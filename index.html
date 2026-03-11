@@ -112,8 +112,64 @@
       color: var(--muted);
       font-size: 0.85rem;
     }
+    /* 橫幅容器樣式 */
+  .marquee-container {
+    width: 100%;
+    overflow: hidden;
+    background: rgba(68, 212, 190, 0.05); /* 淡淡的藍色背景 */
+    border-top: 1px solid rgba(68, 212, 190, 0.05);
+    border-bottom: 1px solid rgba(68, 212, 190, 0.05);
+    padding: 10px 0;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .marquee-content {
+    display: flex; /* 改用 flex 確保內容橫向排列 */
+    white-space: nowrap;
+    animation: marquee 40s linear infinite; /* 根據字數長短可調整秒數 */
+  }
+
+  .marquee-content span {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding-right: 2rem; /* 給兩組重複內容留點間距 */
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* 動態生成時，我們讓它從 0 位移到 -50% (因為內容重複了一次) */
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .marquee-content span {
+    font-family: 'Courier New', monospace; /* 使用等寬字型增加工程感 */
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-right: 4rem; /* 文字間距 */
+    letter-spacing: 0.1em;
+    opacity: 0.8;
+  }
+
+  /* 定義動畫：從右向左移動 */
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* 滑鼠懸停時暫停，方便閱讀 */
+  .marquee-container:hover .marquee-content {
+    animation-play-state: paused;
+  }
   </style>
 </head>
+
 <body>
   <header>
     <h1>風川梓</h1>
@@ -127,6 +183,11 @@
       <a class="btn" href="#projects">View Projects</a>
     </div>
   </header>
+    <div class="marquee-container">
+      <div class="marquee-content" id="marquee-text">
+        Loading skills...
+      </div>
+    </div>
 
   <main>
     <section>
@@ -141,40 +202,12 @@
     <section id="projects">
       <h2>Selected Projects</h2>
       <div class="grid">
-        <div class="card">
-          <h3>Azustock</h3>
-          <div class="meta">Stock Market Simulation Platform</div>
-          <p>
-            即時股票模擬與報價系統，
-            自行設計價格行為模型、成交撮合與高頻更新流程。
-          </p>
-          <span class="tag">Python</span>
-          <span class="tag">AsyncIO</span>
-          <span class="tag">Finance</span>
-          <span class="tag">System Design</span>
-        </div>
-
-        <div class="card">
-          <h3>Discord Bot Infrastructure</h3>
-          <div class="meta">High-frequency Message Update System</div>
-          <p>
-            多頻道、多 Thread 即時更新系統，
-            透過 Queue 與 Scheduler 解決 Discord API Rate Limit 問題。
-          </p>
-          <span class="tag">Discord API</span>
-          <span class="tag">Queue</span>
-          <span class="tag">Concurrency</span>
-        </div>
-
-        <div class="card">
-          <h3>Developer Utilities</h3>
-          <div class="meta">Automation & Tooling</div>
-          <p>
-            PDF 轉換、資料清洗、批次處理與內部工作流程自動化工具。
-          </p>
-          <span class="tag">Tooling</span>
-          <span class="tag">Automation</span>
-        </div>
+        <section id="projects">
+          <h2>Selected Projects</h2>
+          <div class="grid" id="project-grid">
+            <p>Loading projects...</p>
+          </div>
+        </section>
       </div>
     </section>
 
@@ -192,5 +225,54 @@
   <footer>
     © 2026 風川梓（Azustock） · Hosted on GitHub Pages
   </footer>
+
+
+
+
+
+  <script>
+    async function loadProjects() {
+      const grid = document.getElementById('project-grid');
+      const marquee = document.getElementById('marquee-text');
+      
+      try {
+        const response = await fetch('./all_projects.json');
+        if (!response.ok) throw new Error('Projects file not found');
+        
+        const projects = await response.json();
+        
+        // --- 處理橫幅文字 ---
+        // 1. 提取所有 tags 並扁平化成一個陣列
+        const allTags = projects.flatMap(p => p.tags);
+        // 2. 使用 Set 去除重複，並轉回陣列
+        const uniqueTags = [...new Set(allTags)];
+        // 3. 組合文字，中間用間隔符號連接
+        const marqueeString = uniqueTags.join(' • ') + ' • ';
+        
+        // 填充兩次以實現無縫滾動
+        marquee.innerHTML = `<span>${marqueeString}</span>`.repeat(2);
+
+        // --- 處理專案卡片 ---
+        grid.innerHTML = '';
+        projects.forEach(data => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          const tagsHTML = data.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+          
+          card.innerHTML = `
+            <h3>${data.title}</h3>
+            <div class="meta">${data.meta}</div>
+            <p>${data.description}</p>
+            <div class="tags-container">${tagsHTML}</div>
+            ${data.link ? `<a class="btn" href="${data.link}" target="_blank" style="margin-top:10px; display:inline-block; font-size:0.8rem;">Link</a>` : ''}
+          `;
+          grid.appendChild(card);
+        });
+      } catch (err) {
+        console.error("載入失敗:", err);
+        marquee.innerText = "SYSTEMS BUILDER • SOFTWARE ENGINEER"; // 失敗時的備用文字
+      }
+    }
+  </script>
 </body>
 </html>
