@@ -1,5 +1,18 @@
 [
   {
+    "title": "Discord Bot Infrastructure",
+    "meta": "High-frequency Message Update System",
+    "description": "多頻道、多 Thread 即時更新系統，透過 Queue 與 Scheduler 解決 Discord API Rate Limit 問題。",
+    "tags": [
+      "Python",
+      "Discord API",
+      "Queue",
+      "Concurrency"
+    ],
+    "link": "",
+    "id": "DC bot"
+  },
+  {
     "title": "Azustock",
     "meta": "Stock Market Simulation Platform",
     "description": "即時股票模擬與報價系統，自行設計價格行為模型、成交撮合與高頻更新流程。",
