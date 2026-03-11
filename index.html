@@ -112,49 +112,37 @@
       color: var(--muted);
       font-size: 0.85rem;
     }
-    /* 橫幅容器樣式 */
+
+  /* 橫幅容器樣式 */
   .marquee-container {
     width: 100%;
     overflow: hidden;
-    background: rgba(68, 212, 190, 0.05); /* 淡淡的藍色背景 */
+    background: rgba(68, 212, 190, 0.05);
     border-top: 1px solid rgba(68, 212, 190, 0.05);
     border-bottom: 1px solid rgba(68, 212, 190, 0.05);
     padding: 10px 0;
-    white-space: nowrap;
     position: relative;
+    /* 加入 flex 確保內部元素排列 */
+    display: flex; 
   }
 
+  /* 滾動內容樣式 */
   .marquee-content {
-    display: flex; /* 改用 flex 確保內容橫向排列 */
-    white-space: nowrap;
-    animation: marquee 40s linear infinite; /* 根據字數長短可調整秒數 */
+    display: inline-block;
+    padding-left: 100%; /* 初始位置 */
+    animation: marquee 30s linear infinite;
   }
 
   .marquee-content span {
-    display: inline-block;
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--accent);
-    padding-right: 2rem; /* 給兩組重複內容留點間距 */
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-  }
-
-  /* 動態生成時，我們讓它從 0 位移到 -50% (因為內容重複了一次) */
-  @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  .marquee-content span {
-    font-family: 'Courier New', monospace; /* 使用等寬字型增加工程感 */
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--accent);
-    margin-right: 4rem; /* 文字間距 */
+    /* 這裡控制文字之間的間距 */
+    padding-right: 10rem; 
     letter-spacing: 0.1em;
     opacity: 0.8;
+    white-space: nowrap;
   }
 
   /* 定義動畫：從右向左移動 */
@@ -167,6 +155,74 @@
   .marquee-container:hover .marquee-content {
     animation-play-state: paused;
   }
+
+    /* Loading 容器置中並跨越整個 Grid */
+  .loading-container {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 0;
+  }
+
+  /* 動態點點文字樣式 */
+  .loading-text {
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+  }
+
+  /* 利用 ::after 偽元素來製作動態點點 */
+  .loading-text::after {
+    content: '';
+    animation: loading-dots 1.5s infinite steps(4, end);
+  }
+
+  /* 定義點點動畫 */
+  @keyframes loading-dots {
+    0%, 20% { content: ''; }
+    40% { content: '.'; }
+    60% { content: '..'; }
+    80%, 100% { content: '...'; }
+  }
+
+  /* 頁尾與版權聲明方框 */
+  footer {
+    padding: 2rem 1.5rem 4rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .copyright-box {
+    max-width: 800px;
+    width: 100%;
+    /* 半透明的深色背景，帶有一點點立體感 */
+    background: rgba(23, 35, 59, 0.6); 
+    /* 配合你的主題色 (螢光藍) 設定微弱的邊框 */
+    border: 1px solid rgba(71, 198, 253, 0.15); 
+    border-radius: 0.8rem;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    /* 加上一點陰影讓方框浮現出來 */
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+  }
+
+  .copyright-box p {
+    margin: 0 0 0.8rem 0;
+  }
+
+  /* 最下方那行年份的特殊樣式 */
+  .copyright-footer {
+    margin-bottom: 0 !important;
+    font-family: 'Courier New', monospace; /* 使用等寬字體維持工程感 */
+    font-size: 0.8rem;
+    opacity: 0.6;
+    border-top: 1px solid rgba(255, 255, 255, 0.45); /* 加一條極細的分隔線 */
+    padding-top: 0.8rem;
+  }
   </style>
 </head>
 
@@ -178,9 +234,9 @@
       即時系統、金融模擬、Discord Bot、非同步架構
     </p>
     <div class="cta">
-      <a class="btn" href="https://github.com/" target="_blank">GitHub</a>
-      <a class="btn" href="mailto:example@mail.com">Email</a>
-      <a class="btn" href="#projects">View Projects</a>
+      <a class="btn" href="https://github.com/Kazekawa-azusa" target="_blank">GitHub</a>
+      <!-- <a class="btn" href="mailto:example@mail.com">Email</a>
+      <a class="btn" href="#projects">View Projects</a> -->
     </div>
   </header>
     <div class="marquee-container">
@@ -201,13 +257,10 @@
 
     <section id="projects">
       <h2>Selected Projects</h2>
-      <div class="grid">
-        <section id="projects">
-          <h2>Selected Projects</h2>
-          <div class="grid" id="project-grid">
-            <p>Loading projects...</p>
-          </div>
-        </section>
+      <div class="grid" id="project-grid">
+        <div class="loading-container">
+          <span class="loading-text">FETCHING PROJECTS</span>
+        </div>
       </div>
     </section>
 
@@ -223,7 +276,14 @@
   </main>
 
   <footer>
-    © 2026 風川梓（Azustock） · Hosted on GitHub Pages
+    <div class="copyright-box">
+      <p>
+        Unless otherwise stated, all texts, images, and audio on this website are the intellectual property of 風川梓 (Azustock). Unauthorized reproduction, distribution, or modification is strictly prohibited.
+      </p>
+      <p class="copyright-footer">
+        © 2026 風川梓 (Azustock) · Hosted on GitHub Pages
+      </p>
+    </div>
   </footer>
 
 
@@ -236,21 +296,17 @@
       const marquee = document.getElementById('marquee-text');
       
       try {
+        // await new Promise(resolve => setTimeout(resolve, 2000));
         const response = await fetch('./all_projects.json');
         if (!response.ok) throw new Error('Projects file not found');
         
         const projects = await response.json();
         
         // --- 處理橫幅文字 ---
-        // 1. 提取所有 tags 並扁平化成一個陣列
         const allTags = projects.flatMap(p => p.tags);
-        // 2. 使用 Set 去除重複，並轉回陣列
         const uniqueTags = [...new Set(allTags)];
-        // 3. 組合文字，中間用間隔符號連接
-        const marqueeString = uniqueTags.join(' • ') + ' • ';
-        
-        // 填充兩次以實現無縫滾動
-        marquee.innerHTML = `<span>${marqueeString}</span>`.repeat(2);
+        const marqueeString = uniqueTags.join(' • ');
+        marquee.innerHTML = `<span>${marqueeString}</span>`.repeat(1);
 
         // --- 處理專案卡片 ---
         grid.innerHTML = '';
@@ -270,9 +326,13 @@
         });
       } catch (err) {
         console.error("載入失敗:", err);
-        marquee.innerText = "SYSTEMS BUILDER • SOFTWARE ENGINEER"; // 失敗時的備用文字
+        grid.innerHTML = '<p>無法載入專案資料，請確認 all_projects.json 是否存在。</p>';
+        marquee.innerText = "SYSTEMS BUILDER • SOFTWARE ENGINEER";
       }
     }
+
+    // ✨ 關鍵：確保網頁載入後執行函式
+    window.addEventListener('DOMContentLoaded', loadProjects);
   </script>
 </body>
 </html>
