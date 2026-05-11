@@ -367,6 +367,24 @@
 
       } catch (err) {
         console.error("載入失敗:", err);
+        
+        // 找出所有的 Grid 並顯示紅色報錯畫面
+        Object.values(grids).forEach(grid => {
+          if (grid) {
+            grid.innerHTML = `
+              <div class="error-container">
+                <span class="error-text">ERR: FAILED TO FETCH DATA</span>
+              </div>
+            `;
+          }
+        });
+
+        // 如果有跑馬燈橫幅，也讓它顯示系統錯誤
+        const marquee = document.getElementById('marquee-text');
+        if (marquee) {
+          marquee.innerHTML = `<span>SYSTEM OFFLINE • CONNECTION REFUSED • </span>`.repeat(4);
+          marquee.style.color = "#ef4444";
+        }
       }
     }
   </script>
