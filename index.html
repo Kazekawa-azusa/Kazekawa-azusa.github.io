@@ -329,22 +329,33 @@
         music: document.getElementById('music-grid'),
         art: document.getElementById('art-grid')
       };
+      // 抓取橫幅元素
+      const marquee = document.getElementById('marquee-text');
 
       try {
         const response = await fetch('./all_projects.json');
         const projects = await response.json();
 
-        // 1. 清空所有網格的 Loading 文字
+        // 1. 處理橫幅 (跑馬燈)
+        if (marquee) {
+          const allTags = projects.flatMap(p => p.tags || []);
+          const uniqueTags = [...new Set(allTags)];
+          if (uniqueTags.length > 0) {
+            marquee.innerHTML = `<span>${uniqueTags.join(' • ')} • </span>`.repeat(4);
+          }
+        }
+
+        // 2. 清空所有網格的 Loading 文字
         Object.values(grids).forEach(g => { if(g) g.innerHTML = ''; });
 
-        // 2. 自動分類填寫
+        // 3. 自動分類填寫
         projects.forEach(data => {
           const targetGrid = grids[data.category]; // 根據 Python 產生的類別找對應網格
           
           if (targetGrid) {
             const card = document.createElement('div');
             card.className = 'card';
-            const tagsHTML = data.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+            const tagsHTML = (data.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
             
             card.innerHTML = `
               <h3>${data.title}</h3>
@@ -357,7 +368,7 @@
           }
         });
 
-        // 3. (選用) 如果某個分類沒東西，就把該 Section 隱藏
+        // 4. 如果某個分類沒東西，就把該 Section 隱藏
         Object.keys(grids).forEach(cat => {
           if (grids[cat] && grids[cat].children.length === 0) {
             const section = document.getElementById(`${cat}-section`);
@@ -380,13 +391,15 @@
         });
 
         // 如果有跑馬燈橫幅，也讓它顯示系統錯誤
-        const marquee = document.getElementById('marquee-text');
         if (marquee) {
           marquee.innerHTML = `<span>SYSTEM OFFLINE • CONNECTION REFUSED • </span>`.repeat(4);
           marquee.style.color = "#ef4444";
         }
       }
     }
+
+    // 啟動指令！
+    window.addEventListener('DOMContentLoaded', loadProjects);
   </script>
 </body>
 </html>
