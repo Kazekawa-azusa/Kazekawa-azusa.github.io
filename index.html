@@ -240,8 +240,162 @@
     border-top: 1px solid rgba(255, 255, 255, 0.45); /* 加一條極細的分隔線 */
     padding-top: 0.8rem;
   }
+
+  /* ========================= */
+  /* 卡片滾動浮現動畫 (Scroll Reveal) */
+  /* ========================= */
+
+  /* 1. 修改原本的 .card，加入過渡動畫設定 */
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0)), var(--card);
+    border-radius: 1.1rem;
+    padding: 1.4rem 1.6rem;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.35);
+    
+    /* 👇 新增這三行：預設隱藏、往下偏移 40px，並設定 0.6 秒的平滑過渡 */
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  /* 2. 當 JavaScript 偵測到卡片進入畫面時，會幫它加上 .show 類別 */
+  .card.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* (選用) 讓游標懸停在卡片上時有微微上浮的效果，增加互動感 */
+  .card.show:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(56, 189, 248, 0.15); /* 帶有主題色的光暈 */
+  }
+
+  /* ========================= */
+  /* 全螢幕彈出選單樣式        */
+  /* ========================= */
+
+  /* 漢堡按鈕 */
+  .menu-btn {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 1000; /* 確保按鈕永遠在最上層 */
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .menu-btn .bar {
+    width: 30px;
+    height: 3px;
+    background-color: var(--accent);
+    transition: all 0.3s ease-in-out;
+  }
+
+  /* 點擊後，按鈕變形為 "X" 的動畫 */
+  .menu-btn.open .bar:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+  .menu-btn.open .bar:nth-child(2) { opacity: 0; }
+  .menu-btn.open .bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+  /* 全螢幕選單容器 */
+  .fullscreen-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(2, 6, 23, 0.95); /* 使用你的深色背景色加上半透明 */
+    backdrop-filter: blur(10px); /* 毛玻璃效果 */
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* 動畫初始狀態：藏在畫面正上方 (-100%) */
+    transform: translateY(-100%);
+    transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+  }
+
+  /* 加上 active class 時，從上方滑入 */
+  .fullscreen-nav.active {
+    transform: translateY(0);
+  }
+
+  /* 選單文字樣式 */
+  .nav-links {
+    list-style: none;
+    padding: 0;
+    text-align: center;
+  }
+
+  .nav-item {
+    display: inline-block;
+    font-family: 'Courier New', monospace; /* 工程師風格字體 */
+    font-size: clamp(2rem, 5vw, 3.5rem); /* 根據螢幕大小自動縮放字體 */
+    font-weight: bold;
+    color: var(--text);
+    text-decoration: none;
+    margin: 1.5rem 0;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+  }
+
+  /* 游標移上時的發光效果 */
+  .nav-item:hover {
+    color: var(--accent);
+    letter-spacing: 0.2em; /* 游標放上去時字距拉開，增加動態感 */
+    text-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+  }
+
+  /* ========================= */
+  /* 漢堡按鈕 - 滑鼠懸停特效     */
+  /* ========================= */
+
+  /* 1. 顏色變亮與發光 (使用 :not(.open) 確保打開變成 X 的時候不會跑版) */
+  .menu-btn:not(.open):hover .bar {
+    background-color: var(--accent-2); /* 變換成更亮的青色 */
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.8); /* 霓虹發光效果 */
+  }
+
+  /* 2. 三條線產生科技感的錯位位移 */
+  .menu-btn:not(.open):hover .bar:nth-child(1) {
+    transform: translateX(-4px);
+  }
+  .menu-btn:not(.open):hover .bar:nth-child(2) {
+    transform: translateX(4px);
+  }
+  .menu-btn:not(.open):hover .bar:nth-child(3) {
+    transform: translateX(-4px);
+  }
+
+  /* 3. 當選單已經打開(變成 X) 時的懸停特效 (可選) */
+  .menu-btn.open:hover .bar {
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.8); /* X 狀態下發出微弱的紅色警告光 */
+  }
+  .menu-btn.open:hover .bar:nth-child(1),
+  .menu-btn.open:hover .bar:nth-child(3) {
+    background-color: #ef4444; /* 線條變成紅色，暗示「關閉」 */
+  }
   </style>
 </head>
+
+<button id="menu-toggle" class="menu-btn">
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
+
+  <nav id="fullscreen-menu" class="fullscreen-nav">
+    <ul class="nav-links">
+      <li><a href="#code-section" class="nav-item">Programming</a></li>
+      <li><a href="#music-section" class="nav-item">Music & Vocaloid</a></li>
+      <li><a href="#art-section" class="nav-item">Art & Design</a></li>
+    </ul>
+  </nav>
 
 <body>
   <header>
@@ -275,7 +429,7 @@
   <main>
     <section id="programming-section">
       <h2>Programming</h2>
-      <div class="grid" id="programming-grid">
+      <div class="grid" id="code-grid">
         <div class="loading-container"><span class="loading-text">FETCHING DATA</span></div>
       </div>
     </section>
@@ -322,6 +476,35 @@
 
 
   <script>
+    // --- 全螢幕目錄控制邏輯 ---
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.getElementById('menu-toggle');
+      const fullscreenMenu = document.getElementById('fullscreen-menu');
+      const navItems = document.querySelectorAll('.nav-item');
+
+      // 點擊漢堡按鈕時，切換打開/關閉狀態
+      menuToggle.addEventListener('click', () => {
+        menuToggle.classList.toggle('open');
+        fullscreenMenu.classList.toggle('active');
+        
+        // 選用：打開選單時禁止背景滾動
+        if (fullscreenMenu.classList.contains('active')) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = '';
+        }
+      });
+
+      // 點擊任何一個選單項目後，自動收起目錄並恢復背景滾動
+      navItems.forEach(item => {
+        item.addEventListener('click', () => {
+          menuToggle.classList.remove('open');
+          fullscreenMenu.classList.remove('active');
+          document.body.style.overflow = '';
+        });
+      });
+    });
+
     async function loadProjects() {
       // 對應 HTML 中的區塊
       const grids = {
@@ -350,8 +533,7 @@
 
         // 3. 自動分類填寫
         projects.forEach(data => {
-          const targetGrid = grids[data.category]; // 根據 Python 產生的類別找對應網格
-          
+          const targetGrid = grids[data.category]; 
           if (targetGrid) {
             const card = document.createElement('div');
             card.className = 'card';
@@ -375,6 +557,31 @@
             if (section) section.style.display = 'none';
           }
         });
+
+        // 👇 從這裡開始加入 Intersection Observer 的邏輯 👇
+        // 5. 設定滾動浮現動畫 (Scroll Reveal)
+        const observerOptions = {
+          root: null,
+          rootMargin: '0px 0px -50px 0px', // 當卡片距離視窗底部 50px 時觸發
+          threshold: 0.1 // 卡片有 10% 進入畫面就觸發
+        };
+
+        const cardObserver = new IntersectionObserver((entries, observer) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              // 當卡片進入畫面，加上 .show 類別
+              entry.target.classList.add('show');
+              // 觸發後就停止監視該卡片，節省效能
+              observer.unobserve(entry.target);
+            }
+          });
+        }, observerOptions);
+
+        // 抓出畫面上所有剛生成好的 .card，把它們交給監視器
+        document.querySelectorAll('.card').forEach(card => {
+          cardObserver.observe(card);
+        });
+        // 👆 Intersection Observer 邏輯結束 👆
 
       } catch (err) {
         console.error("載入失敗:", err);
