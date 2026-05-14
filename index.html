@@ -271,22 +271,38 @@
   }
 
   /* ========================= */
-  /* 全螢幕彈出選單樣式        */
+  /* 漢堡按鈕 (帶背景的懸浮圓形)   */
   /* ========================= */
-
-  /* 漢堡按鈕 */
   .menu-btn {
     position: fixed;
-    top: 2rem;
-    right: 2rem;
+    top: 1.5rem; /* 稍微往上移一點，適應圓形的視覺比例 */
+    right: 1.5rem;
     z-index: 1000; /* 確保按鈕永遠在最上層 */
-    background: transparent;
-    border: none;
+    
+    /* 👇 新增的背景與特效 */
+    background: rgba(11, 18, 32, 0.7); /* 半透明的深色太空藍 */
+    backdrop-filter: blur(10px); /* 毛玻璃特效 */
+    border: 1px solid rgba(56, 189, 248, 0.2); /* 螢光藍極細邊框 */
+    border-radius: 50%; /* 變成正圓形 */
+    width: 60px; /* 固定寬度 */
+    height: 60px; /* 固定高度 */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); /* 增加立體陰影 */
+    
+    /* 👇 排版設定 */
     cursor: pointer;
     display: flex;
     flex-direction: column;
+    justify-content: center; /* 讓三條線垂直置中 */
+    align-items: center;     /* 讓三條線水平置中 */
     gap: 6px;
-    padding: 10px;
+    transition: all 0.3s ease;
+  }
+
+  /* 讓整個圓形按鈕在游標移上去時，邊框跟著亮起來 */
+  .menu-btn:not(.open):hover {
+    background: rgba(11, 18, 32, 0.95);
+    border-color: rgba(56, 189, 248, 0.6);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
   }
 
   .menu-btn .bar {

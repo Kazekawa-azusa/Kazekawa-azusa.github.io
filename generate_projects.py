@@ -43,6 +43,3 @@ def generate_projects_json():
 
 if __name__ == "__main__":
     generate_projects_json()
-
-if __name__ == "__main__":
-    generate_projects_json()
