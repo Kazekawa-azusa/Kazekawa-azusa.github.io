@@ -64,22 +64,6 @@
     },
     {
       "order": 1,
-      "title": "azubar",
-      "category": "code",
-      "meta": "A lite progress bar",
-      "description": "一個小品進度條",
-      "tags": [
-        "Python",
-        "azubar",
-        "Beta"
-      ],
-      "link": "https://github.com/Kazekawa-azusa/azubar",
-      "cover": "./logo.webp",
-      "id": "01_azubar",
-      "cover_image": "projects/code/01_azubar/./logo.webp"
-    },
-    {
-      "order": 1,
       "title": "書架",
       "category": "writing",
       "meta": "Note",
@@ -141,21 +125,20 @@
       ]
     },
     {
-      "order": 2,
-      "title": "azustock",
+      "order": 1,
+      "title": "azubar",
       "category": "code",
-      "meta": "Stock Market Simulation Platform",
-      "description": "即時股票模擬與報價系統，自行設計價格行為模型、成交撮合與高頻更新流程。",
+      "meta": "A lite progress bar",
+      "description": "一個小品進度條",
       "tags": [
         "Python",
-        "AsyncIO",
-        "Finance",
-        "System Design"
+        "azubar",
+        "Beta"
       ],
-      "link": "",
-      "cover": "logo.webp",
-      "id": "02_azustock",
-      "cover_image": "projects/code/02_azustock/logo.webp"
+      "link": "https://github.com/Kazekawa-azusa/azubar",
+      "cover": "./logo.webp",
+      "id": "01_azubar",
+      "cover_image": "projects/code/01_azubar/./logo.webp"
     },
     {
       "order": 2,
@@ -292,19 +275,21 @@
       ]
     },
     {
-      "order": 3,
-      "title": "Discord Bot Infrastructure",
+      "order": 2,
+      "title": "azustock",
       "category": "code",
-      "meta": "High-frequency Message Update System",
-      "description": "多頻道、多 Thread 即時更新系統，透過 Queue 與 Scheduler 解決 Discord API Rate Limit 問題。",
+      "meta": "Stock Market Simulation Platform",
+      "description": "即時股票模擬與報價系統，自行設計價格行為模型、成交撮合與高頻更新流程。",
       "tags": [
         "Python",
-        "Discord API",
-        "Queue",
-        "Concurrency"
+        "AsyncIO",
+        "Finance",
+        "System Design"
       ],
       "link": "",
-      "id": "03_DCbot"
+      "cover": "logo.webp",
+      "id": "02_azustock",
+      "cover_image": "projects/code/02_azustock/logo.webp"
     },
     {
       "order": 3,
@@ -343,6 +328,21 @@
           "content": "## 自介\n初次見面，我叫 梓 ，還沒有姓氏。  \n可以暫時先叫我 25梓(A2U5A)  \n大概在一個半月前開始接替 風川梓 的工作！  \n雖然我跟風川梓的興趣大致一樣，但是我們的風格並不相同。  \n她會時不時想一些有的沒的、說話、做事前都會想很多，然後可能會把自己搞emo…  \n而我是不會想什麼，反正想做什麼就做什麼，所以可能會太high、說話怪怪的、問A答B、跳脫是很正常（額，對你們而言可能會怪怪的XD），我自己也不知道我在幹嘛bruh  \n總之大概就是這樣，做著沒意義的事、不想有意義的事。  \n額，不要問我 風川梓 去哪了，我不知道。  \n反正哪天我消失了她就回來了（可能啦） "
         }
       ]
+    },
+    {
+      "order": 3,
+      "title": "Discord Bot Infrastructure",
+      "category": "code",
+      "meta": "High-frequency Message Update System",
+      "description": "多頻道、多 Thread 即時更新系統，透過 Queue 與 Scheduler 解決 Discord API Rate Limit 問題。",
+      "tags": [
+        "Python",
+        "Discord API",
+        "Queue",
+        "Concurrency"
+      ],
+      "link": "",
+      "id": "03_DCbot"
     }
   ]
 }
