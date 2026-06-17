@@ -6,7 +6,7 @@ def update_extensions_to_webp(directory="projects"):
     掃描指定目錄下的所有 .md 與 .json 檔案，
     將內文中的 .png, .jpg, .jpeg 批量替換為 .webp。
     """
-    print(f"🔍 開始掃描 {directory} 目錄下的 Markdown 與 JSON 檔案...\n")
+    print(f"🔍 開始掃描 {directory} 目錄下的 Markdown 與 JSON 檔案...")
     
     # 尋找所有 md 和 json 檔案 (包含所有子目錄)
     target_files = []

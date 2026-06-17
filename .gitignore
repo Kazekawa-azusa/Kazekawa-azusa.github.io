@@ -1,3 +1,5 @@
 projects/**/*.png
 projects/**/*.jpg
 projects/**/*.jpeg
+*.pyc
+__pycache__

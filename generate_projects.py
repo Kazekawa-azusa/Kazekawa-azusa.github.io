@@ -1,5 +1,7 @@
 import os
 import json
+from convert_webp import convert_to_webp_with_protection
+from update_paths import update_extensions_to_webp
 
 def generate_projects_json():
     base_dir = 'projects'
@@ -150,4 +152,20 @@ def generate_projects_json():
     print(f"Success: Categorized {len(output_data['projects'])} projects into {len(output_data['categories'])} categories.")
 
 if __name__ == "__main__":
+    # ==========================================
+    # 🚀 系統啟動序列
+    # ==========================================
+    
+    # [Step 1] 優先執行圖片轉檔與防偽寫入
+    # 設定 quality=25，並開啟自動模式 (auto_mode=False 代表遇到舊圖就跳過)
+    convert_to_webp_with_protection(directory="projects", quality=25, auto_mode=False)
+    
+    # [Step 2] 執行原本的資料庫打包程序
+    print(f"\n==========================================")
+    print(f"📦 [第二階段] 開始解析 Markdown 並打包 JSON 資料庫...")
+    print(f"==========================================")
     generate_projects_json()
+    print(f"\n==========================================")
+    print(f"📦 [第三階段] 開始修改路徑...")
+    print(f"==========================================")
+    update_extensions_to_webp()

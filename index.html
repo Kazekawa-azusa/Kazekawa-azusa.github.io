@@ -862,7 +862,7 @@
     }
 
     /* ========================= */
-    /* 畫廊圖片容器 (加入載入動畫) */
+    /* 畫廊圖片容器 (確保這裡面是乾淨的) */
     /* ========================= */
     .markdown-body .gallery figure {
       margin: 0;
@@ -877,10 +877,7 @@
       overflow: hidden; 
       position: relative; 
       
-      /* 👇 新增 1：載入中的預設底色 */
-      background-color: var(--card-border);
-      /* 👇 新增 2：綁定呼吸動畫 */
-      animation: skeleton-pulse 1.5s infinite ease-in-out;
+      /* 這裡絕對不能有 background-color 和 animation！ */
       
       transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-radius 0.3s ease; 
       cursor: pointer;
