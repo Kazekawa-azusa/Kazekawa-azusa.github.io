@@ -1,4 +1,3 @@
-import os
 import glob
 
 def update_extensions_to_webp(directory="projects"):
