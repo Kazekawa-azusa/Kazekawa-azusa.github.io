@@ -1,4 +1,5 @@
 {
+  "order": "1",
   "title": "azubar",
   "category": "code",
   "meta": "A lite progress bar",

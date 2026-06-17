@@ -1,1 +1,1 @@
-# [LINK](https://Azustock.github.io/ "風川梓的網頁")
+# [LINK](https://kazekawa-azusa.github.io/ "風川梓的網頁")
