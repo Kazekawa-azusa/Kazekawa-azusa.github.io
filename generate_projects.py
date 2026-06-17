@@ -143,8 +143,8 @@ def generate_projects_json():
                 print(f"Error reading {proj_path}: {e}")
 
     # 對分類與專案進行全域排序
-    output_data["categories"].sort(key=lambda x: int(x.get('order', 999)))
-    output_data["projects"].sort(key=lambda x: int(x.get('order', 999)))
+    output_data["categories"].sort(key=lambda x: int(x['order']) if x.get('order') and str(x['order']).isdigit() else 999)
+    output_data["projects"].sort(key=lambda x: int(x['order']) if x.get('order') and str(x['order']).isdigit() else 999)
 
     with open('all_projects.json', 'w', encoding='utf-8') as f:
         json.dump(output_data, f, ensure_ascii=False, indent=2)

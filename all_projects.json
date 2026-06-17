@@ -63,7 +63,7 @@
       ]
     },
     {
-      "order": "1",
+      "order": 1,
       "title": "azubar",
       "category": "code",
       "meta": "A lite progress bar",
@@ -141,7 +141,7 @@
       ]
     },
     {
-      "order": "2",
+      "order": 2,
       "title": "azustock",
       "category": "code",
       "meta": "Stock Market Simulation Platform",
@@ -292,7 +292,7 @@
       ]
     },
     {
-      "order": "3",
+      "order": 3,
       "title": "Discord Bot Infrastructure",
       "category": "code",
       "meta": "High-frequency Message Update System",

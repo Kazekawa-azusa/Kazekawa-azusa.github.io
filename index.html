@@ -955,6 +955,87 @@
     .markdown-body .gallery::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
     .markdown-body .gallery::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
 
+    /* ========================================== */
+    /* ✨ 橫向捲動「雙向」視覺提示系統               */
+    /* ========================================== */
+    
+    .scroll-wrapper {
+      position: relative;
+      display: flow-root; 
+    }
+
+    /* 1. 共用遮罩基底 */
+    .scroll-hint {
+      position: absolute;
+      top: 0;
+      width: 60px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      pointer-events: none; 
+      z-index: 5;
+      opacity: 0; 
+      visibility: hidden; 
+      transition: opacity 0.4s ease, visibility 0.4s ease; 
+    }
+    .scroll-hint.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* 2. 右側專屬設定 */
+    .hint-right {
+      right: 0;
+      justify-content: flex-end;
+      padding-right: 8px;
+      background: linear-gradient(to right, rgba(0,0,0,0) 0%, var(--bg) 100%);
+    }
+    .hint-right::after {
+      content: "→";
+      color: var(--accent);
+      font-size: 1.5rem;
+      font-weight: bold;
+      animation: hint-pulse-right 1.5s infinite ease-in-out;
+    }
+
+    /* 3. 左側專屬設定 (漸層方向與箭頭相反) */
+    .hint-left {
+      left: 0;
+      justify-content: flex-start;
+      padding-left: 8px;
+      background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--bg) 100%);
+    }
+    .hint-left::after {
+      content: "←";
+      color: var(--accent);
+      font-size: 1.5rem;
+      font-weight: bold;
+      animation: hint-pulse-left 1.5s infinite ease-in-out;
+    }
+
+    /* 4. Modal 內的邊距與底色覆寫 */
+    .modal-content .hint-right {
+      right: -0.8rem; 
+      background: linear-gradient(to right, rgba(0,0,0,0) 0%, var(--card) 100%);
+    }
+    .modal-content .hint-left {
+      left: -0.8rem; 
+      background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--card) 100%);
+    }
+    #portfolio-sections .hint-left {
+      left: -0.5rem;
+    }
+
+    /* 5. 左右各自的動畫 */
+    @keyframes hint-pulse-right {
+      0%, 100% { transform: translateX(-8); opacity: 0.4; }
+      50% { transform: translateX(5px); opacity: 1; }
+    }
+    @keyframes hint-pulse-left {
+      0%, 100% { transform: translateX(8); opacity: 0.4; }
+      50% { transform: translateX(-5px); opacity: 1; } /* 往左彈 */
+    }
+
     /* 手機版排版最佳化 (Mobile UI) */
     /* ========================= */
     @media (max-width: 600px) {
@@ -1297,7 +1378,12 @@
                 </div>
                 ${sectionImageHtml}
               </div>
-              <div class="grid" id="${cat.id}-grid"></div>
+              
+              <div class="scroll-wrapper">
+                <div class="scroll-hint hint-left" id="${cat.id}-hint-left"></div>
+                <div class="grid" id="${cat.id}-grid"></div>
+                <div class="scroll-hint hint-right" id="${cat.id}-hint-right"></div>
+              </div>
             </section>
           `;
         });
@@ -1362,6 +1448,40 @@
             }
 
             targetGrid.appendChild(card);
+          }
+        });
+        // 👇 首頁卡片的精準偵測
+        // 👇 首頁卡片的雙向精準偵測
+        categories.forEach(cat => {
+          const grid = document.getElementById(`${cat.id}-grid`);
+          const hintRight = document.getElementById(`${cat.id}-hint-right`);
+          const hintLeft = document.getElementById(`${cat.id}-hint-left`); // 新增左箭頭抓取
+          
+          if (grid && hintRight && hintLeft) {
+            const checkScroll = () => {
+              const isScrollable = grid.scrollWidth > grid.clientWidth + 5;
+              const isAtEnd = Math.ceil(grid.scrollLeft + grid.clientWidth) >= Math.floor(grid.scrollWidth) - 10;
+              const isAtStart = grid.scrollLeft <= 10; // 新增：是否在最左邊的起點
+
+              // 右箭頭邏輯
+              if (isScrollable && !isAtEnd) hintRight.classList.add('visible');
+              else hintRight.classList.remove('visible');
+
+              // 左箭頭邏輯
+              if (isScrollable && !isAtStart) hintLeft.classList.add('visible');
+              else hintLeft.classList.remove('visible');
+            };
+            
+            grid.addEventListener('scroll', checkScroll);
+            
+            const imgs = grid.querySelectorAll('img');
+            imgs.forEach(img => {
+              if (img.complete) checkScroll();
+              else img.addEventListener('load', checkScroll);
+            });
+
+            new ResizeObserver(checkScroll).observe(grid);
+            setTimeout(checkScroll, 100); 
           }
         });
 
@@ -1481,13 +1601,56 @@
       modalBody.innerHTML = backBtnHtml + articleHtml;
       document.querySelector('.modal-content').scrollTop = 0; 
 
-      // 👇 新增這段：尋找文章內所有的 figure 並綁定點擊切換功能
+      // 👇 補回這段被遺忘的魔法：綁定畫廊圖片的點擊隱藏文字功能
       const figures = modalBody.querySelectorAll('.gallery figure');
       figures.forEach(fig => {
         fig.addEventListener('click', function() {
-          // toggle 會自動判斷：如果沒有 hide-caption 就加上去，如果有就拿掉
           this.classList.toggle('hide-caption');
         });
+      });
+
+      // 👇 Markdown 畫廊的雙向精準偵測
+      const galleries = modalBody.querySelectorAll('.gallery');
+      galleries.forEach(gallery => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'scroll-wrapper';
+        gallery.parentNode.insertBefore(wrapper, gallery);
+
+        // 建立左箭頭
+        const hintLeft = document.createElement('div');
+        hintLeft.className = 'scroll-hint hint-left';
+        wrapper.appendChild(hintLeft);
+
+        // 放入畫廊本體
+        wrapper.appendChild(gallery);
+
+        // 建立右箭頭
+        const hintRight = document.createElement('div');
+        hintRight.className = 'scroll-hint hint-right';
+        wrapper.appendChild(hintRight);
+
+        const checkScroll = () => {
+          const isScrollable = gallery.scrollWidth > gallery.clientWidth + 5;
+          const isAtEnd = Math.ceil(gallery.scrollLeft + gallery.clientWidth) >= Math.floor(gallery.scrollWidth) - 10;
+          const isAtStart = gallery.scrollLeft <= 10;
+
+          if (isScrollable && !isAtEnd) hintRight.classList.add('visible');
+          else hintRight.classList.remove('visible');
+
+          if (isScrollable && !isAtStart) hintLeft.classList.add('visible');
+          else hintLeft.classList.remove('visible');
+        };
+        
+        gallery.addEventListener('scroll', checkScroll);
+        
+        const imgs = gallery.querySelectorAll('img');
+        imgs.forEach(img => {
+          if (img.complete) checkScroll();
+          else img.addEventListener('load', checkScroll);
+        });
+
+        new ResizeObserver(checkScroll).observe(gallery);
+        setTimeout(checkScroll, 100); 
       });
     };
 
