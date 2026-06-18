@@ -1542,7 +1542,7 @@
     const modalBody = document.getElementById('modal-body');
 
     // 打開該專案的「目錄頁面」
-    window.openProjectIndex = function(projectId) {
+    window.openProjectIndex = function(projectId, restoreScroll = false) {
       const proj = window.siteProjects.find(p => p.id === projectId);
       if (!proj || !proj.articles) return;
 
@@ -1587,19 +1587,36 @@
       modalBody.innerHTML = indexHtml;
       modalOverlay.classList.add('active');
       document.body.style.overflow = 'hidden';
-      document.querySelector('.modal-content').scrollTop = 0; 
+      
+      // 👇 2. 替換原本的 document.querySelector('.modal-content').scrollTop = 0;
+      // 改成這個「智慧記憶捲動」邏輯：
+      const modalContainer = document.querySelector('.modal-content');
+      if (restoreScroll && window.lastIndexScrollPos) {
+        // 給瀏覽器一點時間 (10毫秒) 把 DOM 畫出來，再把捲軸拉回存檔點
+        setTimeout(() => { modalContainer.scrollTop = window.lastIndexScrollPos; }, 10);
+      } else {
+        // 如果是從首頁點進來的，就乖乖回到最上面
+        modalContainer.scrollTop = 0;
+      }
     };
 
     // 打開具體的「文章內文」
     window.openArticle = function(projectId, articleIndex) {
+      
+      // 👇 1. 在畫面被洗掉之前，立刻把現在的捲軸位置「存檔」起來！
+      window.lastIndexScrollPos = document.querySelector('.modal-content').scrollTop;
+
       const proj = window.siteProjects.find(p => p.id === projectId);
       const article = proj.articles[articleIndex];
       
-      const backBtnHtml = `<button onclick="openProjectIndex('${projectId}')" class="btn" style="margin-bottom: 1.5rem; padding: 0.4rem 0.9rem; font-size: 0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> 返回索引</button>`;      
+      // 👇 2. 修改返回按鈕的 onclick：原本是 openProjectIndex('${projectId}')
+      // ✨ 把它改成 openProjectIndex('${projectId}', true) 告訴系統要讀檔！
+      const backBtnHtml = `<button onclick="openProjectIndex('${projectId}', true)" class="btn" style="margin-bottom: 1.5rem; padding: 0.4rem 0.9rem; font-size: 0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> 返回索引</button>`;      
+      
       const articleHtml = marked.parse(article.content);
 
       modalBody.innerHTML = backBtnHtml + articleHtml;
-      document.querySelector('.modal-content').scrollTop = 0; 
+      document.querySelector('.modal-content').scrollTop = 0; // 文章本身還是要從頭看 
 
       // 👇 補回這段被遺忘的魔法：綁定畫廊圖片的點擊隱藏文字功能
       const figures = modalBody.querySelectorAll('.gallery figure');
