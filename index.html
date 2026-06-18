@@ -745,6 +745,149 @@
       box-shadow: 0 0 10px var(--error-shadow);
       transform: rotate(90deg);
     }
+    
+    /* ========================= */
+    /* 🍔 漢堡式動態目錄 (Floating TOC - 穿透版) */
+    /* ========================= */
+    
+    /* 1. 隱形定位容器：負責吸附與靠右，高度為 0 確保不會擠壓文字 */
+    .toc-wrapper {
+      position: sticky;
+      top: 0;
+      float: right;
+      z-index: 1053;
+      margin-top: -1rem;
+      margin-left: 1rem;
+      
+      /* ✨ 核心防撞機制：強制往左推 3rem，永遠為關閉按鈕保留專屬空位 */
+      margin-right: 3rem; 
+      
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      height: 0; 
+    }
+
+    /* 2. 漢堡按鈕本體 */
+    .toc-toggle-btn {
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--card-border);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      
+      /* 👇 核心修復魔法：拒絕被外層的 height: 0 壓縮，維持正圓形 */
+      flex-shrink: 0; 
+      
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .toc-toggle-btn:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px var(--shadow-hover);
+    }
+
+    .toc-toggle-btn .bar {
+      width: 16px;
+      height: 2px;
+      background-color: var(--muted);
+      transition: all 0.3s ease-in-out;
+    }
+
+    /* 點開後變成「一字型 (減號)」，並使用 accent-2 */
+    .toc-toggle-btn.open .bar:nth-child(1) { transform: translateY(6px) scaleX(0.5); opacity: 0; }
+    .toc-toggle-btn.open .bar:nth-child(2) { transform: scaleX(1.3); background-color: var(--accent-2); }
+    .toc-toggle-btn.open .bar:nth-child(3) { transform: translateY(-6px) scaleX(0.5); opacity: 0; }
+
+    /* 點開後變成「向右箭頭 (→)」
+    .toc-toggle-btn.open .bar:nth-child(1) { transform-origin: right center; transform: rotate(-42deg) scaleX(0.55) translateY(-1px); background-color: var(--accent); }
+    .toc-toggle-btn.open .bar:nth-child(2) { background-color: var(--accent); }
+    .toc-toggle-btn.open .bar:nth-child(3) { transform-origin: right center; transform: rotate(42deg) scaleX(0.55) translateY(1px); background-color: var(--accent); } */
+
+    /* 3. 下拉選單 (✨ Absolute 定位，完全懸浮於文字上方) */
+    .toc-dropdown {
+      position: absolute;
+      top: 3rem; /* 位於按鈕下方 */
+      right: 0;
+      z-index: 1052;
+      background: var(--glass-bg);
+      backdrop-filter: blur(15px);
+      border: 1px solid var(--card-border);
+      border-radius: 1.1rem;
+      padding: 1.2rem 1.5rem;
+      width: 260px;
+      max-width: 80vw;
+      box-shadow: 0 10px 30px var(--shadow-base);
+      
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-10px) scale(0.95);
+      transform-origin: top right; 
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .toc-dropdown.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    /* 4. 👇 補回你遺失的「酷酷格式」(排版與 Hover 互動) */
+    .toc-dropdown .toc-title {
+      font-weight: bold;
+      color: var(--accent);
+      margin-bottom: 0.8rem;
+      font-size: 1.05rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .toc-dropdown ul {
+      list-style: none !important;
+      padding-left: 0 !important;
+      margin: 0 !important;
+      max-height: 50vh;
+      overflow-y: auto; 
+      
+      /* 👇 核心修復 1：物理封殺橫向捲軸，絕對不准它出現 */
+      overflow-x: hidden; 
+      /* 多給右邊 10px 的呼吸空間，讓放大的文字不會貼壁 */
+      padding-right: 10px; 
+    }
+    
+    .toc-dropdown li { margin-bottom: 0.6rem; line-height: 1.4; }
+    .toc-dropdown .toc-h2 { font-weight: 600; }
+    .toc-dropdown .toc-h3 { padding-left: 1.2rem; font-size: 0.9rem; }
+    
+    .toc-dropdown a {
+      color: var(--text) !important;
+      text-decoration: none !important;
+      transition: color 0.2s ease, transform 0.2s ease;
+      display: block; 
+      
+      /* 👇 核心修復 2：設定變形軸心為「左側垂直置中」，這樣放大時只會往右長，左邊依然切齊 */
+      transform-origin: left center; 
+    }
+    
+    .toc-dropdown a:hover {
+      color: var(--accent-hover) !important;
+      
+      /* 👇 核心修復 3：從往右推 4px，改為整體放大 1.05 倍 (約 5% 的微放大) */
+      transform: scale(1.05); 
+    }
+    
+    .toc-dropdown ul::-webkit-scrollbar { width: 4px; }
+    .toc-dropdown ul::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
 
     /* ========================= */
     /* Markdown 內部元素排版設定   */
@@ -1041,20 +1184,35 @@
     @media (max-width: 600px) {
       /* 彈出視窗：增加底部留白，避免被瀏覽器選單遮擋 */
       .modal-content {
-        width: 95%;                  /* 讓視窗稍微變寬，善用手機螢幕 */
-        max-height: 90vh;           /* 使用動態高度 */
-        max-height: 90dvh;           /* 使用動態高度 */
-        /* 上: 2rem, 左右: 1.5rem, 👇 下: 5rem (刻意留出大片空白給瀏覽器選單) */
+        width: 95%;                  
+        max-height: 90vh;           
+        max-height: 90dvh;           
         padding: 2rem 1.5rem 5rem 1.5rem; 
       }
 
       /* 關閉按鈕：稍微縮小並往邊緣靠，節省空間 */
       .modal-close-btn {
-        top: 1rem;
-        right: 1rem;
+        top: 0;             
+        right: 0;
+        margin-right: -0.5rem; 
         width: 32px;
         height: 32px;
         font-size: 1.2rem;
+      }
+
+      /* 👇 新增這段：強制漢堡按鈕在手機上同步縮小，並完美對齊 */
+      .toc-wrapper {
+        /* 因為關閉按鈕的位置變了，這裡將防撞邊距縮小到 2.5rem，維持完美間距 */
+        margin-right: 2.5rem; 
+      }
+      
+      .toc-toggle-btn {
+        width: 32px;   /* 降為 32px，與關閉按鈕一模一樣大 */
+        height: 32px;
+      }
+      
+      .toc-toggle-btn .bar {
+        width: 14px;   /* 裡面的三條線稍微變短，比例才好看 */
       }
 
       /* Markdown 圖片：取消浮動，改成置中且縮小尺寸 */
@@ -1616,9 +1774,68 @@
       const articleHtml = marked.parse(article.content);
 
       modalBody.innerHTML = backBtnHtml + articleHtml;
-      document.querySelector('.modal-content').scrollTop = 0; // 文章本身還是要從頭看 
+      document.querySelector('.modal-content').scrollTop = 0; 
+      
+      // 如果文章裡有兩個以上的標題，我們才生成目錄 (避免短文也跑出目錄)
+      // ==========================================
+      // ✨ 核心魔法：動態生成「漢堡選單式」文章目錄
+      // ==========================================
+      const headings = modalBody.querySelectorAll('h2, h3'); 
+      
+      if (headings.length > 1) {
+        // 1. 建立左上角的微型漢堡按鈕
+        const tocBtn = document.createElement('div');
+        tocBtn.className = 'toc-toggle-btn';
+        tocBtn.innerHTML = '<span class="bar"></span><span class="bar"></span><span class="bar"></span>';
+        
+        // 2. 建立下拉選單面板
+        const tocDropdown = document.createElement('div');
+        tocDropdown.className = 'toc-dropdown';
+        tocDropdown.innerHTML = '<div class="toc-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> 內容索引</div><ul class="toc-list"></ul>';
+        const tocList = tocDropdown.querySelector('.toc-list');
 
-      // 👇 補回這段被遺忘的魔法：綁定畫廊圖片的點擊隱藏文字功能
+        headings.forEach((h, index) => {
+          const id = `article-heading-${index}`;
+          h.id = id;
+
+          const li = document.createElement('li');
+          li.className = `toc-${h.tagName.toLowerCase()}`; 
+          
+          const a = document.createElement('a');
+          a.innerText = h.innerText;
+          a.href = "javascript:void(0)"; 
+          
+          a.onclick = () => {
+            // 點擊段落：平滑滾動，並且「自動收起」目錄！
+            const modalContainer = document.querySelector('.modal-content');
+            modalContainer.scrollTo({
+              top: h.offsetTop - 30, 
+              behavior: 'smooth'
+            });
+            tocBtn.classList.remove('open');
+            tocDropdown.classList.remove('active');
+          };
+          
+          li.appendChild(a);
+          tocList.appendChild(li);
+        });
+
+        // 3. 綁定按鈕點擊：展開或收起選單
+        tocBtn.onclick = () => {
+          tocBtn.classList.toggle('open');
+          tocDropdown.classList.toggle('active');
+        };
+
+        // 4. 將按鈕與選單「打包」進一個高度為0的 Wrapper，徹底避免擠壓文字
+        const tocWrapper = document.createElement('div');
+        tocWrapper.className = 'toc-wrapper';
+        tocWrapper.appendChild(tocBtn);
+        tocWrapper.appendChild(tocDropdown);
+        
+        modalBody.insertBefore(tocWrapper, modalBody.firstChild);
+      }
+
+      // 綁定畫廊圖片的點擊隱藏文字功能
       const figures = modalBody.querySelectorAll('.gallery figure');
       figures.forEach(fig => {
         fig.addEventListener('click', function() {
