@@ -20,8 +20,9 @@ def verify_signature(image_path):
     except Exception as e:
         print(f"讀取失敗: {e}")
 
-# 把括號裡的檔名換成你隨便一張轉好的 WebP
-verify_signature(r"C:\Users\iambe\Desktop\git page\projects\writing\01_note\01_changer\architecture.webp")
-verify_signature(r"C:\Users\iambe\Desktop\basic.webp")
-verify_signature(r"projects\art\01_azu5atellite\01_palindrome\basic.png")
-verify_signature(r"projects\art\01_azu5atellite\01_palindrome\basic.webp")
+if __name__ == "__main__":
+    # 把括號裡的檔名換成你隨便一張轉好的 WebP
+    verify_signature(r"C:\Users\iambe\Desktop\git page\projects\writing\01_note\01_changer\architecture.webp")
+    verify_signature(r"C:\Users\iambe\Desktop\basic.webp")
+    verify_signature(r"projects\art\01_azu5atellite\01_palindrome\basic.png")
+    verify_signature(r"projects\art\01_azu5atellite\01_palindrome\basic.webp")
