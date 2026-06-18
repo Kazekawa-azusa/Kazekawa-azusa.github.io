@@ -3,3 +3,4 @@ projects/**/*.jpg
 projects/**/*.jpeg
 *.pyc
 __pycache__
+.vscode
