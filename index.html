@@ -747,7 +747,11 @@
       height: 0;
       margin: 0 -3rem; 
       padding: 2.5rem 3rem 0 3rem; 
-      position: relative; /* 確保子元素可以相對於此容器定位 */
+      
+      /* ✨ 核心修復：把 relative 換回 sticky！
+         這樣它既能當作 X 按鈕的絕對座標基準，又能在滾動時死死釘在視窗頂端 */
+      position: sticky; 
+      top: 0; /* 確保它釘在最頂部 */
     }
 
     /* 2. 精確鎖定 X 按鈕對齊標題第一行 */
@@ -1273,10 +1277,11 @@
       /* ✨ 頂部目錄列的手機版微調 */
       .modal-top-bar {
         top: 0; 
-        /* ✨ 移除 margin-top 的負數 */
         margin: 0 -1.5rem 1.5rem -1.5rem; 
-        /* ✨ 手機版救星：加高 padding-top 到 1.5rem，窄版上方再也不會被切削了！ */
-        padding: 2rem 1rem 1.2rem 1.5rem; 
+        
+        /* 👇 就是這裡！開頭的 2rem 就是控制「手機版文章目錄列」的上方留白 */
+        padding: 1.5rem 1rem 1.2rem 1.5rem; 
+        
         border-top-left-radius: 1.1rem;
         border-top-right-radius: 1.1rem;
       }
@@ -1553,7 +1558,6 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // === 3. JSON 資料載入與卡片渲染邏輯 ===
     // === 3. JSON 資料載入與卡片動態生成 ===
     async function loadProjects() {
       const dynamicNav = document.getElementById('dynamic-nav');
@@ -1651,11 +1655,13 @@
             if (data.articles && data.articles.length > 0) {
               card.style.cursor = 'pointer';
               card.onclick = () => openProjectIndex(data.id);
-              actionText = `<div style="margin-top: 1.2rem; color: var(--accent); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">📖 展開系列 (${data.articles.length}) <span style="font-size: 1.1rem; transition: transform 0.2s;">➔</span></div>`;
+              // ✨ 調整 1：把預設大小改回 0.95rem，並加入 action-btn 類別與 font-size 過渡動畫
+              actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: font-size 0.2s ease;">📖 展開系列 (${data.articles.length}) <span class="action-arrow" data-dir="right" style="font-size: 1.2rem; transition: transform 0.2s ease;">➔</span></div>`;
             } else if (data.link) {
               card.style.cursor = 'pointer';
               card.onclick = () => window.open(data.link, '_blank');
-              actionText = `<div style="margin-top: 1.2rem; color: var(--accent); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">🔗 前往專案 <span style="font-size: 1.1rem; transition: transform 0.2s;">➔</span></div>`;
+              // ✨ 調整 2：把預設大小改回 0.95rem，並加入 action-btn 類別與 font-size 過渡動畫
+              actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: font-size 0.2s ease;">🔗 前往外部專案 <span class="action-arrow" data-dir="up-right" style="font-size: 1.2rem; transition: transform 0.2s ease;">↗</span></div>`;
             }
 
             // C. 處理專案卡片
@@ -1687,21 +1693,39 @@
               ${actionText}
             `;
             
+            // ✨ 調整 3：升級 Hover 監聽器，讓「文字變大」跟「箭頭位移」同步發生！
             if (actionText) {
               card.addEventListener('mouseenter', () => {
-                const arrow = card.querySelector('span[style*="transition"]');
-                if (arrow) arrow.style.transform = 'translateX(4px)';
+                // 1. 文字整行放大
+                const actionBtn = card.querySelector('.action-btn');
+                if (actionBtn) actionBtn.style.fontSize = '1.05rem';
+                
+                // 2. 箭頭依照方向飛出
+                const arrow = card.querySelector('.action-arrow');
+                if (arrow) {
+                  if (arrow.dataset.dir === 'up-right') {
+                    arrow.style.transform = 'translate(4px, -4px)';
+                  } else {
+                    arrow.style.transform = 'translateX(5px)';
+                  }
+                }
               });
+              
               card.addEventListener('mouseleave', () => {
-                const arrow = card.querySelector('span[style*="transition"]');
-                if (arrow) arrow.style.transform = 'translateX(0)';
+                // 1. 文字恢復原狀
+                const actionBtn = card.querySelector('.action-btn');
+                if (actionBtn) actionBtn.style.fontSize = '0.95rem';
+
+                // 2. 箭頭恢復原位
+                const arrow = card.querySelector('.action-arrow');
+                if (arrow) arrow.style.transform = 'translate(0, 0)';
               });
             }
 
             targetGrid.appendChild(card);
           }
         });
-        // 👇 首頁卡片的精準偵測
+
         // 👇 首頁卡片的雙向精準偵測
         categories.forEach(cat => {
           const grid = document.getElementById(`${cat.id}-grid`);
@@ -1803,7 +1827,8 @@
       const proj = window.siteProjects.find(p => p.id === projectId);
       if (!proj || !proj.articles) return;
 
-      let indexHtml = `<h1>${proj.title} - 內容索引</h1><ul style="list-style:none; padding-left:0; margin-top:1.5rem;">`;
+      // ✨ 核心修復：加上 style="padding-right: 4.5rem;" 預留出 X 按鈕的專屬空間
+      let indexHtml = `<h1 style="padding-right: 4.5rem;">${proj.title} - 內容索引</h1><ul style="list-style:none; padding-left:0; margin-top:1.5rem;">`;
       
       proj.articles.forEach((art, idx) => {
         // 1. 處理描述文字
