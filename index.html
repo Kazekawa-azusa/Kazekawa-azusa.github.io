@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>風川梓 | Azustock</title>
-  <!-- 🌟 Open Graph (社群軟體預覽卡片) 設定 -->
+
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://kazekawa-azusa.github.io/" />
   <meta property="og:title" content="風川梓 | Azustock" />
   <meta property="og:description" content="技術隨筆、系統架構反思與生活散文。" />
-  
   <meta property="og:image" content="https://kazekawa-azusa.github.io/assets/og.png" />
 
   <meta name="twitter:card" content="summary_large_image" />
@@ -18,8 +17,14 @@
   <meta name="twitter:title" content="風川梓 | Azustock" />
   <meta name="twitter:description" content="技術隨筆、系統架構反思與生活散文。" />
   <meta name="twitter:image" content="https://kazekawa-azusa.github.io/assets/og.png" />
+  
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <link id="favicon" rel="icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/og.png" />
+
+  <link id="favicon" rel="icon" type="image/png" href="./assets/OG_dark.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/OG_dark.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/OG_dark.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./assets/OG_dark.png" />
+
   <style>
     /* ================================== */
     /* 🎨 狀態驅動主題系統 (Theme System) */
@@ -1536,8 +1541,9 @@
       const favicon = document.getElementById('favicon');
       
       // 使用相對路徑，本地端測試更方便！
-      const darkFaviconUrl = './assets/light_bg.png';
-      const lightFaviconUrl = './assets/dark_bg.png';
+      // ✨ 在網址最後面補上 ?v=1
+      const darkFaviconUrl = './assets/OG_light.png';
+      const lightFaviconUrl = './assets/OG_dark.png';
       
       // 1. 取得使用者過去的點擊紀錄
       const savedTheme = localStorage.getItem('theme');
