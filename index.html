@@ -738,24 +738,23 @@
       transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
-    /* 👇 內容索引頁模式 */
+    /* 1. 調整索引模式下的頂部欄位與按鈕位置 */
     .modal-top-bar.is-index-mode {
       background: transparent;
       backdrop-filter: none;
       border-bottom-color: transparent;
       pointer-events: none; 
-      
       height: 0;
-      /* ✨ 核心修復：把 0 改成 0 -3rem，讓它解除封印向左右撐開到底！ */
       margin: 0 -3rem; 
       padding: 2.5rem 3rem 0 3rem; 
+      position: relative; /* 確保子元素可以相對於此容器定位 */
     }
-    
-    /* 👇 索引模式下，精準鎖定 X 按鈕的位置 */
+
+    /* 2. 精確鎖定 X 按鈕對齊標題第一行 */
     .modal-top-bar.is-index-mode #modal-top-right {
       position: absolute;
-      /* ✨ 因為外層已經完美撐開，現在這個絕對座標就是 100% 舊版位置 */
-      top: 1.5rem;   
+      /* 這裡設定 2.5rem，因為父層 padding-top 為 2.5rem，剛好讓按鈕中心對齊標題頂端 */
+      top: 2.5rem;   
       right: 1.5rem; 
       pointer-events: auto; 
     }
@@ -785,7 +784,7 @@
       padding: 0.4rem 0.9rem; 
       font-size: 0.85rem;     
       
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -1284,15 +1283,14 @@
 
       /* 手機版索引頁模式 */
       .modal-top-bar.is-index-mode {
-        /* ✨ 手機版同步向外延伸 1.5rem，與邊緣切齊 */
         margin: 0 -1.5rem;
         padding: 2rem 1.5rem 0 1.5rem; 
       }
 
       .modal-top-bar.is-index-mode #modal-top-right {
-        /* ✨ 手機版精準還原舊版座標 */
-        top: 1rem; 
-        right: 1rem; 
+        /* 手機版標題 padding-top 是 2rem，按鈕位置設為 2rem */
+        top: 3rem; 
+        right: 2rem; 
       }
 
       /* 統一縮小按鈕 */
