@@ -1655,13 +1655,13 @@
             if (data.articles && data.articles.length > 0) {
               card.style.cursor = 'pointer';
               card.onclick = () => openProjectIndex(data.id);
-              // ✨ 調整 1：把預設大小改回 0.95rem，並加入 action-btn 類別與 font-size 過渡動畫
-              actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: font-size 0.2s ease;">📖 展開系列 (${data.articles.length}) <span class="action-arrow" data-dir="right" style="font-size: 1.2rem; transition: transform 0.2s ease;">➔</span></div>`;
+              // ✨ 調整 1：把 transition 改為 color，取消 font-size 動畫
+              actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">📖 展開系列 (${data.articles.length}) <span class="action-arrow" data-dir="right" style="font-size: 1.2rem; transition: transform 0.2s ease;">➔</span></div>`;
             } else if (data.link) {
               card.style.cursor = 'pointer';
               card.onclick = () => window.open(data.link, '_blank');
-              // ✨ 調整 2：把預設大小改回 0.95rem，並加入 action-btn 類別與 font-size 過渡動畫
-              actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: font-size 0.2s ease;">🔗 前往外部專案 <span class="action-arrow" data-dir="up-right" style="font-size: 1.2rem; transition: transform 0.2s ease;">↗</span></div>`;
+              // ✨ 調整 2：把 transition 改為 color，取消 font-size 動畫
+              actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">🔗 前往外部專案 <span class="action-arrow" data-dir="up-right" style="font-size: 1.2rem; transition: transform 0.2s ease;">↗</span></div>`;
             }
 
             // C. 處理專案卡片
@@ -1693,12 +1693,12 @@
               ${actionText}
             `;
             
-            // ✨ 調整 3：升級 Hover 監聽器，讓「文字變大」跟「箭頭位移」同步發生！
+            // ✨ 調整 3：Hover 監聽器改為觸發「顏色改變」，保留原本的箭頭位移
             if (actionText) {
               card.addEventListener('mouseenter', () => {
-                // 1. 文字整行放大
+                // 1. 文字與圖示顏色變更為 accent-2 (例如淺色模式的湖水綠 / 深色模式的金黃色)
                 const actionBtn = card.querySelector('.action-btn');
-                if (actionBtn) actionBtn.style.fontSize = '1.05rem';
+                if (actionBtn) actionBtn.style.color = 'var(--accent-2)';
                 
                 // 2. 箭頭依照方向飛出
                 const arrow = card.querySelector('.action-arrow');
@@ -1712,9 +1712,9 @@
               });
               
               card.addEventListener('mouseleave', () => {
-                // 1. 文字恢復原狀
+                // 1. 顏色恢復原本的 accent
                 const actionBtn = card.querySelector('.action-btn');
-                if (actionBtn) actionBtn.style.fontSize = '0.95rem';
+                if (actionBtn) actionBtn.style.color = 'var(--accent)';
 
                 // 2. 箭頭恢復原位
                 const arrow = card.querySelector('.action-arrow');
