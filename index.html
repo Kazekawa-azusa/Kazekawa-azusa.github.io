@@ -47,7 +47,7 @@
       --tag-bg: rgba(34, 211, 238, 0.15);      
       --marquee-bg: rgba(34, 211, 238, 0.1);    
       --marquee-border: rgba(34, 211, 238, 0.3);
-      --card-border: rgba(255, 255, 255, 0.05); 
+      --card-border: rgba(255, 255, 255, 0.1); 
       --shadow-base: rgba(0, 0, 0, 0.35);      
       --shadow-hover: rgba(56, 189, 248, 0.15); 
       --btn-hover-bg: rgba(11, 18, 32, 0.95);  
@@ -424,13 +424,6 @@
       transition: all 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
     }
 
-    .menu-btn:not(.open):hover {
-      background: rgba(255, 255, 255, 0.95);
-      border-color: var(--accent-hover);
-      /* 懸停時發出桃紅色光芒 */
-      box-shadow: 0 0 20px rgba(219, 48, 105, 0.2); 
-    }
-
     .menu-btn .bar {
       width: 30px;
       height: 3px;
@@ -438,12 +431,23 @@
       transition: all 0.3s ease-in-out;
     }
 
-    /* 選單打開時變成桃紅色 X */
-    .menu-btn.open .bar {
-      background-color: var(--accent-hover);
+    /* ========================= */
+    /* 漢堡按鈕 - 點開後 (X) 的常駐狀態 */
+    /* ========================= */
+    
+    /* ✨ 新增：讓點開後的圓形外框維持在 accent-2 的顏色 */
+    .menu-btn.open {
+      border-color: var(--accent-2);
+      /* (可選) 如果你希望它點開時，不只外框變色，還能保持淡淡的發光，可以解除下方的註解： */
+      /* box-shadow: 0 0 10px rgba(68, 212, 190, 0.3); */ /* 依深淺模式可能需要微調 */
     }
 
-    /* 點擊後，按鈕變形為 "X" 的動畫 */
+    /* 選單打開時，裡面的 X 線條也統一使用 accent-2 */
+    .menu-btn.open .bar {
+      background-color: var(--accent-2);
+    }
+
+    /* 點擊後，按鈕變形為 "X" 的動畫 (保持不變) */
     .menu-btn.open .bar:nth-child(1) { transform: translateY(9px) rotate(45deg); }
     .menu-btn.open .bar:nth-child(2) { opacity: 0; }
     .menu-btn.open .bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
@@ -512,13 +516,22 @@
 
     .menu-btn:not(.open):hover {
       background: var(--btn-hover-bg);
-      border-color: var(--accent-hover);
-      box-shadow: 0 0 20px var(--btn-hover-shadow); 
+      
+      /* ✨ 調整 1：將邊框顏色統一改為 accent-2 */
+      border-color: var(--accent-2);
+      
+      /* ✨ 調整 2：將光暈效果改為 accent-2，並把擴散範圍調整為標準的 10px */
+      box-shadow: 0 0 10px var(--accent-2); 
     }
     
     .menu-btn:not(.open):hover .bar {
       background-color: var(--accent-2); 
-      box-shadow: 0 0 10px var(--accent-2); /* 直接用主色做光暈即可 */
+      box-shadow: 0 0 10px var(--accent-2); 
+    }
+
+    /* 2. 三條線產生科技感的錯位位移 (保持不變) */
+    .menu-btn:not(.open):hover .bar:nth-child(1) {
+      transform: translateX(-4px);
     }
 
     /* 2. 三條線產生科技感的錯位位移 */
@@ -533,12 +546,20 @@
     }
 
     /* 3. 當選單已經打開(變成 X) 時的懸停特效 (可選) */
-    .menu-btn.open:hover .bar {
-      box-shadow: 0 0 12px var(--error-shadow);
+    /* 3. 當選單已經打開(變成 X) 時的懸停特效 */
+    .menu-btn.open:hover {
+      background: var(--btn-hover-bg);
+      
+      /* ✨ 核心調整：讓外圍圓框亮起紅色的邊框與光暈 */
+      border-color: var(--error-color);
+      box-shadow: 0 0 10px var(--error-shadow);
     }
+    
     .menu-btn.open:hover .bar:nth-child(1),
     .menu-btn.open:hover .bar:nth-child(3) {
+      /* ✨ 內部的兩根交叉線 (X) 一起變成紅色並發光 */
       background-color: var(--error-color); 
+      box-shadow: 0 0 10px var(--error-shadow);
     }
     /* ========================= */
     /* 主題切換按鈕 (Sun/Moon)     */
@@ -565,8 +586,12 @@
 
     .theme-btn:hover {
       transform: scale(1.1) rotate(15deg);
-      border-color: var(--accent);
-      box-shadow: 0 0 20px var(--btn-hover-shadow);
+      
+      /* ✨ 調整 1：將邊框顏色改為 accent-2 */
+      border-color: var(--accent-2);
+      
+      /* ✨ 調整 2：將陰影改為 accent-2 的發光效果，並把擴散範圍調整為與 X 按鈕一致的 10px */
+      box-shadow: 0 0 10px var(--accent-2);
     }
     .error-text {
       font-family: 'Courier New', monospace;
@@ -654,11 +679,16 @@
     }
 
     .btt-btn:hover {
-      background: var(--btn-hover-bg);
-      border-color: var(--accent-hover);
-      color: var(--accent-hover);
-      box-shadow: 0 0 20px var(--btn-hover-shadow);
-      transform: translateY(-5px); /* 懸停時微微向上浮動 */
+      /* ✨ 調整 1：將背景與邊框完全填滿 accent-2 色 */
+      background: var(--accent-2);
+      border-color: var(--accent-2);
+      
+      /* ✨ 調整 2：將裡面的箭頭圖示顏色「反轉」為卡片底色，這與 GitHub 按鈕文字反白的行為完全一樣！ */
+      color: var(--card);
+      
+      /* ✨ 調整 3：保留光暈，並讓它有微微上浮的實體陰影感 */
+      box-shadow: 0 8px 20px var(--btn-hover-shadow);
+      transform: translateY(-5px); 
     }
 
     /* ========================= */
@@ -758,7 +788,7 @@
     .modal-top-bar.is-index-mode #modal-top-right {
       position: absolute;
       /* 這裡設定 2.5rem，因為父層 padding-top 為 2.5rem，剛好讓按鈕中心對齊標題頂端 */
-      top: 2.5rem;   
+      top: 3.3rem;   
       right: 1.5rem; 
       pointer-events: auto; 
     }
@@ -938,10 +968,27 @@
     }
 
     /* 目錄內部樣式 (保持不變) */
+    /* 目錄內部樣式 (保持不變) */
     .toc-dropdown ul { list-style: none !important; padding-left: 0 !important; margin: 0 !important; max-height: 50vh; overflow-y: auto; overflow-x: hidden; padding-right: 10px; }
     .toc-dropdown li { margin-bottom: 0.6rem; line-height: 1.4; }
-    .toc-dropdown .toc-h2 { font-weight: 600; }
-    .toc-dropdown .toc-h3 { padding-left: 1.2rem; font-size: 0.9rem; }
+    
+    /* ✨ 替換這段：完整的三階層樹狀排版 */
+    .toc-dropdown .toc-h1 { 
+      font-weight: 700; 
+      color: var(--accent); 
+      font-size: 1.05rem;
+      margin-top: 0.5rem; 
+    }
+    .toc-dropdown .toc-h2 { 
+      font-weight: 600; 
+      padding-left: 1rem; /* H2 往內縮 1rem */
+      font-size: 0.95rem; 
+    }
+    .toc-dropdown .toc-h3 { 
+      padding-left: 2rem; /* H3 往內縮 2rem */
+      font-size: 0.85rem; 
+      color: var(--muted); /* H3 顏色稍微調淡，區分主次 */
+    }
     .toc-dropdown a { color: var(--text) !important; text-decoration: none !important; transition: color 0.2s ease, transform 0.2s ease; display: block; transform-origin: left center; }
     .toc-dropdown a:hover { color: var(--accent-hover) !important; transform: scale(1.03); }
     .toc-dropdown ul::-webkit-scrollbar { width: 4px; }
@@ -955,12 +1002,47 @@
       line-height: 1.8;
       font-size: 1rem;
     }
-    .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+
+    /* ========================= */
+    /* Markdown 標題行距客製化   */
+    /* ========================= */
+    
+    /* 1. H1 大標題：上方留出極大空間，與前段徹底隔開 */
+    .markdown-body h1 {
+      color: var(--accent);
+      border-bottom: 2px solid var(--card-border); /* H1 底線稍微加粗 */
+      padding-bottom: 0.3rem; /* 文字距離底線遠一點 */
+      margin-top: 0.8rem;     /* ✨ 上方行距超級大 */
+      margin-bottom: 0.8rem;  /* ✨ 下方與內文的距離 */
+    }
+    .markdown-body h1:first-child { margin-top: 0; } /* 保持第一行不留白 */
+    /* 2. H2 中標題：中等距離 */
+    .markdown-body h2 {
       color: var(--accent);
       border-bottom: 1px solid var(--card-border);
-      padding-bottom: 0.5rem;
-      margin-top: 2rem;
+      padding-bottom: 0.3rem;
+      margin-top: 0.5rem;     /* ✨ 上方行距中等 */
+      margin-bottom: 0.5rem;
     }
+    /* 3. H3 小標題：最貼近內文 */
+    .markdown-body h3 {
+      color: var(--accent);
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.3rem;
+      margin-top: 0rem;     /* ✨ 上方行距較小 */
+      margin-bottom: 0rem;
+    }
+    /* 讓所有的標題在變色時都有平滑的漸變動畫 */
+    .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+      transition: color 0.5s ease, text-shadow 0.5s ease;
+    }
+
+    /* ✨ 跳轉時的高亮閃爍效果 */
+    .highlight-flash {
+      color: var(--accent-2) !important;
+      text-shadow: 0 0 12px var(--accent-2); /* 加上一點霓虹光暈，超有質感！ */
+    }
+
     .markdown-body h1:first-child { margin-top: 0; }
     .markdown-body p { margin-bottom: 1rem; }
     .markdown-body a { color: var(--accent-2); text-decoration: none; }
@@ -1919,7 +2001,7 @@
       const tocMount = document.getElementById('toc-mount-point');
       tocMount.innerHTML = ''; // 清空舊的
       
-      const headings = modalBody.querySelectorAll('h2, h3'); 
+      const headings = modalBody.querySelectorAll('h1, h2, h3'); 
       if (headings.length > 1) {
         const tocWrapper = document.createElement('div');
         tocWrapper.className = 'toc-wrapper';
@@ -1947,9 +2029,18 @@
           
           a.onclick = () => {
             const modalContainer = document.querySelector('.modal-content');
-            // 👇 找到這行，把原本的 - 60 改成 - 90 或 - 100 (加大緩衝空間)
+            // 執行平滑滾動
             modalContainer.scrollTo({ top: h.offsetTop - 90, behavior: 'smooth' }); 
             
+            // ✨ 加上高亮特效！
+            h.classList.add('highlight-flash');
+            
+            // ✨ 設定 1 秒後自動移除高亮，讓它像呼吸一樣變回原色
+            setTimeout(() => {
+              h.classList.remove('highlight-flash');
+            }, 1000);
+            
+            // 關閉目錄
             tocBtn.classList.remove('open');
             tocDropdown.classList.remove('active');
           };
