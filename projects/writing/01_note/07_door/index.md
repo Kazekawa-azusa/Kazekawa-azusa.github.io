@@ -1,4 +1,4 @@
-## 「房門」
+# 「房門」
 ![float-right](./architecture.webp)
 小小的房間裡，住著小小的人，  
 她想要知道門外有什麼。  

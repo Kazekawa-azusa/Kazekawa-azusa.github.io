@@ -1,0 +1,2 @@
+畫廊設定
+<div class="gallery" style="--g-width: 220px; --g-ratio: 3/4; --g-rows: 1;">

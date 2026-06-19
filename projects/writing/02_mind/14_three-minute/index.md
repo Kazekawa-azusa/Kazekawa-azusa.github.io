@@ -1,4 +1,4 @@
-## 「三分鐘熱度」
+# 「三分鐘熱度」
 ![float-right](./architecture.webp)
 被講很多次了…  
 有必要澄清一下！  
