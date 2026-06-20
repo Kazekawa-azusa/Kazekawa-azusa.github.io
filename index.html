@@ -1016,9 +1016,20 @@
       color: var(--error-color);
       border-color: var(--error-color);
       box-shadow: 0 0 10px var(--error-shadow);
-      /* ✨ 調整 3：把原本的 transform: rotate(90deg) scale(0.85); 裡面的 scale 刪掉！
-            這樣它轉動時就會維持原本霸氣的大小，不再縮水。 */
-      transform: rotate(90deg);
+    }
+
+    /* ========================================== */
+    /* ✨ 核心修復 2：讓裡面的 SVG 負責旋轉，並消除隱形基準線 */
+    /* ========================================== */
+    .modal-close-btn svg {
+      display: block; /* 消除 inline 預設的文字底線干擾，達成 100% 絕對幾何置中 */
+      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      transform-origin: center center; /* 強制以正中心為軸心 */
+    }
+
+    .modal-close-btn:hover svg {
+      /* 讓裡面的 X 自己轉半圈，外圍的圓形邊框穩如泰山！ */
+      transform: rotate(90deg); 
     }
 
     /* 2. 漢堡式動態目錄 (回歸圓形圖示版) */
@@ -1799,7 +1810,12 @@
         <div id="modal-top-left"></div>
         <div id="modal-top-right">
           <div id="toc-mount-point"></div>
-          <button id="close-modal" class="modal-close-btn">&times;</button>
+          <button id="close-modal" class="modal-close-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
       </div>
       
@@ -1819,7 +1835,10 @@
       </button>
       <div class="toast-divider"></div>
       <button class="toast-btn close-btn" onclick="window.clearFilter(event)" data-tooltip="解除過濾">
-        &times;
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
       </button>
     </div>
   </div>
