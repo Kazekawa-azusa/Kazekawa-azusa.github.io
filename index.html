@@ -12,6 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>風川梓 | Azustock</title>
+  <link rel="preload" href="./all_projects.json" as="fetch" crossorigin="anonymous" />
 
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://kazekawa-azusa.github.io/" />
@@ -25,9 +26,10 @@
   <meta name="twitter:description" content="技術隨筆、系統架構反思與生活散文。" />
   <meta name="twitter:image" content="https://kazekawa-azusa.github.io/assets/og.png" />
   
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <link rel="stylesheet" href="./style.css?v=1" />
+  <script defer src="./main.js?v=1"></script>
 </head>
 <body>
 <button id="theme-toggle" class="theme-btn" aria-label="切換深淺色模式">
@@ -142,7 +144,5 @@
       </p>
     </div>
   </footer>
-
-  <script src="./main.js?v=1"></script>
 </body>
 </html>
