@@ -20,10 +20,12 @@
   
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  <link id="favicon" rel="icon" type="image/png" href="./assets/OG_dark.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="./assets/OG_dark.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="./assets/OG_dark.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="./assets/OG_dark.png" />
+  <link rel="shortcut icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/OG_dark.png" />
+  
+  <link id="favicon" rel="icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/OG_dark.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="https://kazekawa-azusa.github.io/assets/OG_dark.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="https://kazekawa-azusa.github.io/assets/OG_dark.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="https://kazekawa-azusa.github.io/assets/OG_dark.png" />
 
   <style>
     /* ================================== */
@@ -284,10 +286,10 @@
     .marquee-content {
       display: flex;
       flex-shrink: 0;
-      min-width: 100%; /* 確保一塊就能撐滿螢幕 */
+      min-width: 100%; 
       align-items: center;
-      /* 25s 跑完一輪，你可以改秒數調速度 */
-      animation: marquee-seamless 25s linear infinite;
+      /* ✨ 改吃控制面板的變數設定，預設給 40s 當備用 */
+      animation: marquee-seamless var(--marquee-speed, 25s) linear infinite;
     }
 
     .marquee-content span {
@@ -506,18 +508,19 @@
     }
 
     /* ========================= */
-    /* ✨ 新增：卡片跳轉時的「放大跳動」強調特效 */
+    /* ✨ 修復：卡片跳轉時的「放大跳動」強調特效 (防抖動終極版) */
     /* ========================= */
     @keyframes card-bump {
-      0% { transform: scale(1) translateY(0); box-shadow: 0 0 15px var(--accent-2); }
-      /* 恢復 1.05 的放大比例，因為外面的 grid 已經加高 padding，絕對不會被裁切了！ */
-      50% { transform: scale(1.05) translateY(-8px); box-shadow: 0 15px 35px var(--accent-2); z-index: 20; }
-      100% { transform: scale(1) translateY(0); box-shadow: 0 0 15px var(--accent-2); }
+      /* ✨ 魔法 1：改用獨立的 scale 與 translate 屬性，完全不干擾 Hover 的 transform */
+      /* ✨ 魔法 2：移除 keyframes 裡的 box-shadow，讓它自然繼承目前的發光狀態，消滅閃爍！ */
+      0% { scale: 1; translate: 0 0; }
+      50% { scale: 1.05; translate: 0 -8px; z-index: 20; }
+      100% { scale: 1; translate: 0 0; }
     }
     
     .card.highlighted.jump-bump {
-      /* ✨ 核心防打架魔法：在執行 Keyframes 動畫的這 0.6 秒內，強制關閉卡片本身的平滑過渡！ */
-      transition: none !important;
+      /* ✨ 魔法 3：拔除 transition: none !important; 
+         因為我們改用了獨立屬性，動畫不會再跟 Hover 打架了，所以我們把平滑過渡還給卡片！ */
       animation: card-bump 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
@@ -917,7 +920,7 @@
       pointer-events: none; 
       height: 0;
       margin: 0 -3rem; 
-      padding: 2.5rem 3rem 0 3rem; 
+      padding: 1.2rem 3rem 0 3rem;
       
       /* ✨ 核心修復：把 relative 換回 sticky！
          這樣它既能當作 X 按鈕的絕對座標基準，又能在滾動時死死釘在視窗頂端 */
@@ -929,7 +932,7 @@
     .modal-top-bar.is-index-mode #modal-top-right {
       position: absolute;
       /* 這裡設定 2.5rem，因為父層 padding-top 為 2.5rem，剛好讓按鈕中心對齊標題頂端 */
-      top: 3.3rem;   
+      top: 1.5rem; 
       right: 1.5rem; 
       pointer-events: auto; 
     }
@@ -1651,13 +1654,13 @@
       /* 手機版索引頁模式 */
       .modal-top-bar.is-index-mode {
         margin: 0 -1.5rem;
-        padding: 2rem 1.5rem 0 1.5rem; 
+        padding: 1rem 1.5rem 0 1.5rem;
       }
 
       .modal-top-bar.is-index-mode #modal-top-right {
         /* 手機版標題 padding-top 是 2rem，按鈕位置設為 2rem */
-        top: 3rem; 
-        right: 2rem; 
+        top: 1.6rem; 
+        right: 1rem; 
       }
 
       /* 統一縮小按鈕 */
@@ -1819,18 +1822,36 @@
     </div>
   </footer>
 
-
-
-
-
   <script>
-    // === 全域變數 ===
-    // 用於存放所有專案資料，方便 Modal 隨時讀取
-    window.siteProjects = [];
+    /* ================================================================== */
+    /* ⚙️ 網站核心設定區 (SITE CONFIGURATION)                               */
+    /* 每次發布新版本或修改全域狀態時，請只在這裡修改！                         */
+    /* ================================================================== */
+    const CONFIG = {
+      // 🚩 發布前必改
+      VERSION: "U0.3.1",          // 目前系統版本號
+      
+      // 🎨 介面與主題設定
+      DEFAULT_THEME: "light",     // 預設主題 (light / dark)
+      
+      // ✨ 跑馬燈速度設定：跑完一整圈需要的「秒數」(數字越大跑得越慢！)
+      MARQUEE_SPEED: 40,          
 
-    // === 版本管理 ===
-    const APP_VERSION = "U0.3.0"; // 你以後只需要改這裡
-    document.getElementById('sys-version').innerText = APP_VERSION;
+      // 🔗 資源路徑
+      FAVICON_LIGHT: "https://kazekawa-azusa.github.io/assets/OG_dark.png?v=2",
+      FAVICON_DARK: "https://kazekawa-azusa.github.io/assets/OG_light.png?v=2",
+      DATA_SOURCE: "./all_projects.json" 
+    };
+
+    // 自動將版本號注入到 Footer
+    const sysVersionEl = document.getElementById('sys-version');
+    if (sysVersionEl) sysVersionEl.innerText = CONFIG.VERSION;
+
+    // ✨ 自動將跑馬燈速度變成 CSS 變數，供畫面排版使用
+    document.documentElement.style.setProperty('--marquee-speed', `${CONFIG.MARQUEE_SPEED}s`);
+
+    // === 全域變數 (系統內部使用) ===
+    window.siteProjects = [];
 
     // === 1. 介面與導覽列邏輯 (Theme & Menu) ===
     document.addEventListener('DOMContentLoaded', () => {
@@ -1839,11 +1860,6 @@
       const themeToggle = document.getElementById('theme-toggle');
       const favicon = document.getElementById('favicon');
       
-      // 使用相對路徑，本地端測試更方便！
-      // ✨ 在網址最後面補上 ?v=1
-      const darkFaviconUrl = './assets/OG_light.png?v=1';
-      const lightFaviconUrl = './assets/OG_dark.png?v=1';
-      
       // 1. 取得使用者過去的點擊紀錄
       const savedTheme = localStorage.getItem('theme');
       
@@ -1851,29 +1867,26 @@
       const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
 
       // 3. 決定最終要套用的主題
-      let initialTheme = 'light'; // 你網站原本 CSS 的底層預設
+      // ✨ 改用控制面板的設定作為預設值
+      let initialTheme = CONFIG.DEFAULT_THEME; 
       
       if (savedTheme) {
-        // 如果使用者有手動切換過，尊重使用者的選擇
         initialTheme = savedTheme;
       } else if (prefersLight) {
-        // 如果沒有手動紀錄，但系統設定為淺色，就跟隨系統
         initialTheme = 'light';
       } 
 
       // 4. 建立一個專門執行切換的函數 (保持程式碼 DRY 原則)
       function applyTheme(theme) {
-        // 直接將傳進來的主題名稱寫入 html 標籤
         document.documentElement.setAttribute('data-theme', theme);
         
-        // Favicon 判斷邏輯 (如果你未來有更多模式，可以擴充這裡)
+        // ✨ 改用控制面板設定的網址
         if (theme === 'light') {
-          if (favicon) favicon.href = lightFaviconUrl;
+          if (favicon) favicon.href = CONFIG.FAVICON_LIGHT;
         } else {
-          if (favicon) favicon.href = darkFaviconUrl; // 包含 dark 或其他新模式
+          if (favicon) favicon.href = CONFIG.FAVICON_DARK; 
         }
 
-        // 通知 Giscus 留言板切換
         const iframe = document.querySelector('iframe.giscus-frame');
         if (iframe && iframe.contentWindow) {
           const newGiscusTheme = theme === 'light' ? 'light' : 'transparent_dark';
@@ -1952,8 +1965,9 @@
       const marquee = document.getElementById('marquee-text');
 
       try {
-        const response = await fetch('./all_projects.json');
-        const db = await response.json(); // 現在是 { categories: [], projects: [] }
+        // ✨ 改用控制面板設定的路徑
+        const response = await fetch(CONFIG.DATA_SOURCE);
+        const db = await response.json();
         
         const categories = db.categories;
         const projects = db.projects;
@@ -2475,7 +2489,7 @@
 
         // 3. 計算剩下要走完的比例與時間 (總時間 25 秒)
         const remainingFraction = 1 - (Math.abs(currentX) / contentWidth);
-        const remainingTime = 25000 * remainingFraction; 
+        const remainingTime = (CONFIG.MARQUEE_SPEED * 1000) * remainingFraction; 
 
         m.style.transition = 'none';
         m.style.animation = 'none';
@@ -2609,7 +2623,12 @@
           targetCard.classList.remove('jump-bump');
           void targetCard.offsetWidth; 
           targetCard.classList.add('jump-bump');
-        }, delay); 
+          
+          // ✨ 新增：動畫播完 (600ms) 後立刻拔除 class，保持卡片狀態乾淨，不干擾後續 Hover
+          setTimeout(() => {
+            targetCard.classList.remove('jump-bump');
+          }, 600);
+        }, delay);
       }
     };
 
@@ -2638,6 +2657,11 @@
         targetCard.classList.remove('jump-bump');
         void targetCard.offsetWidth;
         targetCard.classList.add('jump-bump');
+        
+        // ✨ 同理：在這裡也補上清理動作
+        setTimeout(() => {
+          targetCard.classList.remove('jump-bump');
+        }, 600);
       }, delay);
     };
 
