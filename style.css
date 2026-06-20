@@ -1303,18 +1303,6 @@ footer {
     z-index: 10;
 }
 
-/* 內部圖片本體設定 */
-.markdown-body .gallery figure img {
-    width: 100%;
-    height: 100%; /* ✨ 改為 100%，確保自訂比例 (aspect-ratio) 時能完美填滿容器 */
-    object-fit: cover; 
-    object-position: top; 
-    display: block; 
-    border: none;
-    border-radius: 0; 
-    transform: scale(1.02); /* 防漏光補償 */
-}
-
 /* 👇 新增 3：定義骨架屏呼吸動畫 (放在 figure 設定的下方即可) */
 @keyframes skeleton-pulse {
     0% { opacity: 0.6; }
@@ -1329,18 +1317,16 @@ footer {
     z-index: 10;
 }
 
-/* ========================= */
 /* 內部圖片本體設定 */
-/* ========================= */
 .markdown-body .gallery figure img {
     width: 100%;
-    height: auto; 
-    /* aspect-ratio: 3 / 4; 保留你註解掉的設定 */
+    height: 100%; /* ✨ 改為 100%，確保自訂比例 (aspect-ratio) 時能完美填滿容器 */
     object-fit: cover; 
     object-position: top; 
     display: block; 
     border: none;
-    border-radius: 0; /* 圓角交給外層 figure 處理了 */
+    border-radius: 0; 
+    transform: scale(1.02); /* 防漏光補償 */
 }
 
 /* ========================= */

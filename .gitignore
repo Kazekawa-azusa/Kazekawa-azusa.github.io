@@ -4,3 +4,4 @@ projects/**/*.jpeg
 *.pyc
 __pycache__
 .vscode
+note.txt

@@ -5,7 +5,7 @@
 /* ================================================================== */
 const CONFIG = {
     // 🚩 發布前必改
-    VERSION: "U0.3.1",          // 目前系統版本號
+    VERSION: "U0.4.0",          // 目前系統版本號
 
     // 🎨 介面與主題設定
     DEFAULT_THEME: "light",     // 預設主題 (light / dark)
@@ -859,28 +859,6 @@ window.scrollToNextCard = function(event) {
     }, 600);
     }, delay);
 };
-
-// 為了保留首頁的測試按鈕，加入這個純文字渲染函數
-window.openMarkdownModal = function(markdownText) {
-    modalBody.innerHTML = marked.parse(markdownText);
-    modalOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    document.querySelector('.modal-content').scrollTop = 0;
-};
-
-// 關閉 Modal 的函數與事件綁定
-function closeModal() {
-    modalOverlay.classList.remove('active');
-    document.body.style.overflow = ''; 
-}
-
-closeModalBtn.addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) closeModal();
-});
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal();
-});
 
 // 為了保留首頁的測試按鈕，加入這個純文字渲染函數
 window.openMarkdownModal = function(markdownText) {
