@@ -414,6 +414,50 @@
     }
 
     /* ========================= */
+    /* 標籤過濾聚焦效果 (Focus Mode) */
+    /* ========================= */
+    
+    /* 讓跑馬燈裡的標籤變成可以點擊的按鈕 */
+    .clickable-ticker-tag {
+      cursor: pointer;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+    .clickable-ticker-tag:hover {
+      color: var(--accent-2);
+      text-shadow: 0 0 10px var(--accent-2);
+    }
+
+    /* ✨ 讓跑馬燈可以被 JS 強制暫停 */
+    .marquee-content.paused {
+      animation-play-state: paused !important;
+    }
+
+    /* 當卡片被判定為「不符合」時：變暗，但 ✨恢復點擊功能✨ */
+    .card.dimmed {
+      opacity: 0.25 !important;
+      filter: grayscale(80%);
+      /* 移除 pointer-events: none; 讓它可以被點擊 */
+      box-shadow: none !important;
+      border-color: transparent !important;
+    }
+
+    /* ✨ 給變暗的卡片一點微弱的 Hover 反饋，讓使用者知道它還活著 */
+    .card.dimmed:hover {
+      opacity: 0.6 !important;
+      filter: grayscale(40%);
+      transform: translateY(-2px) !important;
+    }
+
+    /* 當卡片被判定為「符合」時：強制浮起並發光 */
+    .card.highlighted {
+      opacity: 1 !important;
+      filter: none;
+      transform: translateY(-5px);
+      border-color: var(--accent-2) !important;
+      box-shadow: 0 15px 35px var(--shadow-hover) !important;
+    }
+
+    /* ========================= */
     /* 漢堡按鈕 (帶背景的懸浮圓形)   */
     /* ========================= */
     .menu-btn {
@@ -1672,28 +1716,34 @@
         const projects = db.projects;
         window.siteProjects = projects;
 
-        // 1. 處理跑馬燈橫幅 (華爾街報價機版)
+        // 1. 處理跑馬燈橫幅 (華爾街報價機版 - 點擊聚焦功能)
         if (marquee) {
           const allTags = projects.flatMap(p => p.tags || []);
           const uniqueTags = [...new Set(allTags)];
           if (uniqueTags.length > 0) {
-            // 為每個標籤產生專屬的漲跌幅
             const stockContent = uniqueTags.map((tag, i) => {
-              // 用索引值製造隨機漲跌的錯覺
               const isUp = i % 2 !== 0; 
-              const change = (Math.random() * 3 + 0.1).toFixed(2); // 產生 0.10 ~ 3.10 的數字
+              const change = (Math.random() * 3 + 0.1).toFixed(2); 
               const arrow = isUp ? '▲' : '▼';
               const colorClass = isUp ? 'stock-up' : 'stock-down';
               const sign = isUp ? '+' : '-';
               
-              return `<span>${tag} <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
+              // ✨ 加上 event 參數，防止點擊標籤時觸發到外層容器
+              return `<span class="clickable-ticker-tag" onclick="window.filterByTag('${tag}', event)">${tag} <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
             }).join('<span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span>');
 
-            // 一樣複製兩份做無縫輪播
-            marquee.parentElement.innerHTML = `
+            const container = marquee.parentElement;
+            container.innerHTML = `
               <div class="marquee-content">${stockContent} <span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span> </div>
               <div class="marquee-content">${stockContent} <span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span> </div>
             `;
+
+            // ✨ 點擊跑馬燈的「空白處」會解除過濾
+            container.onclick = (e) => {
+              if (window.currentActiveTag && !e.target.closest('.clickable-ticker-tag')) {
+                window.clearFilter();
+              }
+            };
           }
         }
 
@@ -1765,19 +1815,27 @@
           if (targetGrid) {
             const card = document.createElement('div');
             card.className = 'card';
+            // ✨ 新增這行：把這張卡片的所有標籤，變成隱藏的字串存起來 (例如 "Python,API")
+            card.setAttribute('data-tags', (data.tags || []).join(','));
             const tagsHTML = (data.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
             
             let actionText = '';
             if (data.articles && data.articles.length > 0) {
               card.style.cursor = 'pointer';
-              card.onclick = () => openProjectIndex(data.id);
-              // ✨ 調整 1：把 transition 改為 color，取消 font-size 動畫
-              actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">📖 展開系列 (${data.articles.length}) <span class="action-arrow" data-dir="right" style="font-size: 1.2rem; transition: transform 0.2s ease;">➔</span></div>`;
+              card.onclick = () => {
+                // ✨ 點擊卡片時，如果有過濾狀態就先解除
+                if (window.currentActiveTag) window.clearFilter();
+                openProjectIndex(data.id);
+              };
+              actionText = `<div class="action-btn" ... 保持原本的 ... </div>`;
             } else if (data.link) {
               card.style.cursor = 'pointer';
-              card.onclick = () => window.open(data.link, '_blank');
-              // ✨ 調整 2：把 transition 改為 color，取消 font-size 動畫
-              actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">🔗 前往外部專案 <span class="action-arrow" data-dir="up-right" style="font-size: 1.2rem; transition: transform 0.2s ease;">↗</span></div>`;
+              card.onclick = () => {
+                // ✨ 點擊卡片時，如果有過濾狀態就先解除
+                if (window.currentActiveTag) window.clearFilter();
+                window.open(data.link, '_blank');
+              };
+              actionText = `<div class="action-btn" ... 保持原本的 ... </div>`;
             }
 
             // C. 處理專案卡片
@@ -2142,6 +2200,52 @@
         figure.addEventListener('click', () => {
           figure.classList.toggle('hide-caption');
         });
+      });
+    };
+
+    // === 5. 標籤點擊聚焦邏輯 (Focus Highlight) ===
+    window.currentActiveTag = null; 
+
+    // ✨ 專門用來「解除所有過濾與暫停狀態」的函數
+    window.clearFilter = function() {
+      window.currentActiveTag = null;
+      // 卡片恢復原狀
+      document.querySelectorAll('.card').forEach(c => {
+        c.classList.remove('dimmed', 'highlighted');
+      });
+      // 跑馬燈恢復滾動
+      document.querySelectorAll('.marquee-content').forEach(m => {
+        m.classList.remove('paused');
+      });
+    };
+
+    window.filterByTag = function(targetTag, event) {
+      // 防止點擊事件往上傳遞給跑馬燈背景
+      if (event) event.stopPropagation(); 
+
+      // 如果點擊的是同一個標籤，取消過濾並恢復滾動
+      if (window.currentActiveTag === targetTag) {
+        window.clearFilter();
+        return;
+      }
+
+      // 進入過濾模式
+      window.currentActiveTag = targetTag;
+      
+      // ✨ 讓跑馬燈強制暫停！
+      document.querySelectorAll('.marquee-content').forEach(m => {
+        m.classList.add('paused');
+      });
+
+      document.querySelectorAll('.card').forEach(card => {
+        const tags = card.getAttribute('data-tags');
+        if (tags && tags.includes(targetTag)) {
+          card.classList.remove('dimmed');
+          card.classList.add('highlighted');
+        } else {
+          card.classList.remove('highlighted');
+          card.classList.add('dimmed');
+        }
       });
     };
 
