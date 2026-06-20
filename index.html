@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>風川梓 | Azustock</title>
-  <!-- 🌟 Open Graph (社群軟體預覽卡片) 設定 -->
+
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://kazekawa-azusa.github.io/" />
   <meta property="og:title" content="風川梓 | Azustock" />
   <meta property="og:description" content="技術隨筆、系統架構反思與生活散文。" />
-  
   <meta property="og:image" content="https://kazekawa-azusa.github.io/assets/og.png" />
 
   <meta name="twitter:card" content="summary_large_image" />
@@ -18,8 +17,14 @@
   <meta name="twitter:title" content="風川梓 | Azustock" />
   <meta name="twitter:description" content="技術隨筆、系統架構反思與生活散文。" />
   <meta name="twitter:image" content="https://kazekawa-azusa.github.io/assets/og.png" />
+  
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <link id="favicon" rel="icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/og.png" />
+
+  <link id="favicon" rel="icon" type="image/png" href="./assets/OG_dark.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/OG_dark.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/OG_dark.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./assets/OG_dark.png" />
+
   <style>
     /* ================================== */
     /* 🎨 狀態驅動主題系統 (Theme System) */
@@ -176,14 +181,19 @@
       gap: 1.5rem;
       grid-template-rows: auto; 
       grid-auto-flow: column; 
-      
-      /* 👇 核心防禦：絕對鎖死 320px，拒絕任何瀏覽器壓縮 */
       grid-auto-columns: minmax(320px, 320px); 
       
       overflow-x: auto;
       overflow-y: hidden; 
-      padding: 1rem 0.5rem 2.5rem 0.5rem; 
+      
+      /* ✨ 核心修復：把上方的 padding 從 1rem 加大到 2.5rem，給陰影足夠的顯示空間 */
+      padding: 2.5rem 0.5rem 2.5rem 0.5rem; 
+      
+      /* ✨ 同步修復：加上 margin-top: -1.5rem 來把整個網格「往上拉」，
+            這樣就不會因為剛剛加大的 padding 而導致卡片跟標題的距離變太遠！ */
+      margin-top: -1.5rem;
       margin-left: -0.5rem; 
+      
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
     }
@@ -223,6 +233,7 @@
       font-size: 0.85rem;
       margin-bottom: 0.6rem;
     }
+
     /* 標籤 */
     .tag {
       display: inline-block;
@@ -234,19 +245,27 @@
       margin-right: 0.3rem;
       margin-top: 0.3rem;
       font-weight: 600;
-      transition: background-color 0.5s ease, color 0.5s ease;
+      /* ✨ 加上 pointer 與過渡動畫 */
+      cursor: pointer;
+      transition: all 0.3s ease;
     }
-    ul {
-      padding-left: 1.2rem;
-    }
-    footer {
-      text-align: center;
-      padding: 2.5rem 1rem;
-      color: var(--muted);
-      font-size: 0.85rem;
+    
+    /* ✨ 讓卡片標籤 Hover 時有互動感 */
+    .tag:hover {
+      background: var(--accent-2);
+      color: var(--card); /* 文字反白 */
+      box-shadow: 0 2px 8px var(--accent-2);
+      transform: translateY(-2px);
     }
 
-    /* 1. 跑馬燈 */
+    /* ✨ 當標籤處於「被過濾選中」的狀態時 */
+    .tag.active-tag {
+      background: var(--accent-2);
+      color: var(--card);
+      box-shadow: 0 0 10px var(--accent-2);
+    }
+
+    /* 1. 完美無縫跑馬燈 (Seamless Loop) */
     .marquee-container {
       background: var(--marquee-bg); 
       border-top: 1px solid var(--marquee-border);
@@ -254,42 +273,66 @@
       transition: background-color 0.5s ease, border-color 0.5s ease;
       width: 100%;
       overflow: hidden;
-      padding: 10px 0;
-      position: relative;
-      display: flex; 
+      padding: 12px 0;
+      display: flex; /* 讓內部的兩塊內容橫向排列 */
+      
+      /* ✨ 邊緣漸層消隱魔法：讓文字在左右兩側像是隱沒在霧中 */
+      -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+      mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
     }
 
-    /* 滾動內容樣式 */
     .marquee-content {
-      display: inline-block;
-      padding-left: 100%; /* 初始位置 */
-      animation: marquee 30s linear infinite;
+      display: flex;
+      flex-shrink: 0;
+      min-width: 100%; /* 確保一塊就能撐滿螢幕 */
+      align-items: center;
+      /* 25s 跑完一輪，你可以改秒數調速度 */
+      animation: marquee-seamless 25s linear infinite;
     }
 
     .marquee-content span {
       font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: var(--accent);
-      /* 這裡控制文字之間的間距 */
-      padding-right: 10rem; 
+      padding: 0 3rem; /* 改為左右均等的間距 */
       letter-spacing: 0.1em;
-      opacity: 0.8;
       white-space: nowrap;
     }
 
-    /* 定義動畫：從右向左移動 */
-    @keyframes marquee {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
-    }
-
-    /* 滑鼠懸停時暫停，方便閱讀 */
+    /* 滑鼠放上去暫停 */
     .marquee-container:hover .marquee-content {
       animation-play-state: paused;
     }
 
-      /* Loading 容器置中並跨越整個 Grid */
+    /* ✨ 完美無縫動畫：往左移動剛好一塊的距離 (-100%)，然後瞬間歸零 */
+    @keyframes marquee-seamless {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* ========================= */
+    /* 華爾街報價機專屬漲跌色      */
+    /* ========================= */
+    
+    /* ✨ 核心修復：把間距、粗體與動畫抽出來共用，確保切換主題時不會位移！ */
+    .stock-up, .stock-down {
+      margin-left: 8px; 
+      font-weight: bold;
+      transition: color 0.5s ease; /* 加上變色動畫，切換主題會更絲滑 */
+    }
+
+    /* 深色模式顏色 */
+    [data-theme="dark"] .stock-up { color: #44D4BE; }
+    [data-theme="dark"] .stock-down { color: #DB3069; }
+    
+    /* 淺色模式顏色 */
+    [data-theme="light"] .stock-up { color: #333AFD; } 
+    [data-theme="light"] .stock-down { color: #F93435; }
+
+
+
+    /* Loading 容器置中並跨越整個 Grid */
     .loading-container {
       grid-column: 1 / -1;
       text-align: center;
@@ -354,20 +397,46 @@
 
     /* 最下方那行年份的特殊樣式 */
     .copyright-footer {
-      /* 👇 改用變數，並加上過渡動畫 */
       border-top: 1px solid var(--divider-line); 
       transition: border-color 0.5s ease;
-      
       margin-bottom: 0 !important;
       font-family: 'Courier New', monospace;
       font-size: 0.8rem;
       opacity: 0.8;
       padding-top: 0.8rem;
+      
+      /* ✨ 加上 Flex 排版，讓左右兩邊自動撐開對齊 */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ✨ 系統版本標籤：微縮小並調整對齊 */
+    .sys-version {
+      background: var(--tag-bg);
+      color: var(--muted);            /* 改為淡色，不搶戲 */
+      padding: 0.1rem 0.4rem;         /* 稍微縮小 */
+      border-radius: 4px;
+      font-size: 0.7rem;              /* 再縮小一點 */
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      border: 1px solid var(--card-border);
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+    
+    /* 滑鼠游標移上去時的微互動 */
+    .sys-version:hover {
+      background: var(--accent-2);
+      color: var(--card);
+      border-color: var(--accent-2);
+      box-shadow: 0 0 8px var(--accent-2);
     }
 
     /* ========================= */
     /* 卡片滾動浮現動畫 (Scroll Reveal) */
     /* ========================= */
+    
 
     /* 1. 修改原本的 .card，加入過渡動畫設定 */
     .card {
@@ -395,6 +464,78 @@
       /* 滑過時散發湖水綠的光暈 */
       box-shadow: 0 15px 35px rgba(68, 212, 190, 0.2); 
     }
+
+    /* ========================= */
+    /* 標籤過濾聚焦效果 (Focus Mode) */
+    /* ========================= */
+    
+    .clickable-ticker-tag {
+      cursor: pointer;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+    
+    /* ✨ 新增 .active-tag 類別：讓被點擊的標籤維持發光狀態 */
+    .clickable-ticker-tag:hover,
+    .clickable-ticker-tag.active-tag {
+      color: var(--accent-2);
+      text-shadow: 0 0 10px var(--accent-2);
+    }
+
+    .marquee-content.paused {
+      animation-play-state: paused !important;
+    }
+
+    /* ✨ 已經完全移除 .card.dimmed，沒被選中的卡片將維持原樣，不會變暗！ */
+
+    /* 當卡片被判定為「符合」時：邊框發出微光，但不強制上浮 */
+    /* 當卡片被判定為「符合」時：邊框發出微光，但不強制上浮 */
+    .card.highlighted {
+      border-color: var(--accent-2) !important;
+      /* ✨ 拔除 !important，利用類別本身的權重覆蓋即可，讓動畫有權限去改變它 */
+      box-shadow: 0 0 15px var(--accent-2); 
+      z-index: 10;
+      position: relative; 
+      transform: translateY(0); 
+    }
+
+    /* ✨ Highlight 狀態下的 Hover 互動：微微上升且光暈稍微放大 */
+    .card.highlighted:hover {
+      /* ✨ 一樣拔除 !important */
+      transform: translateY(-6px);
+      box-shadow: 0 8px 25px var(--accent-2); 
+    }
+
+    /* ========================= */
+    /* ✨ 新增：卡片跳轉時的「放大跳動」強調特效 */
+    /* ========================= */
+    @keyframes card-bump {
+      0% { transform: scale(1) translateY(0); box-shadow: 0 0 15px var(--accent-2); }
+      /* 恢復 1.05 的放大比例，因為外面的 grid 已經加高 padding，絕對不會被裁切了！ */
+      50% { transform: scale(1.05) translateY(-8px); box-shadow: 0 15px 35px var(--accent-2); z-index: 20; }
+      100% { transform: scale(1) translateY(0); box-shadow: 0 0 15px var(--accent-2); }
+    }
+    
+    .card.highlighted.jump-bump {
+      /* ✨ 核心防打架魔法：在執行 Keyframes 動畫的這 0.6 秒內，強制關閉卡片本身的平滑過渡！ */
+      transition: none !important;
+      animation: card-bump 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* ========================= */
+    /* ✨ 新增：卡片動作按鈕的純 CSS 互動 (取代 JS) */
+    /* ========================= */
+    /* 1. 一般滑過卡片時，動作按鈕會亮起並飛出箭頭 */
+    .card:hover .action-btn { color: var(--accent-2) !important; }
+    .card:hover .action-arrow[data-dir="up-right"] { transform: translate(4px, -4px) !important; }
+    .card:hover .action-arrow[data-dir="right"] { transform: translateX(5px) !important; }
+
+    /* 2. 核心防呆：當滑鼠停留在「標籤 (.tag)」上面時，取消卡片的跳轉提示！ */
+    /* 利用最新強大的 :has() 選擇器，完美分離使用者的點擊意圖 */
+    .card:has(.tag:hover) .action-btn { color: var(--accent) !important; }
+    .card:has(.tag:hover) .action-arrow { transform: translate(0, 0) !important; }
+
+    /* ✨ 確保跑馬燈能準確計算內部標籤的位置 */
+    .marquee-content { position: relative; }
 
     /* ========================= */
     /* 漢堡按鈕 (帶背景的懸浮圓形)   */
@@ -1345,6 +1486,145 @@
       50% { transform: translateX(-5px); opacity: 1; } /* 往左彈 */
     }
 
+    /* ========================= */
+    /* 過濾狀態浮動膠囊 (Filter Toast) - 終極版 */
+    /* ========================= */
+    .filter-toast {
+      position: fixed;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translate(-50%, 30px);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1010;
+
+      /* ✨ 配合主題自動變色：取代原本寫死的黑色 */
+      background: var(--nav-bg);
+      backdrop-filter: blur(15px);
+      border: 1px solid var(--glass-border);
+      color: var(--text);
+      
+      padding: 0.4rem 0.4rem 0.4rem 1rem; 
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      box-shadow: 0 10px 25px var(--shadow-base);
+
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .filter-toast.active {
+      transform: translate(-50%, 0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .filter-toast:hover {
+      background: var(--card); /* Hover 時稍微變亮 */
+      box-shadow: 0 10px 25px var(--shadow-hover);
+    }
+
+    .toast-content {
+      display: flex;
+      align-items: center;
+    }
+
+    /* ✨ 讓標籤名字用 accent-2 填色並發出微光 */
+    .toast-tag-name {
+      color: var(--accent-2);
+      text-shadow: 0 0 8px var(--glow-1);
+    }
+
+    .toast-actions {
+      display: flex;
+      align-items: center;
+      /* 按鈕區塊底色：使用主題標籤色 */
+      background: var(--tag-bg); 
+      border-radius: 999px;
+      padding: 2px;
+    }
+
+    .toast-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      padding: 0;
+      position: relative; /* 為了定位 Tooltip */
+    }
+
+    .toast-btn:hover { background: var(--marquee-border); color: var(--accent); }
+    .toast-btn.next-btn:active { transform: scale(0.9) translateY(2px); }
+
+    .toast-btn.close-btn { font-size: 1.2rem; font-weight: bold; color: var(--muted); }
+    .toast-btn.close-btn:hover {
+      background: var(--error-color);
+      color: #fff;
+      box-shadow: 0 0 10px var(--error-shadow);
+    }
+
+    .toast-divider {
+      width: 1px;
+      height: 16px;
+      background: var(--card-border);
+      margin: 0 2px;
+    }
+
+    /* ========================= */
+    /* ✨ 自訂 Hover 提示字 (Custom Tooltip) */
+    /* ========================= */
+    .toast-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: -38px; /* 浮在按鈕上方 */
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      /* 提示字底色與文字反轉，確保清晰 */
+      background: var(--text);
+      color: var(--card);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none; /* 避免滑鼠干擾 */
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* 提示字下方的小三角形 */
+    .toast-btn::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      border-width: 5px;
+      border-style: solid;
+      border-color: var(--text) transparent transparent transparent;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* 滑鼠懸停時，提示字往上滑出 */
+    .toast-btn:hover::after,
+    .toast-btn:hover::before {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
     /* 手機版排版最佳化 (Mobile UI) */
     /* ========================= */
     @media (max-width: 600px) {
@@ -1466,6 +1746,23 @@
     </div>
   </div>
 
+  <div id="filter-toast" class="filter-toast">
+    <div class="toast-content">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+      <span id="toast-text"></span>
+      <span id="toast-count" style="font-size: 0.85rem; color: var(--muted); margin-left: 6px; font-family: monospace;"></span>
+    </div>
+    <div class="toast-actions">
+      <button class="toast-btn next-btn" onclick="window.scrollToNextCard(event)" data-tooltip="跳至下一個">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg>
+      </button>
+      <div class="toast-divider"></div>
+      <button class="toast-btn close-btn" onclick="window.clearFilter(event)" data-tooltip="解除過濾">
+        &times;
+      </button>
+    </div>
+  </div>
+
   <header>
     <h1>風川梓</h1>
     <p>
@@ -1509,12 +1806,15 @@
   </main>
 
   <footer>
-    <div class="copyright-box">
-      <p>
-        © 2026 風川梓 (Azustock). All rights reserved.
+   <div class="copyright-box">
+      <p>© 2026 風川梓 (Azustock). All rights reserved.</p>
+      
+      <p class="copyright-footer" style="justify-content: center;">
+        <span>Hosted on GitHub Pages.</span>
       </p>
-      <p class="copyright-footer">
-        Hosted on GitHub Pages.
+      
+      <p style="text-align: right; margin-top: 0.5rem; margin-bottom: 0;">
+        <span id="sys-version" class="sys-version"></span>
       </p>
     </div>
   </footer>
@@ -1528,6 +1828,10 @@
     // 用於存放所有專案資料，方便 Modal 隨時讀取
     window.siteProjects = [];
 
+    // === 版本管理 ===
+    const APP_VERSION = "U0.3.0"; // 你以後只需要改這裡
+    document.getElementById('sys-version').innerText = APP_VERSION;
+
     // === 1. 介面與導覽列邏輯 (Theme & Menu) ===
     document.addEventListener('DOMContentLoaded', () => {
       
@@ -1536,8 +1840,9 @@
       const favicon = document.getElementById('favicon');
       
       // 使用相對路徑，本地端測試更方便！
-      const darkFaviconUrl = './assets/light_bg.png';
-      const lightFaviconUrl = './assets/dark_bg.png';
+      // ✨ 在網址最後面補上 ?v=1
+      const darkFaviconUrl = './assets/OG_light.png?v=1';
+      const lightFaviconUrl = './assets/OG_dark.png?v=1';
       
       // 1. 取得使用者過去的點擊紀錄
       const savedTheme = localStorage.getItem('theme');
@@ -1654,12 +1959,36 @@
         const projects = db.projects;
         window.siteProjects = projects;
 
-        // 1. 處理跑馬燈橫幅
+        // 1. 處理跑馬燈橫幅 (華爾街報價機版 - 點擊聚焦功能)
         if (marquee) {
           const allTags = projects.flatMap(p => p.tags || []);
-          const uniqueTags = [...new Set(allTags)];
+          const uniqueTags = [...new Set(allTags)].sort(() => Math.random() - 0.5);
           if (uniqueTags.length > 0) {
-            marquee.innerHTML = `<span>${uniqueTags.join(' • ')} • </span>`.repeat(4);
+            const stockContent = uniqueTags.map((tag, i) => {
+              const isUp = i % 2 !== 0; 
+              const change = (Math.random() * 3 + 0.1).toFixed(2); 
+              const arrow = isUp ? '▲' : '▼';
+              const colorClass = isUp ? 'stock-up' : 'stock-down';
+              const sign = isUp ? '+' : '-';
+              
+              // ✨ 核心修改：加上 data-tag 屬性，方便之後用 JS 找出來讓它發光
+              return `<span class="clickable-ticker-tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event)">${tag} <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
+            }).join('<span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span>');
+
+            const container = marquee.parentElement;
+            container.innerHTML = `
+              <div class="marquee-content">${stockContent} <span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span> </div>
+              <div class="marquee-content">${stockContent} <span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span> </div>
+            `;
+
+            // ✨ 點擊跑馬燈的「空白處」會解除過濾
+            container.onclick = (e) => {
+              // ✨ 新增 this 參數，讓大腦知道點擊的是哪個實體元素
+              if (window.currentActiveTag && !e.target.closest('.clickable-ticker-tag')) {
+                window.clearFilter();
+              }
+              return `<span class="clickable-ticker-tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event, this)">${tag} <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
+            };
           }
         }
 
@@ -1731,19 +2060,41 @@
           if (targetGrid) {
             const card = document.createElement('div');
             card.className = 'card';
-            const tagsHTML = (data.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
+            // ✨ 新增這行：把這張卡片的所有標籤，變成隱藏的字串存起來 (例如 "Python,API")
+            card.setAttribute('data-tags', (data.tags || []).join(','));
+            // ✨ 核心升級：幫卡片內的標籤加上 onclick 事件，並傳入 event 進行攔截
+            // ✨ 核心升級：一樣加上 this 參數
+            const tagsHTML = (data.tags || []).map(tag => 
+              `<span class="tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event, this)">${tag}</span>`
+            ).join('');
             
             let actionText = '';
             if (data.articles && data.articles.length > 0) {
               card.style.cursor = 'pointer';
-              card.onclick = () => openProjectIndex(data.id);
-              // ✨ 調整 1：把 transition 改為 color，取消 font-size 動畫
+              card.onclick = (e) => {
+                if (window.currentActiveTag) window.clearFilter();
+                openProjectIndex(data.id);
+              };
               actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">📖 展開系列 (${data.articles.length}) <span class="action-arrow" data-dir="right" style="font-size: 1.2rem; transition: transform 0.2s ease;">➔</span></div>`;
             } else if (data.link) {
               card.style.cursor = 'pointer';
-              card.onclick = () => window.open(data.link, '_blank');
-              // ✨ 調整 2：把 transition 改為 color，取消 font-size 動畫
+              card.onclick = (e) => {
+                if (window.currentActiveTag) window.clearFilter();
+                window.open(data.link, '_blank');
+              };
               actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">🔗 前往外部專案 <span class="action-arrow" data-dir="up-right" style="font-size: 1.2rem; transition: transform 0.2s ease;">↗</span></div>`;
+            } else {
+              // ✨ 終極修復：針對沒有任何連結與文章的靜態卡片
+              card.onclick = (e) => {
+                // 如果目前是過濾狀態，點擊它依然可以解除過濾！
+                if (window.currentActiveTag) window.clearFilter();
+              };
+              
+              // (選用 UX 優化) 當滑鼠移入時，如果有過濾狀態，讓游標變成手指，暗示它現在是可以點擊來解除過濾的
+              card.addEventListener('mouseenter', () => {
+                if (window.currentActiveTag) card.style.cursor = 'pointer';
+                else card.style.cursor = 'default';
+              });
             }
 
             // C. 處理專案卡片
@@ -1775,35 +2126,6 @@
               ${actionText}
             `;
             
-            // ✨ 調整 3：Hover 監聽器改為觸發「顏色改變」，保留原本的箭頭位移
-            if (actionText) {
-              card.addEventListener('mouseenter', () => {
-                // 1. 文字與圖示顏色變更為 accent-2 (例如淺色模式的湖水綠 / 深色模式的金黃色)
-                const actionBtn = card.querySelector('.action-btn');
-                if (actionBtn) actionBtn.style.color = 'var(--accent-2)';
-                
-                // 2. 箭頭依照方向飛出
-                const arrow = card.querySelector('.action-arrow');
-                if (arrow) {
-                  if (arrow.dataset.dir === 'up-right') {
-                    arrow.style.transform = 'translate(4px, -4px)';
-                  } else {
-                    arrow.style.transform = 'translateX(5px)';
-                  }
-                }
-              });
-              
-              card.addEventListener('mouseleave', () => {
-                // 1. 顏色恢復原本的 accent
-                const actionBtn = card.querySelector('.action-btn');
-                if (actionBtn) actionBtn.style.color = 'var(--accent)';
-
-                // 2. 箭頭恢復原位
-                const arrow = card.querySelector('.action-arrow');
-                if (arrow) arrow.style.transform = 'translate(0, 0)';
-              });
-            }
-
             targetGrid.appendChild(card);
           }
         });
@@ -2110,6 +2432,236 @@
         });
       });
     };
+
+    // === 5. 標籤點擊聚焦邏輯 (Focus Highlight) ===
+    window.currentActiveTag = null; 
+    window.highlightedCards = []; 
+    window.currentCardIndex = 0;  
+
+    window.clearFilter = function(event) {
+      if (event) event.stopPropagation(); 
+
+      window.currentActiveTag = null;
+      window.highlightedCards = []; 
+      window.currentCardIndex = 0;  
+      
+      document.querySelectorAll('.card').forEach(c => {
+        c.classList.remove('highlighted', 'jump-bump');
+      });
+      
+      document.querySelectorAll('.active-tag').forEach(t => t.classList.remove('active-tag'));
+      
+      const toast = document.getElementById('filter-toast');
+      if (toast) toast.classList.remove('active');
+
+      // ✨ 跑馬燈終極修復：原地接續滾動 (不跳回設定前)
+      document.querySelectorAll('.marquee-content').forEach(m => {
+        // 1. 先停掉可能正在執行的 WAAPI 動畫
+        if (m.marqueePlayer) {
+          m.marqueePlayer.cancel();
+          m.marqueePlayer = null;
+        }
+
+        // 2. 讀取跑馬燈「現在這一瞬間」的絕對座標
+        const style = window.getComputedStyle(m);
+        const matrix = new DOMMatrix(style.transform);
+        let currentX = matrix.m41; 
+        
+        const contentWidth = m.offsetWidth;
+        
+        // 正規化座標，避免因為無縫輪播把位置推到不合理範圍
+        currentX = currentX % contentWidth;
+        if (currentX > 0) currentX -= contentWidth;
+
+        // 3. 計算剩下要走完的比例與時間 (總時間 25 秒)
+        const remainingFraction = 1 - (Math.abs(currentX) / contentWidth);
+        const remainingTime = 25000 * remainingFraction; 
+
+        m.style.transition = 'none';
+        m.style.animation = 'none';
+        
+        // 4. 動態生成一次性動畫，讓它穩穩滑到終點
+        m.marqueePlayer = m.animate([
+          { transform: `translateX(${currentX}px)` },
+          { transform: `translateX(-${contentWidth}px)` }
+        ], {
+          duration: remainingTime,
+          easing: 'linear'
+        });
+
+        // 5. 跑完之後，無縫接回 CSS 原本的無限迴圈動畫
+        m.marqueePlayer.onfinish = () => {
+          m.style.transform = '';
+          m.style.animation = ''; 
+          m.marqueePlayer = null;
+        };
+      });
+    };
+
+    // ✨ 注意：這裡新增了 clickedElement 參數接收剛剛傳遞過來的 this
+    window.filterByTag = function(targetTag, event, clickedElement) {
+      if (event) event.stopPropagation(); 
+
+      if (window.currentActiveTag === targetTag) {
+        window.clearFilter();
+        return;
+      }
+
+      window.clearFilter();
+      window.currentActiveTag = targetTag;
+      window.highlightedCards = []; 
+      
+      // ==========================================
+      // 1. ✨ 跑馬燈平滑置中魔法 (防破圖修正版)
+      // ==========================================
+      const firstContent = document.querySelector('.marquee-content');
+      const targetTagEl = firstContent.querySelector(`.clickable-ticker-tag[data-tag="${targetTag}"]`);
+      
+      if (targetTagEl) {
+        const contentWidth = firstContent.offsetWidth;
+        const containerWidth = firstContent.parentElement.clientWidth;
+        const tagCenter = targetTagEl.offsetLeft + (targetTagEl.offsetWidth / 2);
+        
+        // 算出目標位置，並嚴格限制在 0 ~ -contentWidth 之間 (這就是絕對安全區)
+        let targetX = (containerWidth / 2) - tagCenter;
+        targetX = targetX % contentWidth;
+        if (targetX > 0) targetX -= contentWidth;
+        
+        document.querySelectorAll('.marquee-content').forEach(m => {
+          if (m.marqueePlayer) {
+            m.marqueePlayer.cancel();
+            m.marqueePlayer = null;
+          }
+          
+          const style = window.getComputedStyle(m);
+          const matrix = new DOMMatrix(style.transform);
+          let currentX = matrix.m41; 
+          
+          // 強制將現在的座標也拉回安全區，消滅任何往右拉的可能性
+          currentX = currentX % contentWidth;
+          if (currentX > 0) currentX -= contentWidth;
+          
+          m.style.transition = 'none';
+          m.style.transform = `translateX(${currentX}px)`;
+          m.style.animation = 'none';
+
+          void m.offsetWidth; // 強制重繪
+
+          // ✨ 動態車速演算：根據要滑行的距離長短，決定煞車時間，確保不會「太快」
+          const travelDistance = Math.abs(targetX - currentX);
+          const travelRatio = travelDistance / contentWidth;
+          // 基礎滑行 0.8 秒，最長可以滑行 1.5 秒
+          const dynamicDuration = 0.8 + (travelRatio * 0.7);
+
+          // 套用動態時間與超絲滑貝茲曲線
+          m.style.transition = `transform ${dynamicDuration}s cubic-bezier(0.22, 1, 0.36, 1)`;
+          m.style.transform = `translateX(${targetX}px)`;
+        });
+      }
+
+      document.querySelectorAll(`[data-tag="${targetTag}"]`).forEach(t => t.classList.add('active-tag'));
+
+      document.querySelectorAll('.card').forEach(card => {
+        const tags = card.getAttribute('data-tags');
+        if (tags && tags.includes(targetTag)) {
+          card.classList.add('highlighted');
+          window.highlightedCards.push(card); 
+        }
+      });
+      
+      // ==========================================
+      // 2. ✨ 上下文感知：判斷是從哪張卡片點擊的？
+      // ==========================================
+      // 找找看剛剛點擊的標籤，它的外層是不是包著一張卡片？
+      let clickedCard = clickedElement ? clickedElement.closest('.card') : null;
+      
+      if (clickedCard) {
+        // 如果是，就找出這張卡片在「發光陣列」裡排第幾個，並設定為起始進度！
+        window.currentCardIndex = window.highlightedCards.indexOf(clickedCard);
+        if (window.currentCardIndex === -1) window.currentCardIndex = 0;
+      } else {
+        // 如果是點擊跑馬燈的標籤，就乖乖從第 1 個開始
+        window.currentCardIndex = 0;
+      }
+
+      const toast = document.getElementById('filter-toast');
+      const toastText = document.getElementById('toast-text');
+      const toastCount = document.getElementById('toast-count');
+      
+      if (toast && toastText) {
+        toastText.innerHTML = `<span class="toast-tag-name">${targetTag}</span>`;
+        // ✨ 更新膠囊數字為目前的精準進度
+        if (toastCount) toastCount.innerText = `(${window.currentCardIndex + 1}/${window.highlightedCards.length})`;
+        toast.classList.add('active');
+      }
+
+      if (window.highlightedCards.length > 0) {
+        // ✨ 直接鎖定到使用者目前點擊的這張卡片
+        const targetCard = window.highlightedCards[window.currentCardIndex];
+        
+        const cardRect = targetCard.getBoundingClientRect();
+        const isVisible = cardRect.left >= 0 && cardRect.right <= window.innerWidth;
+        const delay = isVisible ? 150 : 300; 
+        
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        
+        setTimeout(() => {
+          targetCard.classList.remove('jump-bump');
+          void targetCard.offsetWidth; 
+          targetCard.classList.add('jump-bump');
+        }, delay); 
+      }
+    };
+
+    window.scrollToNextCard = function(event) {
+      if (event) event.stopPropagation();
+
+      if (window.highlightedCards.length <= 1) return;
+
+      window.currentCardIndex = (window.currentCardIndex + 1) % window.highlightedCards.length;
+      
+      const toastCount = document.getElementById('toast-count');
+      if (toastCount) {
+        toastCount.innerText = `(${window.currentCardIndex + 1}/${window.highlightedCards.length})`;
+      }
+
+      const targetCard = window.highlightedCards[window.currentCardIndex];
+      
+      // ✨ 同理：動態判斷跳轉延遲
+      const cardRect = targetCard.getBoundingClientRect();
+      const isVisible = cardRect.left >= 0 && cardRect.right <= window.innerWidth;
+      const delay = isVisible ? 150 : 300;
+
+      targetCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      
+      setTimeout(() => {
+        targetCard.classList.remove('jump-bump');
+        void targetCard.offsetWidth;
+        targetCard.classList.add('jump-bump');
+      }, delay);
+    };
+
+    // 為了保留首頁的測試按鈕，加入這個純文字渲染函數
+    window.openMarkdownModal = function(markdownText) {
+      modalBody.innerHTML = marked.parse(markdownText);
+      modalOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      document.querySelector('.modal-content').scrollTop = 0;
+    };
+
+    // 關閉 Modal 的函數與事件綁定
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+      document.body.style.overflow = ''; 
+    }
+
+    closeModalBtn.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal();
+    });
 
     // 為了保留首頁的測試按鈕，加入這個純文字渲染函數
     window.openMarkdownModal = function(markdownText) {

@@ -7,7 +7,7 @@ from PIL import Image
 # ==========================================
 MAX_SIZE = (1920, 1920) 
 AUTHOR_NAME = "Azustock (風川梓)"
-COPYRIGHT_TEXT = f"Copyright (c) 2026 {AUTHOR_NAME}. All rights reserved."
+COPYRIGHT_TEXT = f"Copyright (c) 2026 {AUTHOR_NAME}. All rights reserved." # Copyright (c) 2026 Azustock (風川梓). All rights reserved.
 # ==========================================
 
 # 👇 增加 auto_mode 參數，預設為 None
