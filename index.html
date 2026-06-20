@@ -20,12 +20,12 @@
   
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  <link rel="shortcut icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/OG_dark.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
   
-  <link id="favicon" rel="icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/OG_dark.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="https://kazekawa-azusa.github.io/assets/OG_dark.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="https://kazekawa-azusa.github.io/assets/OG_dark.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="https://kazekawa-azusa.github.io/assets/OG_dark.png" />
+  <link id="favicon" rel="icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
+  <link rel="shortcut icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
+  <link rel="icon" type="image/png" sizes="192x192" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
+  <link rel="icon" type="image/png" sizes="512x512" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
 
   <style>
     /* ================================== */
@@ -913,6 +913,7 @@
     }
 
     /* 1. 調整索引模式下的頂部欄位與按鈕位置 */
+    /* 1. 調整索引模式下的頂部欄位與按鈕位置 */
     .modal-top-bar.is-index-mode {
       background: transparent;
       backdrop-filter: none;
@@ -920,33 +921,27 @@
       pointer-events: none; 
       height: 0;
       margin: 0 -3rem; 
-      padding: 1.2rem 3rem 0 3rem;
       
-      /* ✨ 核心修復：把 relative 換回 sticky！
-         這樣它既能當作 X 按鈕的絕對座標基準，又能在滾動時死死釘在視窗頂端 */
+      /* ✨ 核心修復 1：讓頂部留白跟一般模式一樣是 1.5rem，維持數學對稱 */
+      padding: 1.5rem 3rem 0 3rem; 
+      
       position: sticky; 
-      top: 0; /* 確保它釘在最頂部 */
+      top: 0; 
     }
 
     /* 2. 精確鎖定 X 按鈕對齊標題第一行 */
     .modal-top-bar.is-index-mode #modal-top-right {
-      position: absolute;
-      /* 這裡設定 2.5rem，因為父層 padding-top 為 2.5rem，剛好讓按鈕中心對齊標題頂端 */
-      top: 1.5rem; 
-      right: 1.5rem; 
-      pointer-events: auto; 
+      /* ✨ 核心修復 2：拔除這個父層的絕對定位，統一交給 X 按鈕自己處理！ */
+      position: static !important;
     }
 
     #modal-top-right {
       display: flex;
       align-items: center;
       gap: 1rem; 
-    }
-
-    #modal-top-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem; 
+      
+      /* ✨ 核心修復 3：給右側保留 3.5rem 的安全距離，確保漢堡目錄不會跟絕對定位的 X 疊在一起 */
+      padding-right: 3.5rem; 
     }
 
     /* 👇 0. 返回索引按鈕 (左側膠囊按鈕) */
@@ -989,10 +984,18 @@
     }
 
     /* ========================= */
-    /* 1. 關閉按鈕 (回歸 Flex 排版) */
+    /* 1. 關閉按鈕 (全天候絕對定位，消滅排版引擎干擾) */
     /* ========================= */
     .modal-close-btn {
-      /* ✨ 移除 absolute，讓它乖乖待在頂部列裡，絕對不會亂跑 */
+      /* ✨ 核心修復 4：將電腦版的 X 按鈕也徹底拔離 Flexbox 排版流！ */
+      position: absolute !important;
+      top: 1.5rem !important;
+      right: 1.5rem !important;
+      margin: 0 !important;
+
+      /* ✨ 核心修復 5：賦予全天候點擊霸體！無視父層的 pointer-events: none 封印 */
+      pointer-events: auto !important;
+
       background: var(--glass-bg);
       backdrop-filter: blur(8px);
       border: 1px solid var(--card-border);
@@ -1631,6 +1634,25 @@
     /* 手機版排版最佳化 (Mobile UI) */
     /* ========================= */
     @media (max-width: 600px) {
+      /* ========================================== */
+      /* ✨ 終極對稱修復：讓左邊按鈕與右邊按鈕高度一模一樣 */
+      /* ========================================== */
+      
+      /* 強制鎖定左邊「返回索引」按鈕的高度 */
+      .modal-back-btn {
+        height: 32px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        /* 內部本來就有 display: inline-flex; align-items: center; 所以字和圖標依然會完美置中 */
+      }
+
+      /* 這樣一來 Flexbox 絕對不會產生任何誤差了！ */
+      .modal-top-bar.is-index-mode #modal-top-right {
+        /* 我們可以安心地把絕對座標設為最完美的 1.5rem */
+        top: 1.5rem; 
+        right: 1.5rem; 
+      }
+      
       .modal-content {
         width: 95%;                  
         max-height: 90vh;           
@@ -1639,37 +1661,50 @@
         padding: 0 1.5rem 5rem 1.5rem; 
       }
 
-      /* ✨ 頂部目錄列的手機版微調 */
+      /* 1. 修改手機版：一般文章模式的導覽列 (讓上方與右方的留白一模一樣) */
       .modal-top-bar {
         top: 0; 
         margin: 0 -1.5rem 1.5rem -1.5rem; 
         
-        /* 👇 就是這裡！開頭的 2rem 就是控制「手機版文章目錄列」的上方留白 */
-        padding: 1.5rem 1rem 1.2rem 1.5rem; 
+        /* ✨ 核心修改 1：把 padding 的 Top (1.5rem) 與 Right (1.5rem) 統一，形成完美正方角落 */
+        padding: 1.5rem 1.5rem 1.2rem 1.5rem; 
         
         border-top-left-radius: 1.1rem;
         border-top-right-radius: 1.1rem;
       }
 
-      /* 手機版索引頁模式 */
+      /* 2. 手機版：索引頁模式 (底色隱藏狀態) */
       .modal-top-bar.is-index-mode {
         margin: 0 -1.5rem;
-        padding: 1rem 1.5rem 0 1.5rem;
+        /* ✨ 同步調整這裡的 padding 保持排版邏輯一致 */
+        padding: 1.5rem 1.5rem 0 1.5rem;
       }
 
+      /* 3. 手機版：索引頁模式下的右上角 X 按鈕絕對座標 */
       .modal-top-bar.is-index-mode #modal-top-right {
-        /* 手機版標題 padding-top 是 2rem，按鈕位置設為 2rem */
-        top: 1.6rem; 
-        right: 1rem; 
+        /* ✨ 核心修改 2：強制將座標鎖定在距離頂部與右側完全相等的完美數值 */
+        /* 因為 Flexbox 垂直置中會產生約 0.05rem (約 1px) 的視覺偏移，
+           所以我們把 Top 和 Right 雙雙鎖定在 1.55rem，達到極致的視覺對稱與無縫切換！ */
+        top: 1.5rem; 
+        right: 1.5rem; 
       }
 
-      /* 統一縮小按鈕 */
+      /* ✨ 手機版：硬性鎖定 X 按鈕與漢堡按鈕的尺寸完全一致 */
       .modal-close-btn, .toc-toggle-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 1.2rem;
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+        font-size: 1.5rem !important; /* 1.5 是一個完美的平衡點，X 剛好夠大且不撐破框 */
+        padding: 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
       }
-      .toc-toggle-btn .bar { width: 14px; }
+
+      .toc-toggle-btn .bar { 
+        width: 14px; 
+      }
 
       /* Markdown 圖片：取消浮動，改成置中且縮小尺寸 */
       .markdown-body img[alt="float-right"],
@@ -1679,6 +1714,29 @@
         width: 75%;             
         max-width: 260px;       
         margin: 1.5rem auto;    /* 左右 auto 完美置中 */
+      }
+
+      /* ========================================== */
+      /* ✨ 終極防抖動：將 X 按鈕徹底拔離排版流，成為全天候絕對定位 */
+      /* ========================================== */
+
+      /* 1. 讓 X 按鈕永遠釘死在導覽列右上角，不受任何按鈕出現/消失的干擾 */
+      .modal-close-btn {
+        position: absolute !important;
+        top: 1.5rem !important;
+        right: 1.5rem !important;
+        margin: 0 !important;
+      }
+
+      /* 2. 拔除原本在 is-index-mode 賦予父容器的定位，統一交給 X 按鈕自己控制 */
+      .modal-top-bar.is-index-mode #modal-top-right {
+        position: static !important;
+      }
+
+      /* 3. 確保漢堡按鈕不會跟絕對定位的 X 按鈕重疊！
+         (X 按鈕約佔 2rem 寬 + 原本的 1rem 間距，所以我們給右側留出 3rem 的完美安全距離) */
+      #modal-top-right {
+        padding-right: 3rem !important; 
       }
     }
     /* ========================= */
