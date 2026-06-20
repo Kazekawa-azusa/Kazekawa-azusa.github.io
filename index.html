@@ -251,7 +251,7 @@
       font-size: 0.85rem;
     }
 
-    /* 1. 跑馬燈 */
+    /* 1. 完美無縫跑馬燈 (Seamless Loop) */
     .marquee-container {
       background: var(--marquee-bg); 
       border-top: 1px solid var(--marquee-border);
@@ -259,42 +259,54 @@
       transition: background-color 0.5s ease, border-color 0.5s ease;
       width: 100%;
       overflow: hidden;
-      padding: 10px 0;
-      position: relative;
-      display: flex; 
+      padding: 12px 0;
+      display: flex; /* 讓內部的兩塊內容橫向排列 */
+      
+      /* ✨ 邊緣漸層消隱魔法：讓文字在左右兩側像是隱沒在霧中 */
+      -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+      mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
     }
 
-    /* 滾動內容樣式 */
     .marquee-content {
-      display: inline-block;
-      padding-left: 100%; /* 初始位置 */
-      animation: marquee 30s linear infinite;
+      display: flex;
+      flex-shrink: 0;
+      min-width: 100%; /* 確保一塊就能撐滿螢幕 */
+      align-items: center;
+      /* 25s 跑完一輪，你可以改秒數調速度 */
+      animation: marquee-seamless 25s linear infinite;
     }
 
     .marquee-content span {
       font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: var(--accent);
-      /* 這裡控制文字之間的間距 */
-      padding-right: 10rem; 
+      padding: 0 3rem; /* 改為左右均等的間距 */
       letter-spacing: 0.1em;
-      opacity: 0.8;
       white-space: nowrap;
     }
 
-    /* 定義動畫：從右向左移動 */
-    @keyframes marquee {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
-    }
-
-    /* 滑鼠懸停時暫停，方便閱讀 */
+    /* 滑鼠放上去暫停 */
     .marquee-container:hover .marquee-content {
       animation-play-state: paused;
     }
 
-      /* Loading 容器置中並跨越整個 Grid */
+    /* ✨ 完美無縫動畫：往左移動剛好一塊的距離 (-100%)，然後瞬間歸零 */
+    @keyframes marquee-seamless {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* 華爾街報價機專屬漲跌色 */
+    [data-theme="dark"] .stock-up { color: #44D4BE; margin-left: 8px; font-weight: bold;}
+    [data-theme="dark"] .stock-down { color: #DB3069; margin-left: 8px; font-weight: bold;}
+    /* 淺色模式時，稍微把紅綠色調深一點，避免看不清楚 */
+    [data-theme="light"] .stock-up { color: #333AFD; } 
+    [data-theme="light"] .stock-down { color: #F93435; }
+
+
+
+    /* Loading 容器置中並跨越整個 Grid */
     .loading-container {
       grid-column: 1 / -1;
       text-align: center;
@@ -1660,12 +1672,28 @@
         const projects = db.projects;
         window.siteProjects = projects;
 
-        // 1. 處理跑馬燈橫幅
+        // 1. 處理跑馬燈橫幅 (華爾街報價機版)
         if (marquee) {
           const allTags = projects.flatMap(p => p.tags || []);
           const uniqueTags = [...new Set(allTags)];
           if (uniqueTags.length > 0) {
-            marquee.innerHTML = `<span>${uniqueTags.join(' • ')} • </span>`.repeat(4);
+            // 為每個標籤產生專屬的漲跌幅
+            const stockContent = uniqueTags.map((tag, i) => {
+              // 用索引值製造隨機漲跌的錯覺
+              const isUp = i % 2 !== 0; 
+              const change = (Math.random() * 3 + 0.1).toFixed(2); // 產生 0.10 ~ 3.10 的數字
+              const arrow = isUp ? '▲' : '▼';
+              const colorClass = isUp ? 'stock-up' : 'stock-down';
+              const sign = isUp ? '+' : '-';
+              
+              return `<span>${tag} <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
+            }).join('<span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span>');
+
+            // 一樣複製兩份做無縫輪播
+            marquee.parentElement.innerHTML = `
+              <div class="marquee-content">${stockContent} <span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span> </div>
+              <div class="marquee-content">${stockContent} <span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span> </div>
+            `;
           }
         }
 
