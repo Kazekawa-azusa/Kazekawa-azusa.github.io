@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-TW" data-theme="light"> <!-- 預設背景 -->
 <head>
+  <link rel="apple-touch-icon" sizes="180x180" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
+  
+  <link id="favicon" rel="icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
+  <link rel="shortcut icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
+  <link rel="icon" type="image/png" sizes="192x192" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
+  <link rel="icon" type="image/png" sizes="512x512" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
@@ -19,13 +26,6 @@
   <meta name="twitter:image" content="https://kazekawa-azusa.github.io/assets/og.png" />
   
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-  <link rel="apple-touch-icon" sizes="180x180" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
-  
-  <link id="favicon" rel="icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
-  <link rel="shortcut icon" type="image/png" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
-  <link rel="icon" type="image/png" sizes="192x192" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
-  <link rel="icon" type="image/png" sizes="512x512" href="https://kazekawa-azusa.github.io/assets/OG_dark.png?v=1" />
 
   <style>
     /* ================================== */
@@ -2079,11 +2079,25 @@
 
             // ✨ 點擊跑馬燈的「空白處」會解除過濾
             container.onclick = (e) => {
-              // ✨ 新增 this 參數，讓大腦知道點擊的是哪個實體元素
               if (window.currentActiveTag && !e.target.closest('.clickable-ticker-tag')) {
                 window.clearFilter();
               }
-              return `<span class="clickable-ticker-tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event, this)">${tag} <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
+            };
+
+            // ==========================================
+            // ✨ 終極修復：讓 JS 引擎接管時的動畫 (WAAPI) 也能完美支援 Hover 暫停！
+            // ==========================================
+            container.onmouseenter = () => {
+              document.querySelectorAll('.marquee-content').forEach(m => {
+                // 如果 JS 動畫播放器存在，就強制暫停它
+                if (m.marqueePlayer) m.marqueePlayer.pause();
+              });
+            };
+            container.onmouseleave = () => {
+              document.querySelectorAll('.marquee-content').forEach(m => {
+                // 滑鼠離開，恢復播放
+                if (m.marqueePlayer) m.marqueePlayer.play();
+              });
             };
           }
         }
