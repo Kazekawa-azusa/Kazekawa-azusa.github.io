@@ -417,44 +417,39 @@
     /* 標籤過濾聚焦效果 (Focus Mode) */
     /* ========================= */
     
-    /* 讓跑馬燈裡的標籤變成可以點擊的按鈕 */
     .clickable-ticker-tag {
       cursor: pointer;
       transition: color 0.3s ease, text-shadow 0.3s ease;
     }
-    .clickable-ticker-tag:hover {
+    
+    /* ✨ 新增 .active-tag 類別：讓被點擊的標籤維持發光狀態 */
+    .clickable-ticker-tag:hover,
+    .clickable-ticker-tag.active-tag {
       color: var(--accent-2);
       text-shadow: 0 0 10px var(--accent-2);
     }
 
-    /* ✨ 讓跑馬燈可以被 JS 強制暫停 */
     .marquee-content.paused {
       animation-play-state: paused !important;
     }
 
-    /* 當卡片被判定為「不符合」時：變暗，但 ✨恢復點擊功能✨ */
-    .card.dimmed {
-      opacity: 0.25 !important;
-      filter: grayscale(80%);
-      /* 移除 pointer-events: none; 讓它可以被點擊 */
-      box-shadow: none !important;
-      border-color: transparent !important;
-    }
+    /* ✨ 已經完全移除 .card.dimmed，沒被選中的卡片將維持原樣，不會變暗！ */
 
-    /* ✨ 給變暗的卡片一點微弱的 Hover 反饋，讓使用者知道它還活著 */
-    .card.dimmed:hover {
-      opacity: 0.6 !important;
-      filter: grayscale(40%);
-      transform: translateY(-2px) !important;
-    }
-
-    /* 當卡片被判定為「符合」時：強制浮起並發光 */
+    /* 當卡片被判定為「符合」時：邊框發出微光，但不強制上浮 */
     .card.highlighted {
-      opacity: 1 !important;
-      filter: none;
-      transform: translateY(-5px);
       border-color: var(--accent-2) !important;
-      box-shadow: 0 15px 35px var(--shadow-hover) !important;
+      /* ✨ 外框微光：利用 accent-2 產生一圈淡淡的霓虹光暈 */
+      box-shadow: 0 0 15px var(--accent-2) !important; 
+      z-index: 10;
+      position: relative; 
+      /* 維持在原位，把上升的動作留給 Hover */
+      transform: translateY(0); 
+    }
+
+    /* ✨ Highlight 狀態下的 Hover 互動：微微上升且光暈稍微放大 */
+    .card.highlighted:hover {
+      transform: translateY(-6px) !important;
+      box-shadow: 0 8px 25px var(--accent-2) !important; 
     }
 
     /* ========================= */
@@ -1728,8 +1723,8 @@
               const colorClass = isUp ? 'stock-up' : 'stock-down';
               const sign = isUp ? '+' : '-';
               
-              // ✨ 加上 event 參數，防止點擊標籤時觸發到外層容器
-              return `<span class="clickable-ticker-tag" onclick="window.filterByTag('${tag}', event)">${tag} <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
+              // ✨ 核心修改：加上 data-tag 屬性，方便之後用 JS 找出來讓它發光
+              return `<span class="clickable-ticker-tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event)">${tag} <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
             }).join('<span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span>');
 
             const container = marquee.parentElement;
@@ -1822,20 +1817,30 @@
             let actionText = '';
             if (data.articles && data.articles.length > 0) {
               card.style.cursor = 'pointer';
-              card.onclick = () => {
-                // ✨ 點擊卡片時，如果有過濾狀態就先解除
+              card.onclick = (e) => {
                 if (window.currentActiveTag) window.clearFilter();
                 openProjectIndex(data.id);
               };
-              actionText = `<div class="action-btn" ... 保持原本的 ... </div>`;
+              actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">📖 展開系列 (${data.articles.length}) <span class="action-arrow" data-dir="right" style="font-size: 1.2rem; transition: transform 0.2s ease;">➔</span></div>`;
             } else if (data.link) {
               card.style.cursor = 'pointer';
-              card.onclick = () => {
-                // ✨ 點擊卡片時，如果有過濾狀態就先解除
+              card.onclick = (e) => {
                 if (window.currentActiveTag) window.clearFilter();
                 window.open(data.link, '_blank');
               };
-              actionText = `<div class="action-btn" ... 保持原本的 ... </div>`;
+              actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">🔗 前往外部專案 <span class="action-arrow" data-dir="up-right" style="font-size: 1.2rem; transition: transform 0.2s ease;">↗</span></div>`;
+            } else {
+              // ✨ 終極修復：針對沒有任何連結與文章的靜態卡片
+              card.onclick = (e) => {
+                // 如果目前是過濾狀態，點擊它依然可以解除過濾！
+                if (window.currentActiveTag) window.clearFilter();
+              };
+              
+              // (選用 UX 優化) 當滑鼠移入時，如果有過濾狀態，讓游標變成手指，暗示它現在是可以點擊來解除過濾的
+              card.addEventListener('mouseenter', () => {
+                if (window.currentActiveTag) card.style.cursor = 'pointer';
+                else card.style.cursor = 'default';
+              });
             }
 
             // C. 處理專案卡片
@@ -2206,47 +2211,69 @@
     // === 5. 標籤點擊聚焦邏輯 (Focus Highlight) ===
     window.currentActiveTag = null; 
 
-    // ✨ 專門用來「解除所有過濾與暫停狀態」的函數
+    // 清除所有狀態的函數
     window.clearFilter = function() {
       window.currentActiveTag = null;
-      // 卡片恢復原狀
+      
+      // 1. 卡片恢復原狀 (移除發光)
       document.querySelectorAll('.card').forEach(c => {
-        c.classList.remove('dimmed', 'highlighted');
+        c.classList.remove('highlighted');
       });
-      // 跑馬燈恢復滾動
+      // 2. 跑馬燈恢復滾動
       document.querySelectorAll('.marquee-content').forEach(m => {
         m.classList.remove('paused');
+      });
+      // 3. ✨ 熄滅跑馬燈上的標籤
+      document.querySelectorAll('.clickable-ticker-tag').forEach(t => {
+        t.classList.remove('active-tag');
       });
     };
 
     window.filterByTag = function(targetTag, event) {
-      // 防止點擊事件往上傳遞給跑馬燈背景
       if (event) event.stopPropagation(); 
 
-      // 如果點擊的是同一個標籤，取消過濾並恢復滾動
       if (window.currentActiveTag === targetTag) {
         window.clearFilter();
         return;
       }
 
-      // 進入過濾模式
+      window.clearFilter();
       window.currentActiveTag = targetTag;
       
-      // ✨ 讓跑馬燈強制暫停！
       document.querySelectorAll('.marquee-content').forEach(m => {
         m.classList.add('paused');
       });
 
+      document.querySelectorAll(`.clickable-ticker-tag[data-tag="${targetTag}"]`).forEach(t => {
+        t.classList.add('active-tag');
+      });
+
+      // ✨ 用來記錄找到的「第一張符合條件的卡片」
+      let firstHighlightedCard = null;
+
       document.querySelectorAll('.card').forEach(card => {
         const tags = card.getAttribute('data-tags');
         if (tags && tags.includes(targetTag)) {
-          card.classList.remove('dimmed');
           card.classList.add('highlighted');
-        } else {
-          card.classList.remove('highlighted');
-          card.classList.add('dimmed');
+          
+          // 如果還沒有找到第一張卡片，就把它記下來
+          if (!firstHighlightedCard) {
+            firstHighlightedCard = card;
+          }
         }
       });
+
+      // ✨ 終極 UX 升級：自動捲動到第一張發光的卡片
+      if (firstHighlightedCard) {
+        // 使用 setTimeout 給瀏覽器一點時間渲染發光效果，然後再滾動
+        setTimeout(() => {
+          firstHighlightedCard.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',  // 垂直方向：讓卡片停在螢幕正中央
+            inline: 'center'  // 水平方向：如果卡片藏在橫向捲軸後面，會自動拉回中間！
+          });
+        }, 50);
+      }
     };
 
     // 為了保留首頁的測試按鈕，加入這個純文字渲染函數
