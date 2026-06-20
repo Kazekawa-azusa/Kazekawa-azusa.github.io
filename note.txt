@@ -1,2 +1,5 @@
 畫廊設定
 <div class="gallery" style="--g-width: 220px; --g-ratio: 3/4; --g-rows: 1;">
+
+記得調設定：
+Ctrl+F -> CONFIG
