@@ -1916,7 +1916,6 @@
       
       // 深淺色模式切換與 Favicon 連動
       const themeToggle = document.getElementById('theme-toggle');
-      const favicon = document.getElementById('favicon');
       
       // 1. 取得使用者過去的點擊紀錄
       const savedTheme = localStorage.getItem('theme');
@@ -1938,13 +1937,19 @@
       function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         
-        // ✨ 改用控制面板設定的網址
-        if (theme === 'light') {
-          if (favicon) favicon.href = CONFIG.FAVICON_LIGHT;
-        } else {
-          if (favicon) favicon.href = CONFIG.FAVICON_DARK; 
-        }
+        // ✨ 核心修復：決定這一次要換上的目標圖片網址
+        const targetFaviconUrl = theme === 'light' ? CONFIG.FAVICON_LIGHT : CONFIG.FAVICON_DARK;
+        
+        // ✨ 核心修復：無差別抓取 HTML 內「所有」包含 icon 字眼的 link 標籤
+        // (這會同時抓到 apple-touch-icon, shortcut icon, icon 192x192 等所有設定)
+        const iconLinks = document.querySelectorAll("link[rel*='icon']");
+        
+        // ✨ 把所有的圖示網址一次性全部更新！
+        iconLinks.forEach(link => {
+          link.href = targetFaviconUrl;
+        });
 
+        // 處理 Giscus 留言板主題 (保持不變)
         const iframe = document.querySelector('iframe.giscus-frame');
         if (iframe && iframe.contentWindow) {
           const newGiscusTheme = theme === 'light' ? 'light' : 'transparent_dark';
