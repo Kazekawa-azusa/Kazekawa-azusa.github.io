@@ -142,6 +142,14 @@
       "is_new": false,
       "articles": [
         {
+          "title": "盒子",
+          "description": "調味牛乳與玩具",
+          "cover_image": null,
+          "content": "# 「盒子」\n少女喜歡喝調味牛乳，  \n巧克力、草莓、蘋果  \n全都喜歡，喝什麼全看心情。  \n唯一困擾的是，送的小玩具少女其實不太喜歡，  \n但是丟掉又有點可惜，所以少女買了一個盒子。  \n\n某天，少女在收拾的時候被她搭話了，  \n她看起來對那些很感興趣。  \n於是  \n少女把小玩具送給她，而她每次都收下。  \n\n直到有一天，  \n少女發現調味牛乳只剩調味牛乳而已，有點錯愕。  \n還是  \n盒子越來越空了。  \n\n之後，雖然還是很喜歡，  \n她買調味牛乳的次數卻越來越少了。  \n但是  \n她還是會來找少女。  \n\n最後，  \n少女的盒子空了。  \n仍是  \n兩人在放學後一起回了家。",
+          "date": "",
+          "is_new": true
+        },
+        {
           "title": "閱讀",
           "description": "時間",
           "cover_image": "projects/writing/01_note/10_read/architecture.webp",
@@ -407,6 +415,14 @@
       "pinned": false,
       "is_new": false,
       "articles": [
+        {
+          "title": "旅行",
+          "description": "直至",
+          "cover_image": "projects/writing/03_azusa/06_travel/architecture.webp",
+          "content": "# 「旅行」\n![float-right](./projects/writing/03_azusa/06_travel/architecture.webp)\n來了一個說走就走的旅行，  \n她沒有告訴她。  \n\n她走下了階梯，  \n她走出了通道，  \n她走過了大門，  \n她走上了層樓，  \n\n走了一段隨心隨向的路線，  \n她沒有看見她。  \n於是  \n\n她走上了階梯，  \n她走過了通道，  \n她走入了大門，  \n她走下了層樓，  \n\n也許在尋找，  \n或許在閒晃，  \n她  \n看到了她，  \n向她揮手，並打了聲招呼。  \n隨後  \n\n伴行一段隨情隨意的路線，  \n她的腳尖能與她平行。  \n雖然  \n\n她轉頭打了聲招呼後就走了。  \n\n縱使同向、  \n分別快慢，  \n興許她能追趕    \n她，  \n\n直至相伴前行  ",
+          "date": "",
+          "is_new": true
+        },
         {
           "title": "名言",
           "description": "誰？",
