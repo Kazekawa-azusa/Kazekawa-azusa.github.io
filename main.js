@@ -368,9 +368,13 @@ async function loadProjects() {
             ? `<span style="font-family: monospace; font-size: 0.8rem; color: var(--accent); opacity: 0.8; margin-right: 0.8rem;">[${data.date}]</span>`
             : '';
 
-        const newBadgeHtml = data.is_new
-            ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>`
-            : '';
+        // ✨ 智慧狀態徽章 (互斥邏輯：NEW 優先，UPDATE 次之)
+        let statusBadgeHtml = '';
+        if (data.is_new) {
+            statusBadgeHtml = `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>`;
+        } else if (data.is_updated) {
+            statusBadgeHtml = `<span style="background: var(--accent); color: var(--card); font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--accent);">UPDATED</span>`;
+        }
 
         // 3. ✨ 組合 HTML：將 absolutePinHtml 放在最外層，還原最乾淨的排版
         card.innerHTML = `
@@ -379,7 +383,7 @@ async function loadProjects() {
             <h3 style="display: flex; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.2rem; margin-top: 0;">
                 ${cardDateHtml}
                 ${data.title}
-                ${newBadgeHtml}
+                ${statusBadgeHtml}
                 ${cardMetaHtml}
             </h3>
             ${cardImageHtml}
@@ -516,9 +520,13 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
             ? `<span style="font-family: monospace; font-size: 0.85rem; color: var(--muted); margin-left: auto; padding-left: 1rem; flex-shrink: 0;">${art.date}</span>`
             : '';
             
-        let newBadgeHtml = art.is_new
-            ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>`
-            : '';
+        // ✨ 智慧狀態徽章
+        let statusBadgeHtml = '';
+        if (art.is_new) {
+            statusBadgeHtml = `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>`;
+        } else if (art.is_updated) {
+            statusBadgeHtml = `<span style="background: var(--accent); color: var(--card); font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--accent);">UPDATED</span>`;
+        }
 
         // ==========================================
         // ✨ 3. 處理左側的縮圖與「絕對定位」圖釘徽章 (圖層覆蓋版)
@@ -556,7 +564,7 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
                 <div style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; row-gap: 0.4rem;">
                     <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
                         <span style="font-size: 1.15rem; color: var(--accent); font-weight: bold;">
-                            ${art.title}${newBadgeHtml}
+                            ${art.title}${statusBadgeHtml}
                         </span>
                         ${descHtml}
                     </div>
@@ -611,7 +619,7 @@ window.openArticle = function(projectId, articleIndex) {
     // ✨ 新增：在文章標題 (H1) 右側動態插入日期與 NEW 標籤
     // ==========================================
     const firstH1 = modalBody.querySelector('h1');
-    if (firstH1 && (article.date || article.is_new)) {
+    if (firstH1 && (article.date || article.is_new || article.is_updated)) {
         // 建立一個 Flex 彈性容器來包裝標題與日期
         const wrapper = document.createElement('div');
         wrapper.style.display = 'flex';
@@ -634,10 +642,17 @@ window.openArticle = function(projectId, articleIndex) {
         firstH1.parentNode.insertBefore(wrapper, firstH1);
         wrapper.appendChild(firstH1);
 
-        // 準備右側的資訊區塊 (NEW 徽章 + 日期)
+        let statusBadge = '';
+        if (article.is_new) {
+            statusBadge = `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>`;
+        } else if (article.is_updated) {
+            statusBadge = `<span style="background: var(--accent); color: var(--card); font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; box-shadow: 0 0 8px var(--accent);">UPDATED</span>`;
+        }
+
+        // 準備右側的資訊區塊
         const metaHtml = `
             <div style="display: flex; align-items: center; gap: 0.8rem; font-family: monospace; font-size: 0.95rem; color: var(--muted);">
-                ${article.is_new ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>` : ''}
+                ${statusBadge}
                 ${article.date ? `<span>${article.date}</span>` : ''}
             </div>
         `;

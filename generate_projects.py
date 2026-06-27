@@ -82,7 +82,8 @@ def generate_projects_json():
             # ==========================================
             proj_data['date'] = proj_data.get('date', "")
             proj_data['pinned'] = bool(proj_data.get('pinned', False))
-            proj_data['is_new'] = bool(proj_data.get('is_new', False))
+            proj_data['is_new'] = bool(proj_data.get('new', False))
+            proj_data['is_updated'] = bool(proj_data.get('updated', False))
             
             proj_cover = proj_data.get('cover')
             if proj_cover:
@@ -141,7 +142,8 @@ def generate_projects_json():
                                 # ==========================================
                                 "date": sub_data.get('date', ""),
                                 "pinned": bool(sub_data.get('pinned', False)),
-                                "is_new": bool(sub_data.get('is_new', False))
+                                "is_new": bool(sub_data.get('new', False)),
+                                "is_updated": bool(sub_data.get('updated', False))
                             })
                     except Exception as e:
                         print(f"⚠️ Error reading Markdown {md_file_path}: {e}")

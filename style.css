@@ -196,33 +196,6 @@ section h2 {
     transition: opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
 }
 
-/* ========================================== */
-/* ✨ 專案卡片專屬的圖釘 (Pin) 獨立樣式與動畫 */
-/* ========================================== */
-.card-pin {
-    position: absolute; 
-    top: -14px; 
-    right: -14px; 
-    width: 34px; 
-    height: 34px; 
-    background: var(--accent-2); 
-    color: var(--card); 
-    border-radius: 50%; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15), 0 0 8px var(--accent-2); 
-    z-index: 10;
-    /* ✨ 讓變形與發光都能完美過渡，不受內聯樣式干擾 */
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s ease;
-}
-
-.card:hover .card-pin {
-    /* ✨ 圖釘跟著微微放大且旋轉，光暈範圍擴展，創造被「強調」的立體感 */
-    transform: scale(1.15) rotate(8deg);
-    box-shadow: 0 8px 15px rgba(0,0,0,0.2), 0 0 15px var(--accent-2);
-}
-
 .card h3 {
     margin-top: 0;
     margin-bottom: 0.4rem;
@@ -853,31 +826,60 @@ footer {
 }
 
 /* ========================================== */
-/* ✨ 內容索引 (TOC) 專屬的圖釘互動動畫 */
+/* ✨ 全域圖釘系統 (專案卡片 & 內容索引)       */
 /* ========================================== */
-.modal-pin {
+
+/* 1. 共用基礎屬性與防抖動核心 (消除 80% 冗餘代碼) */
+.card-pin, .modal-pin {
     position: absolute; 
-    top: -12px; 
-    left: -12px; 
-    width: 24px; 
-    height: 24px; 
     background: var(--accent-2); 
     color: var(--card); 
     border-radius: 50%; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    box-shadow: 0 0 8px var(--accent-2); 
-    z-index: 1; 
-    /* ✨ 同步過渡動畫設定 */
+    
+    /* ✨ 防抖動魔法 1：告訴瀏覽器「這東西隨時會變」，讓它常駐獨立渲染層 */
+    will-change: transform, box-shadow;
+    
+    /* ✨ 防抖動魔法 2：隱藏 3D 背面，防止邊緣在 GPU 運算時產生毛邊鋸齒 */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    
+    /* ✨ 防抖動魔法 3：利用 translateZ(0) 強制開啟全時 GPU 硬體加速 */
+    transform: translateZ(0); 
+    
     transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s ease;
 }
 
-/* ✨ 當滑鼠移到這「整列」目錄連結上時，左側的圖釘會跟著放大旋轉！ */
+/* 2. 專案卡片專屬差異 (右上角, 較大) */
+.card-pin {
+    top: -14px; 
+    right: -14px; 
+    width: 34px; 
+    height: 34px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15), 0 0 8px var(--accent-2); 
+    z-index: 10;
+}
+
+/* 3. 內容索引專屬差異 (左上角, 較小) */
+.modal-pin {
+    top: -12px; 
+    left: -12px; 
+    width: 24px; 
+    height: 24px; 
+    box-shadow: 0 0 8px var(--accent-2); 
+    z-index: 1; 
+}
+
+/* 4. 共用聯動 Hover 動畫*/
+.card:hover .card-pin {
+    transform: scale(1.15) rotate(8deg) translate3d(10%, -10%, 0);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2), 0 0 15px var(--accent-2);
+}
 .modal-content a:hover .modal-pin {
-    transform: scale(1.15) rotate(8deg);
-    /* 因為移除了 Inline style，這裡再也不需要寫醜陋的 !important 了！ */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2), 0 0 12px var(--accent-2); 
+    transform: scale(1.15) rotate(-8deg) translate3d(-10%, -10%, 0);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2), 0 0 15px var(--accent-2);
 }
 
 .modal-overlay.active .modal-content {
