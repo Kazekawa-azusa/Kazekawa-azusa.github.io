@@ -29,6 +29,17 @@ document.documentElement.style.setProperty('--marquee-speed', `${CONFIG.MARQUEE_
 // === 全域變數 (系統內部使用) ===
 window.siteProjects = [];
 
+// ==========================================
+// ✨ 新增：全域圖片破圖處理器 (終極解決 Safari/iOS 限制)
+// ==========================================
+window.handleImageError = function(img) {
+    img.classList.remove('is-loading');
+    img.classList.add('is-broken');
+    // ✨ 核心魔法：將破圖瞬間替換為 1x1 透明 SVG！
+    // 這樣 Safari 就會以為「圖片載入成功了」，進而徹底註銷那個醜陋的原生 X 圓圈！
+    img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+};
+
 // === 1. 介面與導覽列邏輯 (Theme & Menu) ===
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -255,9 +266,9 @@ async function loadProjects() {
         ? `<p style="color: var(--muted); margin-top: 0.2rem; margin-bottom: 0; line-height: 1.6; max-width: 800px; font-size: 0.95rem;">${cat.description}</p>`
         : '';
 
-        // ✨ 新增：分類專屬的右上角正方形圖示
+        // ✨ 修改：將 onerror 接入全域防護系統
         const sectionImageHtml = cat.cover_image
-        ? `<img src="${cat.cover_image}" alt="icon" class="is-loading" onload="this.classList.remove('is-loading')" onerror="this.classList.remove('is-loading')" style="width: 72px; height: 72px; border-radius: 16px; object-fit: cover; border: 1px solid var(--card-border); box-shadow: 0 4px 15px var(--shadow-base); flex-shrink: 0;">`
+        ? `<img src="${cat.cover_image}" alt="icon" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="width: 72px; height: 72px; border-radius: 16px; object-fit: cover; border: 1px solid var(--card-border); box-shadow: 0 4px 15px var(--shadow-base); flex-shrink: 0;">`
         : '';
 
         // 利用 Flexbox 讓文字在左、圖片在右
@@ -335,9 +346,9 @@ async function loadProjects() {
             ? `<p style="color: var(--text); font-size: 0.95rem; line-height: 1.6; margin-top: 0.5rem; margin-bottom: 1rem;">${data.description}</p>`
             : '';
 
-        // ✨ 新增：卡片專屬的右上角正方形縮圖
+        // ✨ 修改：將 onerror 接入全域防護系統
         const cardImageHtml = data.cover_image
-            ? `<img src="${data.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="this.classList.remove('is-loading')" style="width: 56px; height: 56px; border-radius: 12px; object-fit: cover; border: 1px solid var(--card-border); flex-shrink: 0;">`
+            ? `<img src="${data.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="width: 56px; height: 56px; border-radius: 12px; object-fit: cover; border: 1px solid var(--card-border); flex-shrink: 0;">`
             : '';
 
         // ✨ 處理日期顯示 (如果 JSON 有填 date 就顯示)
@@ -482,22 +493,24 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
         : '';
 
     // ==========================================
-    // ✨ 2. 新增：處理單篇文章的日期與 NEW 發光徽章
+    // ✨ 2. 新增：處理單篇文章的日期與 NEW 發光徽章 (改為右側對齊)
     // ==========================================
+    
+    // ✨ 修改：利用 margin-left: auto 把它推到最右邊！並且改為低調的灰色
     let dateHtml = art.date
-        ? `<span style="font-family: monospace; font-size: 0.85rem; color: var(--accent); opacity: 0.8; margin-right: 0.5rem;">[${art.date}]</span>`
+        ? `<span style="font-family: monospace; font-size: 0.85rem; color: var(--muted); margin-left: auto; padding-left: 1rem; flex-shrink: 0;">${art.date}</span>`
         : '';
         
     let newBadgeHtml = art.is_new
         ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 2s infinite;">NEW</span>`
         : '';
 
-    // 2. ✨ 處理左側的縮圖或圖示
+    // 3. 處理左側的縮圖或圖示
     let iconHtml = art.cover_image
-        ? `<img src="${art.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="this.classList.remove('is-loading')" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid var(--card-border);">`
+        ? `<img src="${art.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid var(--card-border);">`
         : `<div style="width: 44px; height: 44px; flex-shrink: 0; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--card-border);">📄</div>`;
 
-    // 4. 組合 HTML：將 Date 與 New 徽章完美的包在標題 (art.title) 旁邊！
+    // 4. ✨ 組合 HTML：將 Flex 結構改寫，讓 Title 靠左，Date 靠右！
     indexHtml += `
         <li style="margin-bottom: 1rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.8rem;">
         <a href="#" onclick="event.preventDefault(); openArticle('${projectId}', ${idx})" 
@@ -505,11 +518,14 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
             
             ${iconHtml}
             
-            <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; width: 100%;">
-            <span style="font-size: 1.15rem; color: var(--accent); font-weight: bold;">
-                ${dateHtml}${art.title}${newBadgeHtml}
-            </span>
-            ${descHtml}
+            <div style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; row-gap: 0.4rem;">
+                <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+                    <span style="font-size: 1.15rem; color: var(--accent); font-weight: bold;">
+                        ${art.title}${newBadgeHtml}
+                    </span>
+                    ${descHtml}
+                </div>
+                ${dateHtml}
             </div>
 
         </a>
@@ -557,24 +573,55 @@ window.openArticle = function(projectId, articleIndex) {
     document.querySelector('.modal-content').scrollTop = 0;
 
     // ==========================================
+    // ✨ 新增：在文章標題 (H1) 右側動態插入日期與 NEW 標籤
+    // ==========================================
+    const firstH1 = modalBody.querySelector('h1');
+    if (firstH1 && (article.date || article.is_new)) {
+        // 建立一個 Flex 彈性容器來包裝標題與日期
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.alignItems = 'baseline';
+        wrapper.style.justifyContent = 'space-between';
+        wrapper.style.flexWrap = 'wrap';
+        wrapper.style.borderBottom = '2px solid var(--card-border)';
+        wrapper.style.paddingBottom = '0.3rem';
+        wrapper.style.marginBottom = '0.8rem';
+        
+        // 處理頂部間距 (如果 H1 是文章的第一個元素就不要有 margin-top)
+        wrapper.style.marginTop = (firstH1 === modalBody.firstElementChild) ? '0' : '0.8rem';
+
+        // 消除 H1 本身的底線與外距 (交給我們新做的 wrapper 統一處理)
+        firstH1.style.borderBottom = 'none';
+        firstH1.style.paddingBottom = '0';
+        firstH1.style.margin = '0';
+
+        // 將 wrapper 插入到 H1 原本的位置，並把 H1 搬進去
+        firstH1.parentNode.insertBefore(wrapper, firstH1);
+        wrapper.appendChild(firstH1);
+
+        // 準備右側的資訊區塊 (NEW 徽章 + 日期)
+        const metaHtml = `
+            <div style="display: flex; align-items: center; gap: 0.8rem; font-family: monospace; font-size: 0.95rem; color: var(--muted);">
+                ${article.is_new ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 2s infinite;">NEW</span>` : ''}
+                ${article.date ? `<span>${article.date}</span>` : ''}
+            </div>
+        `;
+        // 把日期塞到 Wrapper 的最右邊
+        wrapper.insertAdjacentHTML('beforeend', metaHtml);
+    }
+
+    // ==========================================
     // ✨ 終極升級：智慧骨架與破圖防塌陷偵測
     // ==========================================
     modalBody.querySelectorAll('img').forEach(img => {
-      // 1. 如果圖片「已經載入完畢，但寬度是 0」(代表它瞬間就判定破圖了)
       if (img.complete && img.naturalWidth === 0) {
-        img.classList.add('is-broken');
-      } 
-      // 2. 如果圖片還在載入中 (包含 lazy-loading)
-      else if (!img.complete) {
+        // 如果瞬間判定破圖，直接交給攔截器
+        window.handleImageError(img);
+      } else if (!img.complete) {
         img.classList.add('is-loading');
-        
         img.onload = () => img.classList.remove('is-loading');
-        
-        // 圖片下載失敗的瞬間，脫下 loading 裝甲，換上 broken 裝甲！
-        img.onerror = () => {
-          img.classList.remove('is-loading');
-          img.classList.add('is-broken'); 
-        };
+        // 下載失敗時，直接交給攔截器
+        img.onerror = () => window.handleImageError(img);
       }
     });
 

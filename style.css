@@ -296,12 +296,12 @@ section h2 {
 }
 
 /* 深色模式顏色 */
-[data-theme="dark"] .stock-up { color: #44D4BE; }
-[data-theme="dark"] .stock-down { color: #DB3069; }
+[data-theme="dark"] .stock-up { color: #DB3069; }
+[data-theme="dark"] .stock-down { color: #44D4BE; }
 
 /* 淺色模式顏色 */
-[data-theme="light"] .stock-up { color: #333AFD; } 
-[data-theme="light"] .stock-down { color: #F93435; }
+[data-theme="light"] .stock-up { color: #F93435; } 
+[data-theme="light"] .stock-down { color: #333AFD; }
 
 
 
@@ -1068,21 +1068,19 @@ footer {
 .toc-dropdown {
     position: absolute;
     top: 3rem; 
-    right: 0;  /* 靠右展開，與按鈕切齊 */
+    right: 0;  
     z-index: 1052;
-    
-    /* 👇 核心修改：將原本的 var(--glass-bg) 替換為 var(--nav-bg) */
-    /* var(--nav-bg) 的透明度是 0.95，幾乎不透明，但保有極微弱的毛玻璃感 */
     background: var(--nav-bg); 
-    
     backdrop-filter: blur(15px);
     border: 1px solid var(--card-border);
     border-radius: 1.1rem;
     padding: 1.2rem 1.5rem;
     width: 260px;
-    max-width: 80vw;
+    
+    /* ✨ 核心修復 1：拔除 max-width: 80vw，改用動態計算保留安全邊距 */
+    max-width: calc(100vw - 5rem); 
+    
     box-shadow: 0 10px 30px var(--shadow-base);
-
     opacity: 0;
     pointer-events: none;
     transform: translateY(-10px) scale(0.95);
@@ -1096,29 +1094,53 @@ footer {
     transform: translateY(0) scale(1);
 }
 
-/* 目錄內部樣式 (保持不變) */
-/* 目錄內部樣式 (保持不變) */
-.toc-dropdown ul { list-style: none !important; padding-left: 0 !important; margin: 0 !important; max-height: 50vh; overflow-y: auto; overflow-x: hidden; padding-right: 10px; }
-.toc-dropdown li { margin-bottom: 0.6rem; line-height: 1.4; }
+/* ========================================== */
+/* ✨ 目錄內部樣式 (帶有高質感微底線) */
+/* ========================================== */
+.toc-dropdown ul { 
+    list-style: none !important; 
+    padding-left: 0 !important; 
+    margin: 0 !important; 
+    max-height: 50vh; 
+    overflow-y: auto; 
+    overflow-x: hidden; 
+    padding-right: 10px; 
+}
 
-/* ✨ 替換這段：完整的三階層樹狀排版 */
-.toc-dropdown .toc-h1 { 
-    font-weight: 700; 
-    color: var(--accent); 
-    font-size: 1.05rem;
-    margin-top: 0.5rem; 
+.toc-dropdown li { 
+    /* 增加上下呼吸空間 */
+    margin-bottom: 0.5rem; 
+    padding-bottom: 0.5rem; 
+    line-height: 1.5; 
+    
+    /* ✨ 新增：高質感的虛線微底線，完美分隔多行長標題 */
+    border-bottom: 1px dashed var(--divider-line); 
 }
-.toc-dropdown .toc-h2 { 
-    font-weight: 600; 
-    padding-left: 1rem; /* H2 往內縮 1rem */
-    font-size: 0.95rem; 
+
+/* ✨ 拔除最後一個項目的底線，保持畫面乾淨收尾 */
+.toc-dropdown li:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
-.toc-dropdown .toc-h3 { 
-    padding-left: 2rem; /* H3 往內縮 2rem */
-    font-size: 0.85rem; 
-    color: var(--muted); /* H3 顏色稍微調淡，區分主次 */
+
+/* 確保 H1, H2, H3 這些層級的文字不會跟底線黏在一起 */
+.toc-dropdown .toc-h1 { font-weight: 700; color: var(--accent); font-size: 1.05rem; margin-top: 0.3rem; }
+.toc-dropdown .toc-h2 { font-weight: 600; padding-left: 1rem; font-size: 0.95rem; }
+.toc-dropdown .toc-h3 { padding-left: 2rem; font-size: 0.85rem; color: var(--muted); }
+
+.toc-dropdown a { 
+    color: var(--text) !important; 
+    text-decoration: none !important; 
+    transition: color 0.2s ease, transform 0.2s ease; 
+    display: block; 
+    transform-origin: left center; 
+    
+    /* ✨ 核心修復 2：強制長字串換行，防止文字把容器撐破 */
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.4;
 }
-.toc-dropdown a { color: var(--text) !important; text-decoration: none !important; transition: color 0.2s ease, transform 0.2s ease; display: block; transform-origin: left center; }
 .toc-dropdown a:hover { color: var(--accent-hover) !important; transform: scale(1.03); }
 .toc-dropdown ul::-webkit-scrollbar { width: 4px; }
 .toc-dropdown ul::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
@@ -1738,6 +1760,19 @@ footer {
     .hint-left::after {
         font-size: 1.2rem !important;
     }
+
+    /* ========================================== */
+    /* ✨ 終極修復：文章目錄的絕對安全邊界自適應 */
+    /* ========================================== */
+    .toc-dropdown {
+        /* ✨ 定位魔法：將目錄右側推到距離螢幕右邊緣約 1rem 的安全位置 */
+        right: -0.5rem; 
+        
+        /* ✨ 寬度魔法：螢幕總寬度 (100vw) 減去左右各 1rem 的安全距離 (共 2rem)。
+           它永遠不會變大，但螢幕變窄時，它會完美「自適應縮小」，絕對不切斷！ */
+        width: max-content; 
+        max-width: calc(100vw - 2rem); 
+    }
 }
 /* ========================= */
 /* 全站自訂捲軸 (支援明暗主題)  */
@@ -1774,118 +1809,85 @@ footer {
 }
 
 /* ========================================== */
-/* ✨ 圖片骨架屏與排版防抖動 (Skeleton & Anti-CLS) */
+/* ✨ 統一佔位圖系統 (Safari 跨瀏覽器無敵版) */
 /* ========================================== */
 
-/* 1. 骨架屏載入動畫 (Shimmer 掃光特效) */
-.is-loading {
-    /* 使用你現有的主題變數，創造出高質感的深淺漸層 */
-    background: linear-gradient(90deg, var(--bg) 25%, var(--card-border) 50%, var(--bg) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite linear;
-    color: transparent; /* 隱藏圖片預設的「破圖圖示」與 alt 文字 */
-}
-
-@keyframes shimmer {
+/* 1. 定義共用動畫：拆分為兩組，避免多重背景動畫打架 */
+@keyframes loading-sweep {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
-
-/* 2. 文章圖片的「排版防抖」 (Anti-CLS 裝甲) */
-.markdown-body img {
-    /* 避免因為 min-height 導致圖片被硬生生拉長變形 */
-    object-fit: contain; 
-    object-position: center;
-    /* 載入完成移除 is-loading 時，背景色會平滑消失 */
-    transition: background-color 0.4s ease, min-height 0.4s ease; 
+@keyframes broken-sweep {
+    /* 三層背景：Icon不動 (center), 漸層掃描 (200% -> -200%), 底色不動 (0 0) */
+    0% { background-position: center, 200% 0, 0 0; }
+    100% { background-position: center, -200% 0, 0 0; }
 }
-
-/* 只有在「載入中」的 Markdown 圖片，我們才強制給一個保底高度 */
-/* 這樣瀏覽器就會先撐開 250px 的空間，大幅減少載入完成後文字被往下推的幅度！ */
-.markdown-body img.is-loading {
-    min-height: 250px;
-}
-
-/* 如果是舊版浮動小圖片，保底高度不要給太高 */
-.markdown-body img[alt="float-right"].is-loading,
-.markdown-body figure.float-right img.is-loading {
-    min-height: 150px; 
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* ========================================== */
-/* ✨ 破圖防護裝甲 (Broken Image Fallback) */
-/* ========================================== */
-
-/* ✨ 新增：為所有破圖的佔位框加上平滑的呼吸燈特效 */
-img.is-broken {
-    animation: placeholder-breathe 2.5s infinite ease-in-out;
-}
-
-@keyframes placeholder-breathe {
+@keyframes skeleton-breathe {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.55; } /* 呼吸到最暗時的透明度，可自行微調 */
+    50% { opacity: 0.6; }
 }
 
+/* 2. 基礎防護：隱藏原生破圖文字 */
 img {
-    /* 1. 隱藏醜陋的預設 alt 文字與圖示 */
-    position: relative;
     color: transparent !important; 
     font-size: 0; 
 }
 
-/* 2. 只有當圖片載入失敗時，這個 ::before 才會出現，蓋住整個圖片區域 */
-img::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    
-    /* 使用系統的微透明底色蓋住瀏覽器的預設圖示 */
-    background-color: var(--box-bg); 
-    backdrop-filter: blur(4px);
-    
-    /* 給個科技感的虛線框，表示「這裡原本有東西」 */
-    border: 1px dashed var(--muted); 
-    
-    /* 完美繼承你在各處 (卡片、畫廊) 設定的圓角，不會跑版 */
-    border-radius: inherit; 
-    z-index: 1;
-}
-/* ========================================== */
-/* ✨ 文章內文與文繞圖的破圖佔位 (防塌陷終極版) */
-/* ========================================== */
-
-/* 1. 一般 Markdown 圖片破圖時：支援自訂比例，保底 16:9 */
-.markdown-body img.is-broken {
-    display: block; /* ✨ 核心修復：強制轉為區塊元素，解決 inline 塌陷與 Emoji 跑版問題 */
-    width: 100%;
-    aspect-ratio: var(--img-ratio, 1/1); /* ✨ 吃 Markdown 傳來的變數，沒有就用 16:9 */
-    background-color: var(--box-bg);
+/* 3. 載入中 (Loading) 的純骨架狀態 */
+.is-loading {
+    background: linear-gradient(110deg, var(--bg) 25%, var(--card-border) 50%, var(--bg) 75%);
+    background-size: 200% 100%;
+    animation: loading-sweep 1.5s infinite linear, skeleton-breathe 2.5s infinite ease-in-out;
+    transition: background-color 0.4s ease, min-height 0.4s ease; 
 }
 
-/* 2. 針對 Float-Right 文繞圖的破圖：支援自訂比例，保底 4:3 */
+/* 4. 破圖 (Broken) 的複合多重背景 (完美繞過 Safari 偽元素限制) */
+img.is-broken {
+    display: block; 
+    
+    /* ✨ 多重背景魔法疊加：由上到下分別是 Icon、斜光漸層、底色 */
+    background-image: 
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E"),
+        linear-gradient(110deg, transparent 25%, var(--card-border) 50%, transparent 75%),
+        linear-gradient(var(--box-bg), var(--box-bg));
+
+    /* ✨ 定位對齊：Icon 永遠置中，漸層靠右預備，底色靠左上 */
+    background-position: center, 200% 0, 0 0;
+    
+    /* ✨ 智慧縮放：Icon 採用 clamp 設定在 20px~48px 之間動態縮放，漸層與底色則填滿 */
+    background-size: clamp(20px, 30%, 48px) clamp(20px, 30%, 48px), 200% 100%, 100% 100%;
+    
+    background-repeat: no-repeat, no-repeat, no-repeat;
+    border: 1px dashed var(--muted);
+    
+    /* 綁定專屬的三層聯動掃光與呼吸雙重動畫 */
+    animation: broken-sweep 2s infinite linear, skeleton-breathe 2.5s infinite ease-in-out;
+}
+
+/* ========================================== */
+/* ✨ 文章與畫廊防塌陷 (冗餘清除版) */
+/* ========================================== */
+
+/* A. Loading 時的保底高度 */
+.markdown-body img.is-loading { min-height: 250px; }
+.markdown-body img[alt="float-right"].is-loading,
+.markdown-body figure.float-right img.is-loading { min-height: 150px; }
+
+/* B. Broken 時的比例支撐 */
+.markdown-body img.is-broken,
 .markdown-body figure.float-right img.is-broken,
 .markdown-body img[alt="float-right"].is-broken {
-    display: block; /* ✨ 核心修復 */
     width: 100%;
-    aspect-ratio: var(--img-ratio, 1/1); /* ✨ 吃 Markdown 傳來的變數，沒有就用 4:3 */
+    aspect-ratio: var(--img-ratio, 1/1); 
 }
 
-/* 3. 在正中央放一個優雅的 Emoji 或 Icon */
-img::after {
-    content: "🖼️"; /* 你也可以換成 "📄"、"🚫" 或是直接留白 "" */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    
-    /* 恢復字體大小與顏色，讓 Emoji 正常顯示 */
-    font-size: 1.5rem; 
-    color: var(--muted);
-    z-index: 2;
+/* 針對文繞圖獨立覆寫 */
+.markdown-body figure.float-right img.is-broken,
+.markdown-body img[alt="float-right"].is-broken {
+    aspect-ratio: var(--img-ratio, 1/1); 
+}
+
+/* C. 畫廊破圖：拔除放大補償，防止圓角溢出 */
+.markdown-body .gallery figure img.is-broken {
+    transform: none; 
 }

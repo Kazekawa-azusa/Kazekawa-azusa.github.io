@@ -121,8 +121,8 @@
           "description": "",
           "cover_image": "projects/art/01_azu5atellite/01_palindrome/basic.webp",
           "content": "# 『梓川風』\n<figure class=\"float-right\">\n  <img src=\"./projects/art/01_azu5atellite/01_palindrome/basic.webp\" alt=\"主視覺\" loading=\"lazy\" decoding=\"async\">\n  <figcaption>基礎方塊</figcaption>\n</figure>\n\n## 表情\n<div class=\"gallery\" style=\"--g-width: 200px; --g-rows: 1;\">\n  <figure><img src=\"./projects/art/01_azu5atellite/01_palindrome/confused.webp\" alt=\"confused\" loading=\"lazy\" decoding=\"async\"><figcaption>困惑</figcaption></figure>\n  <figure><img src=\"./projects/art/01_azu5atellite/01_palindrome/sad.webp\" alt=\"sad\" loading=\"lazy\" decoding=\"async\"><figcaption>難過</figcaption></figure>\n</div>\n(coc7th | OC)  \n\nTag：  \n作家、博士、偵探  \n\n經歷：  \n為了和編輯討論下一部作品而搭上了末班車，結果發生了不可思議的事情。  \n不久後為了新作品的取材而參訪了神秘的研究機構，還沒開始工作就先睡了兩小時，醒來後… <—— 現在在這",
-          "date": "2026-06-20",
-          "is_new": true
+          "date": "",
+          "is_new": false
         }
       ]
     },
