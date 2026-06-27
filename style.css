@@ -1320,13 +1320,20 @@ footer {
 /* 內部圖片本體設定 */
 .markdown-body .gallery figure img {
     width: 100%;
-    height: 100%; /* ✨ 改為 100%，確保自訂比例 (aspect-ratio) 時能完美填滿容器 */
+    height: 100%; 
     object-fit: cover; 
     object-position: top; 
     display: block; 
     border: none;
     border-radius: 0; 
     transform: scale(1.02); /* 防漏光補償 */
+}
+
+/* ========================================== */
+/* ✨ 核心修復：畫廊破圖時，拔除放大補償，防止佔位框圓角溢出 */
+/* ========================================== */
+.markdown-body .gallery figure img.is-broken {
+    transform: none; 
 }
 
 /* ========================= */
@@ -1706,6 +1713,31 @@ footer {
     #modal-top-right {
     padding-right: 3rem !important; 
     }
+
+    /* ========================================== */
+    /* ✨ 畫廊與卡片網格：手機版雙向捲動提示優化 */
+    /* ========================================== */
+    
+    /* 1. 縮減漸層遮罩寬度：從電腦版的 80px 縮小至 40px，把寶貴的螢幕空間還給卡片 */
+    .scroll-hint {
+        width: 40px !important;
+    }
+
+    /* 2. 微調漸層的過渡比例，讓窄版漸層看起來不會太生硬 */
+    .hint-right, .modal-content .hint-right {
+        background: linear-gradient(to right, rgba(0,0,0,0) 0%, var(--bg) 70%, var(--bg) 100%) !important;
+    }
+    .hint-left, .modal-content .hint-left {
+        background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--bg) 70%, var(--bg) 100%) !important;
+    }
+    .modal-content .hint-right { background: linear-gradient(to right, rgba(0,0,0,0) 0%, var(--card) 70%, var(--card) 100%) !important; }
+    .modal-content .hint-left { background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--card) 70%, var(--card) 100%) !important; }
+
+    /* 3. 稍微縮小箭頭圖示，適應較窄的遮罩空間 */
+    .hint-right::after, 
+    .hint-left::after {
+        font-size: 1.2rem !important;
+    }
 }
 /* ========================= */
 /* 全站自訂捲軸 (支援明暗主題)  */
@@ -1739,4 +1771,121 @@ footer {
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+}
+
+/* ========================================== */
+/* ✨ 圖片骨架屏與排版防抖動 (Skeleton & Anti-CLS) */
+/* ========================================== */
+
+/* 1. 骨架屏載入動畫 (Shimmer 掃光特效) */
+.is-loading {
+    /* 使用你現有的主題變數，創造出高質感的深淺漸層 */
+    background: linear-gradient(90deg, var(--bg) 25%, var(--card-border) 50%, var(--bg) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+    color: transparent; /* 隱藏圖片預設的「破圖圖示」與 alt 文字 */
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* 2. 文章圖片的「排版防抖」 (Anti-CLS 裝甲) */
+.markdown-body img {
+    /* 避免因為 min-height 導致圖片被硬生生拉長變形 */
+    object-fit: contain; 
+    object-position: center;
+    /* 載入完成移除 is-loading 時，背景色會平滑消失 */
+    transition: background-color 0.4s ease, min-height 0.4s ease; 
+}
+
+/* 只有在「載入中」的 Markdown 圖片，我們才強制給一個保底高度 */
+/* 這樣瀏覽器就會先撐開 250px 的空間，大幅減少載入完成後文字被往下推的幅度！ */
+.markdown-body img.is-loading {
+    min-height: 250px;
+}
+
+/* 如果是舊版浮動小圖片，保底高度不要給太高 */
+.markdown-body img[alt="float-right"].is-loading,
+.markdown-body figure.float-right img.is-loading {
+    min-height: 150px; 
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* ========================================== */
+/* ✨ 破圖防護裝甲 (Broken Image Fallback) */
+/* ========================================== */
+
+/* ✨ 新增：為所有破圖的佔位框加上平滑的呼吸燈特效 */
+img.is-broken {
+    animation: placeholder-breathe 2.5s infinite ease-in-out;
+}
+
+@keyframes placeholder-breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; } /* 呼吸到最暗時的透明度，可自行微調 */
+}
+
+img {
+    /* 1. 隱藏醜陋的預設 alt 文字與圖示 */
+    position: relative;
+    color: transparent !important; 
+    font-size: 0; 
+}
+
+/* 2. 只有當圖片載入失敗時，這個 ::before 才會出現，蓋住整個圖片區域 */
+img::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    
+    /* 使用系統的微透明底色蓋住瀏覽器的預設圖示 */
+    background-color: var(--box-bg); 
+    backdrop-filter: blur(4px);
+    
+    /* 給個科技感的虛線框，表示「這裡原本有東西」 */
+    border: 1px dashed var(--muted); 
+    
+    /* 完美繼承你在各處 (卡片、畫廊) 設定的圓角，不會跑版 */
+    border-radius: inherit; 
+    z-index: 1;
+}
+/* ========================================== */
+/* ✨ 文章內文與文繞圖的破圖佔位 (防塌陷終極版) */
+/* ========================================== */
+
+/* 1. 一般 Markdown 圖片破圖時：支援自訂比例，保底 16:9 */
+.markdown-body img.is-broken {
+    display: block; /* ✨ 核心修復：強制轉為區塊元素，解決 inline 塌陷與 Emoji 跑版問題 */
+    width: 100%;
+    aspect-ratio: var(--img-ratio, 1/1); /* ✨ 吃 Markdown 傳來的變數，沒有就用 16:9 */
+    background-color: var(--box-bg);
+}
+
+/* 2. 針對 Float-Right 文繞圖的破圖：支援自訂比例，保底 4:3 */
+.markdown-body figure.float-right img.is-broken,
+.markdown-body img[alt="float-right"].is-broken {
+    display: block; /* ✨ 核心修復 */
+    width: 100%;
+    aspect-ratio: var(--img-ratio, 1/1); /* ✨ 吃 Markdown 傳來的變數，沒有就用 4:3 */
+}
+
+/* 3. 在正中央放一個優雅的 Emoji 或 Icon */
+img::after {
+    content: "🖼️"; /* 你也可以換成 "📄"、"🚫" 或是直接留白 "" */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    /* 恢復字體大小與顏色，讓 Emoji 正常顯示 */
+    font-size: 1.5rem; 
+    color: var(--muted);
+    z-index: 2;
 }

@@ -77,6 +77,14 @@ def generate_projects_json():
             proj_data['title'] = proj_data.get('title', clean_proj_title)
             proj_data['order'] = proj_data.get('order', default_proj_order)
             
+            # ==========================================
+            # ✨ 新增：日期與徽章標籤的安全防呆處理
+            # ==========================================
+            proj_data['date'] = proj_data.get('date', "")
+            # 使用 bool() 強制轉型，確保即使不小心寫成字串 "true"，也能轉為乾淨的布林值
+            proj_data['pinned'] = bool(proj_data.get('pinned', False))
+            proj_data['is_new'] = bool(proj_data.get('is_new', False))
+            
             proj_cover = proj_data.get('cover')
             if proj_cover:
                 proj_data['cover_image'] = f"{base_dir}/{cat_folder}/{proj_folder}/{proj_cover}"
@@ -127,7 +135,13 @@ def generate_projects_json():
                                 "title": meta_title,
                                 "description": meta_desc,
                                 "cover_image": f"{rel_base}/{meta_cover}" if meta_cover else None, 
-                                "content": content
+                                "content": content,
+                                
+                                # ==========================================
+                                # ✨ 補上這裡：讀取單篇文章 (文章資料夾裡的 detail.json) 的標籤
+                                # ==========================================
+                                "date": sub_data.get('date', ''),
+                                "is_new": bool(sub_data.get('is_new', False))
                             })
                     except Exception as e:
                         print(f"⚠️ Error reading Markdown {md_file_path}: {e}")
