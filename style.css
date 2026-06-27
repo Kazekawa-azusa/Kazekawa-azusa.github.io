@@ -186,17 +186,43 @@ section h2 {
     background: var(--card);
     border-radius: 1.1rem;
     padding: 1.4rem 1.6rem;
-    box-shadow: 0 10px 30px var(--shadow-base); 
-    border: 1px solid var(--card-border); 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); 
+    border: 1px solid rgba(64, 120, 153, 0.1); 
+    
+    position: relative; /* 作為右上角絕對定位圖釘的穩固錨點 */
+    
     opacity: 0;
     transform: translateY(40px);
-    transition: opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
+    transition: opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
 }
 
-.card.show:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px var(--shadow-hover); 
+/* ========================================== */
+/* ✨ 專案卡片專屬的圖釘 (Pin) 獨立樣式與動畫 */
+/* ========================================== */
+.card-pin {
+    position: absolute; 
+    top: -14px; 
+    right: -14px; 
+    width: 34px; 
+    height: 34px; 
+    background: var(--accent-2); 
+    color: var(--card); 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15), 0 0 8px var(--accent-2); 
+    z-index: 10;
+    /* ✨ 讓變形與發光都能完美過渡，不受內聯樣式干擾 */
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s ease;
 }
+
+.card:hover .card-pin {
+    /* ✨ 圖釘跟著微微放大且旋轉，光暈範圍擴展，創造被「強調」的立體感 */
+    transform: scale(1.15) rotate(8deg);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2), 0 0 15px var(--accent-2);
+}
+
 .card h3 {
     margin-top: 0;
     margin-bottom: 0.4rem;
@@ -409,22 +435,6 @@ footer {
 /* ========================= */
 /* 卡片滾動浮現動畫 (Scroll Reveal) */
 /* ========================= */
-
-
-/* 1. 修改原本的 .card，加入過渡動畫設定 */
-.card {
-    background: var(--card);
-    border-radius: 1.1rem;
-    padding: 1.4rem 1.6rem;
-    /* 淡淡的灰色陰影 */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); 
-    border: 1px solid rgba(64, 120, 153, 0.1); /* 加一條極淡的藍色邊框 */
-    
-    opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
-}
-
 /* 2. 當 JavaScript 偵測到卡片進入畫面時，會幫它加上 .show 類別 */
 .card.show {
     opacity: 1;
@@ -644,21 +654,10 @@ footer {
     box-shadow: 0 0 10px var(--accent-2); 
 }
 
-/* 2. 三條線產生科技感的錯位位移 (保持不變) */
-.menu-btn:not(.open):hover .bar:nth-child(1) {
-    transform: translateX(-4px);
-}
-
-/* 2. 三條線產生科技感的錯位位移 */
-.menu-btn:not(.open):hover .bar:nth-child(1) {
-    transform: translateX(-4px);
-}
-.menu-btn:not(.open):hover .bar:nth-child(2) {
-    transform: translateX(4px);
-}
-.menu-btn:not(.open):hover .bar:nth-child(3) {
-    transform: translateX(-4px);
-}
+/* 2. 漢堡三條線產生科技感的錯位位移 */
+.menu-btn:not(.open):hover .bar:nth-child(1) { transform: translateX(-4px); }
+.menu-btn:not(.open):hover .bar:nth-child(2) { transform: translateX(4px); }
+.menu-btn:not(.open):hover .bar:nth-child(3) { transform: translateX(-4px); }
 
 /* 3. 當選單已經打開(變成 X) 時的懸停特效 (可選) */
 /* 3. 當選單已經打開(變成 X) 時的懸停特效 */
@@ -853,6 +852,34 @@ footer {
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.5s ease, border-color 0.5s ease;
 }
 
+/* ========================================== */
+/* ✨ 內容索引 (TOC) 專屬的圖釘互動動畫 */
+/* ========================================== */
+.modal-pin {
+    position: absolute; 
+    top: -12px; 
+    left: -12px; 
+    width: 24px; 
+    height: 24px; 
+    background: var(--accent-2); 
+    color: var(--card); 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 0 8px var(--accent-2); 
+    z-index: 1; 
+    /* ✨ 同步過渡動畫設定 */
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s ease;
+}
+
+/* ✨ 當滑鼠移到這「整列」目錄連結上時，左側的圖釘會跟著放大旋轉！ */
+.modal-content a:hover .modal-pin {
+    transform: scale(1.15) rotate(8deg);
+    /* 因為移除了 Inline style，這裡再也不需要寫醜陋的 !important 了！ */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2), 0 0 12px var(--accent-2); 
+}
+
 .modal-overlay.active .modal-content {
     transform: translateY(0) scale(1);
 }
@@ -883,7 +910,6 @@ footer {
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-/* 1. 調整索引模式下的頂部欄位與按鈕位置 */
 /* 1. 調整索引模式下的頂部欄位與按鈕位置 */
 .modal-top-bar.is-index-mode {
     background: transparent;
@@ -1873,18 +1899,13 @@ img.is-broken {
 .markdown-body img[alt="float-right"].is-loading,
 .markdown-body figure.float-right img.is-loading { min-height: 150px; }
 
-/* B. Broken 時的比例支撐 */
+/* B. Broken 破圖時的幾何防塌陷支撐 */
 .markdown-body img.is-broken,
 .markdown-body figure.float-right img.is-broken,
 .markdown-body img[alt="float-right"].is-broken {
     width: 100%;
-    aspect-ratio: var(--img-ratio, 1/1); 
-}
-
-/* 針對文繞圖獨立覆寫 */
-.markdown-body figure.float-right img.is-broken,
-.markdown-body img[alt="float-right"].is-broken {
-    aspect-ratio: var(--img-ratio, 1/1); 
+    /* 統一支援 Markdown 傳入的 --img-ratio 變數，若無則預設為完美的 1:1 方形 */
+    aspect-ratio: var(--img-ratio, 1 / 1); 
 }
 
 /* C. 畫廊破圖：拔除放大補償，防止圓角溢出 */

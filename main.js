@@ -346,23 +346,35 @@ async function loadProjects() {
             ? `<p style="color: var(--text); font-size: 0.95rem; line-height: 1.6; margin-top: 0.5rem; margin-bottom: 1rem;">${data.description}</p>`
             : '';
 
-        // ✨ 修改：將 onerror 接入全域防護系統
+        // ==========================================
+        // ✨ 終極升級：專案卡片的獨立圖釘 (右上角絕對定位)
+        // ==========================================
+        
+        // 1. 基底圖片 (無圖則直接留白，移除 📄 預設框)
         const cardImageHtml = data.cover_image
-            ? `<img src="${data.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="width: 56px; height: 56px; border-radius: 12px; object-fit: cover; border: 1px solid var(--card-border); flex-shrink: 0;">`
+            ? `<img src="${data.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="width: 56px; height: 56px; border-radius: 12px; object-fit: cover; border: 1px solid var(--card-border); flex-shrink: 0; background: var(--bg);">`
             : '';
 
-        // ✨ 處理日期顯示 (如果 JSON 有填 date 就顯示)
+        // 2. 獨立的大型圖釘 (放置於卡片右上角)
+        const techPinSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(45deg);"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`;
+
+        // ✨ 終極淨化：將冗長的 inline-style 徹底拔除，交給 .card-pin 全權處理
+        const absolutePinHtml = data.pinned
+            ? `<div class="card-pin">${techPinSvg}</div>`
+            : '';
+
+        // ✨ 原有的日期與 NEW 徽章保持不變
         const cardDateHtml = data.date
             ? `<span style="font-family: monospace; font-size: 0.8rem; color: var(--accent); opacity: 0.8; margin-right: 0.8rem;">[${data.date}]</span>`
             : '';
 
-        // ✨ 處理 NEW 徽章 (如果 JSON 有填 is_new: true 就顯示發光徽章)
         const newBadgeHtml = data.is_new
-            ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 2s infinite;">NEW</span>`
+            ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>`
             : '';
 
-        // 將日期與徽章塞進標題區塊
+        // 3. ✨ 組合 HTML：將 absolutePinHtml 放在最外層，還原最乾淨的排版
         card.innerHTML = `
+            ${absolutePinHtml}
             <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;">
             <h3 style="display: flex; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.2rem; margin-top: 0;">
                 ${cardDateHtml}
@@ -485,51 +497,74 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
 
     // ✨ 核心修復：加上 style="padding-right: 4.5rem;" 預留出 X 按鈕的專屬空間
     let indexHtml = `<h1 style="padding-right: 4.5rem;">${proj.title} - 內容索引</h1><ul style="list-style:none; padding-left:0; margin-top:1.5rem;">`;
-    
+    // ==========================================
+    // ✨ 新增：文章智慧排序 (將置頂文章推到最上面，其餘維持原本的章節順序)
+    // ==========================================
+    proj.articles.sort((a, b) => {
+        const aPinned = a.pinned ? 1 : 0;
+        const bPinned = b.pinned ? 1 : 0;
+        return bPinned - aPinned;
+    });
     proj.articles.forEach((art, idx) => {
-    // 1. 處理描述文字
-    let descHtml = art.description 
-        ? `<span style="font-size: 0.95rem; color: var(--muted); line-height: 1.4;">- ${art.description}</span>` 
-        : '';
+        // 1. 處理描述文字
+        let descHtml = art.description 
+            ? `<span style="font-size: 0.95rem; color: var(--muted); line-height: 1.4;">- ${art.description}</span>` 
+            : '';
 
-    // ==========================================
-    // ✨ 2. 新增：處理單篇文章的日期與 NEW 發光徽章 (改為右側對齊)
-    // ==========================================
-    
-    // ✨ 修改：利用 margin-left: auto 把它推到最右邊！並且改為低調的灰色
-    let dateHtml = art.date
-        ? `<span style="font-family: monospace; font-size: 0.85rem; color: var(--muted); margin-left: auto; padding-left: 1rem; flex-shrink: 0;">${art.date}</span>`
-        : '';
+        // 2. 處理右側的日期與 NEW 徽章
+        let dateHtml = art.date
+            ? `<span style="font-family: monospace; font-size: 0.85rem; color: var(--muted); margin-left: auto; padding-left: 1rem; flex-shrink: 0;">${art.date}</span>`
+            : '';
+            
+        let newBadgeHtml = art.is_new
+            ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>`
+            : '';
+
+        // ==========================================
+        // ✨ 3. 處理左側的縮圖與「絕對定位」圖釘徽章 (圖層覆蓋版)
+        // ==========================================
         
-    let newBadgeHtml = art.is_new
-        ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 2s infinite;">NEW</span>`
-        : '';
+        // 維持 -45deg 的傾斜科技圖釘
+        const techPinSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(-45deg);"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`;
 
-    // 3. 處理左側的縮圖或圖示
-    let iconHtml = art.cover_image
-        ? `<img src="${art.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid var(--card-border);">`
-        : `<div style="width: 44px; height: 44px; flex-shrink: 0; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--card-border);">📄</div>`;
+        // ✨ 關鍵修改 1：幫縮圖與預設圖示加上 `position: relative; z-index: 2;`，讓它們浮在最上層！
+        let baseIconHtml = art.cover_image
+            ? `<img src="${art.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="position: relative; z-index: 2; width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid var(--card-border);">`
+            : `<div style="position: relative; z-index: 2; width: 44px; height: 44px; flex-shrink: 0; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--card-border);">📄</div>`;
 
-    // 4. ✨ 組合 HTML：將 Flex 結構改寫，讓 Title 靠左，Date 靠右！
-    indexHtml += `
-        <li style="margin-bottom: 1rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.8rem;">
-        <a href="#" onclick="event.preventDefault(); openArticle('${projectId}', ${idx})" 
-            style="display: flex; align-items: center; gap: 1rem; text-decoration: none; padding: 0.5rem; border-radius: 0.8rem; transition: background-color 0.2s;">
-            
-            ${iconHtml}
-            
-            <div style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; row-gap: 0.4rem;">
-                <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
-                    <span style="font-size: 1.15rem; color: var(--accent); font-weight: bold;">
-                        ${art.title}${newBadgeHtml}
-                    </span>
-                    ${descHtml}
-                </div>
-                ${dateHtml}
+        // ✨ 終極淨化：將冗長的 inline-style 徹底拔除，交給 .modal-pin 全權處理
+        let pinnedBadgeHtml = art.pinned
+            ? `<div class="modal-pin">${techPinSvg}</div>`
+            : '';
+
+        // 將它們用一個 relative 容器包裝起來
+        let iconHtml = `
+            <div style="position: relative; flex-shrink: 0; display: flex;">
+                ${pinnedBadgeHtml}
+                ${baseIconHtml}
             </div>
+        `;
 
-        </a>
-        </li>`;
+        // 4. ✨ 組合 HTML (這裡接續你原本的 indexHtml += ...)
+        indexHtml += `
+            <li style="margin-bottom: 1rem; border-bottom: 1px dashed var(--divider-line); padding-bottom: 0.8rem;">
+            <a href="#" onclick="event.preventDefault(); openArticle('${projectId}', ${idx})" 
+                style="display: flex; align-items: center; gap: 1rem; text-decoration: none; padding: 0.5rem; border-radius: 0.8rem; transition: background-color 0.2s;">
+                
+                ${iconHtml}
+                
+                <div style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; row-gap: 0.4rem;">
+                    <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+                        <span style="font-size: 1.15rem; color: var(--accent); font-weight: bold;">
+                            ${art.title}${newBadgeHtml}
+                        </span>
+                        ${descHtml}
+                    </div>
+                    ${dateHtml}
+                </div>
+
+            </a>
+            </li>`;
     });
     indexHtml += `</ul>`;
 
@@ -602,7 +637,7 @@ window.openArticle = function(projectId, articleIndex) {
         // 準備右側的資訊區塊 (NEW 徽章 + 日期)
         const metaHtml = `
             <div style="display: flex; align-items: center; gap: 0.8rem; font-family: monospace; font-size: 0.95rem; color: var(--muted);">
-                ${article.is_new ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 2s infinite;">NEW</span>` : ''}
+                ${article.is_new ? `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>` : ''}
                 ${article.date ? `<span>${article.date}</span>` : ''}
             </div>
         `;

@@ -78,10 +78,9 @@ def generate_projects_json():
             proj_data['order'] = proj_data.get('order', default_proj_order)
             
             # ==========================================
-            # ✨ 新增：日期與徽章標籤的安全防呆處理
+            # ✨ 新增：讀取專案 (Card) 的擴充標籤
             # ==========================================
             proj_data['date'] = proj_data.get('date', "")
-            # 使用 bool() 強制轉型，確保即使不小心寫成字串 "true"，也能轉為乾淨的布林值
             proj_data['pinned'] = bool(proj_data.get('pinned', False))
             proj_data['is_new'] = bool(proj_data.get('is_new', False))
             
@@ -138,9 +137,10 @@ def generate_projects_json():
                                 "content": content,
                                 
                                 # ==========================================
-                                # ✨ 補上這裡：讀取單篇文章 (文章資料夾裡的 detail.json) 的標籤
+                                # ✨ 新增：讀取文章 (Article) 的擴充標籤
                                 # ==========================================
-                                "date": sub_data.get('date', ''),
+                                "date": sub_data.get('date', ""),
+                                "pinned": bool(sub_data.get('pinned', False)),
                                 "is_new": bool(sub_data.get('is_new', False))
                             })
                     except Exception as e:
