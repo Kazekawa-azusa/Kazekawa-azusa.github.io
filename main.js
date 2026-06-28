@@ -524,7 +524,7 @@ const closeModalBtn = document.getElementById('close-modal');
 const modalBody = document.getElementById('modal-body');
 
 // ==========================================
-// ✨ 核心升級：統一的內部平滑切換引擎 (Smooth Swap 2.0 - 高度自適應拉伸版)
+// ✨ 核心升級：同步自適應高度切換 (完美 CSS FLIP 引擎)
 // ==========================================
 function switchModalContent(updateDOMCallback) {
     const isModalOpen = modalOverlay.classList.contains('active');
@@ -533,41 +533,55 @@ function switchModalContent(updateDOMCallback) {
     const modalContainer = document.querySelector('.modal-content');
     
     if (isModalOpen) {
-        // 1. 鎖定當前高度，準備進行「拉伸」動畫
-        const currentHeight = modalContainer.getBoundingClientRect().height;
+        // 1. 取得當前真實高度並鎖定
+        const currentHeight = modalContainer.offsetHeight; 
         modalContainer.style.height = currentHeight + 'px';
+        modalContainer.style.overflow = 'hidden'; 
 
-        // 2. 觸發極速淡出 (從 200ms 加速至 120ms)
+        // 2. 淡出舊內容
         modalBody.classList.add('content-fade-out');
         if (topLeft) topLeft.classList.add('content-fade-out');
         if (tocMount) tocMount.classList.add('content-fade-out');
         
         setTimeout(() => {
-            // 3. 在完全透明的狀態下，偷偷抽換 DOM 內容與捲軸位置
+            // 3. 關閉 CSS 過渡，準備偷偷換內容
+            modalContainer.style.transition = 'none'; 
+            
+            // 4. 執行 DOM 替換
             updateDOMCallback();
             
-            // 4. 瞬間放開高度限制，測量新內容「應該要多高」
-            modalContainer.style.height = 'auto';
-            const newHeight = modalContainer.getBoundingClientRect().height;
+            // 5. 解除鎖定，讓瀏覽器自然撐開，精準測量新高度
+            modalContainer.style.height = ''; 
+            const newHeight = modalContainer.offsetHeight;
             
-            // 5. 把高度拉回舊的狀態，然後強制瀏覽器重繪 (Reflow)
+            // 6. ✨ 核心修復：立刻將高度「死死鎖在起點 (currentHeight)」
+            // 絕對不能先設為 newHeight！讓瀏覽器保持在舊的尺寸，準備當作動畫的完美起點
             modalContainer.style.height = currentHeight + 'px';
+            
+            // 7. 強制重繪：強迫瀏覽器把「鎖定在起點」的狀態畫到螢幕上
             void modalContainer.offsetHeight; 
             
-            // 6. 設定目標新高度，觸發 CSS height 彈性過渡動畫
-            modalContainer.style.height = newHeight + 'px';
+            // 8. 重新開啟 CSS 過渡動畫
+            modalContainer.style.transition = ''; 
             
-            // 7. 同時觸發新內容極速淡入
-            modalBody.classList.remove('content-fade-out');
-            if (topLeft) topLeft.classList.remove('content-fade-out');
-            if (tocMount) tocMount.classList.remove('content-fade-out');
+            // 9. ✨ 終極防漏魔法：利用下一幀才觸發拉伸，讓 CSS 完美接管雙向切換
+            requestAnimationFrame(() => {
+                // 設定目標新高度，觸發平滑拉伸
+                modalContainer.style.height = newHeight + 'px';
+                
+                // 同步淡入新內容
+                modalBody.classList.remove('content-fade-out'); 
+                if (topLeft) topLeft.classList.remove('content-fade-out');
+                if (tocMount) tocMount.classList.remove('content-fade-out');
 
-            // 8. 等待高度拉伸動畫結束 (約 250ms)，拔除 inline style 讓它恢復響應式
-            setTimeout(() => {
-                modalContainer.style.height = '';
-            }, 250);
+                // 動畫結束後清理內聯樣式 (0.25s 需與 CSS transition 時間對齊)
+                setTimeout(() => {
+                    modalContainer.style.height = '';
+                    modalContainer.style.overflow = '';
+                }, 250);
+            });
 
-        }, 120); // ✨ 淡出只需 120ms，體感速度大幅提升！
+        }, 120); // 配合淡出時間
     } else {
         updateDOMCallback();
         modalBody.classList.remove('content-fade-out');
