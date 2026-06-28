@@ -5,7 +5,7 @@
 /* ================================================================== */
 const CONFIG = {
     // 🚩 發布前必改
-    VERSION: "U0.5.0",          // 目前系統版本號
+    VERSION: "U0.5.1",          // 目前系統版本號
 
     // 🎨 介面與主題設定
     DEFAULT_THEME: "light",     // 預設主題 (light / dark)
@@ -524,18 +524,93 @@ const closeModalBtn = document.getElementById('close-modal');
 const modalBody = document.getElementById('modal-body');
 
 // ==========================================
+// ✨ 動態高度追蹤系統 (解決圖片載入時的突發膨脹)
+// ==========================================
+if (!window.modalBodyObserver) {
+    window.modalBodyObserver = new ResizeObserver(() => {
+        const modalContainer = document.querySelector('.modal-content');
+        
+        // 只有在我們「正在執行高度拉伸動畫」的期間 (style.height 有明確的 px 數值時)，才允許動態修正
+        if (modalContainer && modalContainer.style.height && modalContainer.style.height.includes('px')) {
+            const requiredHeight = modalContainer.scrollHeight;
+            const currentTarget = parseInt(modalContainer.style.height);
+            
+            // 如果內容物突然變大 (例如圖片載入完畢，取代了佔位圖)，而且誤差超過 2px
+            if (Math.abs(currentTarget - requiredHeight) > 2) {
+                // 立刻將動畫的目標高度修改為新的真實高度，CSS transition 會極度平滑地「自動轉向」！
+                modalContainer.style.height = requiredHeight + 'px';
+            }
+        }
+    });
+    window.modalBodyObserver.observe(modalBody);
+}
+
+// ==========================================
 // ✨ 核心升級：同步自適應高度切換 (完美 CSS FLIP 引擎)
 // ==========================================
 function switchModalContent(updateDOMCallback) {
-    function update() {
-        updateDOMCallback();
-    }
-    if (document.startViewTransition) {
-        document.startViewTransition(() => {
-            update();
-        });
+    const modalOverlay = document.getElementById('md-modal');
+    const isModalOpen = modalOverlay.classList.contains('active');
+    
+    const topLeft = document.getElementById('modal-top-left');
+    const tocMount = document.getElementById('toc-mount-point');
+    const modalContainer = document.querySelector('.modal-content');
+    const modalBody = document.getElementById('modal-body');
+    
+    if (isModalOpen) {
+        // 1. 取得當前真實高度並鎖定
+        const currentHeight = modalContainer.offsetHeight; 
+        modalContainer.style.height = currentHeight + 'px';
+        modalContainer.style.overflow = 'hidden'; 
+
+        // 2. 觸發 CSS 隱藏動畫 (就是你剛剛挑選的 3D翻轉 或 景深模糊)
+        modalBody.classList.add('content-fade-out');
+        if (topLeft) topLeft.classList.add('content-fade-out');
+        if (tocMount) tocMount.classList.add('content-fade-out');
+        
+        setTimeout(() => {
+            // 3. 關閉 CSS 過渡，準備偷偷換內容
+            modalContainer.style.transition = 'none'; 
+            
+            // 4. 執行 DOM 替換
+            updateDOMCallback();
+            
+            // ✨ 測量前，強制瀏覽器重繪一次，讓 float 元素完成排版計算
+            void modalBody.offsetHeight; 
+            
+            // 清空高度，精準測量新內容的自然高度
+            modalContainer.style.height = ''; 
+            const newHeight = modalContainer.offsetHeight;
+            
+            // 6. 立刻將高度「死死鎖在起點」
+            modalContainer.style.height = currentHeight + 'px';
+            void modalContainer.offsetHeight; // 強制重繪
+            
+            // 7. 重新開啟 CSS 過渡動畫
+            modalContainer.style.transition = ''; 
+            
+            // 8. 下一幀觸發拉伸與新內容淡入
+            requestAnimationFrame(() => {
+                modalContainer.style.height = newHeight + 'px';
+                
+                modalBody.classList.remove('content-fade-out'); 
+                if (topLeft) topLeft.classList.remove('content-fade-out');
+                if (tocMount) tocMount.classList.remove('content-fade-out');
+
+                // 動畫結束後清理內聯樣式
+                setTimeout(() => {
+                    modalContainer.style.height = '';
+                    modalContainer.style.overflow = '';
+                }, 250);
+            });
+
+        }, 120); // ⬅️ 這裡的 120ms 對應舊內容淡出的時間
     } else {
-        update();
+        // 如果是初次打開 Modal，直接更新，不播內部切換動畫
+        updateDOMCallback();
+        modalBody.classList.remove('content-fade-out');
+        if (topLeft) topLeft.classList.remove('content-fade-out');
+        if (tocMount) tocMount.classList.remove('content-fade-out');
     }
 }
 
@@ -574,7 +649,8 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
 
             let pinnedBadgeHtml = art.pinned ? `<div class="modal-pin">${techPinSvg}</div>` : '';
 
-            let iconHtml = `<div style="position: relative; flex-shrink: 0; display: flex;">${pinnedBadgeHtml}${baseIconHtml}</div>`;
+            // ✨ 修正：加上 align-items: center; 並且鎖定寬高，徹底防止手機版 Flexbox 拉伸變形！
+            let iconHtml = `<div style="position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px;">${pinnedBadgeHtml}${baseIconHtml}</div>`;
 
             indexHtml += `
                 <li style="margin-bottom: 1rem; border-bottom: 1px dashed var(--divider-line); padding-bottom: 0.8rem;">
@@ -599,13 +675,22 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
         indexHtml += `<style>#modal-body li a:hover { background: rgba(128, 128, 128, 0.05); }</style>`;
 
         modalBody.innerHTML = indexHtml;
-        document.querySelector('.modal-content').style.viewTransitionName = 'modal-content';
         modalOverlay.classList.add('active');
         document.body.style.overflow = 'hidden';
         
         const modalContainer = document.querySelector('.modal-content');
-        window.pendingModalScroll =
-        window.lastIndexScrollPos ?? 0;
+        
+        // ==========================================
+        // ✨ 修復：根據 restoreScroll 參數，精準還原捲軸位置！
+        // ==========================================
+        if (restoreScroll && window.lastIndexScrollPos !== undefined) {
+            // 同步設定捲軸。因為此時外層的 switchModalContent 已經把高度「鎖定」了，
+            // 捲軸不會被高度限制卡住，能 100% 精準回到使用者點擊文章前的位置！
+            modalContainer.scrollTop = window.lastIndexScrollPos;
+        } else {
+            // 如果是從首頁點擊卡片進來，就乖乖回到最上面
+            modalContainer.scrollTop = 0;
+        }
     }); // ✨ switchModalContent 結束
 };
 
@@ -705,13 +790,15 @@ window.openArticle = function(projectId, articleIndex) {
                 
                 a.onclick = () => {
                     const modalContainer = document.querySelector('.modal-content');
-
-                    requestAnimationFrame(() => {
-                        if(window.lastIndexScrollPos !== undefined){
-                            modalContainer.scrollTop =
-                                window.lastIndexScrollPos;
-                        }
-                    });
+                    
+                    // ✨ 終極精準定位：利用 getBoundingClientRect 取得絕對相對位置，無視任何 DOM 結構干擾！
+                    const targetTop = h.getBoundingClientRect().top 
+                                    - modalContainer.getBoundingClientRect().top 
+                                    + modalContainer.scrollTop 
+                                    - 90; // 扣除 90px 給頂部導覽列
+                    
+                    modalContainer.scrollTo({ top: targetTop, behavior: 'smooth' });
+                    
                     h.classList.add('highlight-flash');
                     setTimeout(() => { h.classList.remove('highlight-flash'); }, 1000);
                     tocBtn.classList.remove('open');
@@ -1001,25 +1088,15 @@ window.scrollToNextCard = function(event) {
 // 為了保留首頁的測試按鈕，加入這個純文字渲染函數
 window.openMarkdownModal = function(markdownText) {
     modalBody.innerHTML = marked.parse(markdownText);
-    document.querySelector('.modal-content').style.viewTransitionName = 'modal-content';
     modalOverlay.classList.add('active');
     document.body.style.overflow = 'hidden';
     document.querySelector('.modal-content').scrollTop = 0;
 };
 
+// 關閉 Modal 的函數與事件綁定
 function closeModal() {
-
-    const modalContent =
-        document.querySelector('.modal-content');
-
-    modalContent.style.viewTransitionName = 'none';
-
     modalOverlay.classList.remove('active');
     document.body.style.overflow = '';
-
-    requestAnimationFrame(() => {
-        modalContent.style.removeProperty('view-transition-name');
-    });
 }
 
 closeModalBtn.addEventListener('click', closeModal);

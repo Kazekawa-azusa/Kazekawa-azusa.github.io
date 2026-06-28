@@ -1189,6 +1189,9 @@ footer {
     color: var(--text);
     line-height: 1.8;
     font-size: 1rem;
+    
+    /* ✨ 核心修復：強制建立 BFC，讓容器絕對包含所有 float 元素，消滅高度計算誤差 */
+    display: flow-root; 
 }
 
 /* ========================= */
@@ -1906,9 +1909,26 @@ img.is-broken {
 /* ========================================== */
 
 /* A. Loading 時的保底高度 */
-.markdown-body img.is-loading { min-height: 250px; }
+.markdown-body img.is-loading { 
+    min-height: 250px; 
+    
+    /* ✨ 核心修復 1：強制轉為區塊元素，這樣 min-height 才會生效，讓佔位圖擁有真實的物理體積！ */
+    display: block; 
+    
+    /* ✨ 核心修復 2：給予完整寬度，讓灰色掃描動畫可以填滿畫面 */
+    width: 100%; 
+}
+
 .markdown-body img[alt="float-right"].is-loading,
-.markdown-body figure.float-right img.is-loading { min-height: 150px; }
+/* 修改這段，確保即使 float 元素內的圖片還在 loading，父容器也能感知到高度 */
+.markdown-body img.is-loading,
+.markdown-body figure.float-right img.is-loading { 
+    min-height: 150px; 
+    display: block; 
+    width: 100%;
+    /* 這裡加上這行，確保它在還沒載入時，就能撐開 float 容器 */
+    background: var(--bg); 
+}
 
 /* B. Broken 破圖時的幾何防塌陷支撐 */
 .markdown-body img.is-broken,
@@ -2082,6 +2102,7 @@ img.is-broken {
     from { opacity:0; }
     to { opacity:1; }
 }
+
 /* ========================================== */
 /* ✨ 模態框內部切換平滑過渡 (磁吸回彈版) */
 /* ========================================== */
@@ -2097,5 +2118,54 @@ img.is-broken {
 .content-fade-out {
     opacity: 0 !important;
     transform: translateX(15px) !important; /* ✨ 往右推擠 */
+    pointer-events: none;
+}
+
+/* ========================================== */
+/* 🎨 狀態驅動動畫系統 (Animation System) */
+/* ========================================== */
+
+/* 1. 預設模式 & 磁吸回彈版 (Magnetic) */
+[data-modal-fx="magnetic"] {
+    --modal-transition: opacity 0.12s ease-out, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --modal-will-change: opacity, transform;
+    --modal-origin: center top;
+
+    /* 退場 (Fade-out) 參數 */
+    --modal-out-opacity: 0;
+    --modal-out-transform: translateX(15px); /* 往右推擠 */
+    --modal-out-filter: none;
+}
+
+/* 2. VisionOS 景深沉浸版 (Vision-OS) */
+:root,[data-modal-fx="vision-os"] {
+    --modal-transition: opacity 0.12s ease-out, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.12s ease-out;
+    --modal-will-change: opacity, transform, filter;
+    --modal-origin: center top;
+
+    /* 退場 (Fade-out) 參數 */
+    --modal-out-opacity: 0;
+    --modal-out-transform: scale(0.92) translateY(10px); /* 往後退並微沉 */
+    --modal-out-filter: blur(8px); /* 毛玻璃迷霧 */
+}
+
+/* ========================================== */
+/* 🧩 綁定元素樣式 (套用變數，原有邏輯不變) */
+/* ========================================== */
+
+/* 基礎過渡狀態 */
+#modal-body, #modal-top-left, #toc-mount-point {
+    transition: var(--modal-transition) !important;
+    will-change: var(--modal-will-change);
+    transform-origin: var(--modal-origin);
+}
+
+/* 觸發隱藏狀態 (JS 加上 .content-fade-out) */
+#modal-body.content-fade-out, 
+#modal-top-left.content-fade-out, 
+#toc-mount-point.content-fade-out {
+    opacity: var(--modal-out-opacity) !important;
+    transform: var(--modal-out-transform) !important;
+    filter: var(--modal-out-filter) !important;
     pointer-events: none;
 }
