@@ -822,7 +822,8 @@ footer {
     position: relative;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     transform: translateY(30px) scale(0.95);
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.5s ease, border-color 0.5s ease;
+    /* ✨ 核心升級：加入 height 0.25s 的平滑拉伸過渡 */
+    transition: height 0.22s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.5s ease, border-color 0.5s ease;
 }
 
 /* ========================================== */
@@ -1916,135 +1917,102 @@ img.is-broken {
 }
 
 /* ========================================== */
-/* ✨ 狀態標籤與徽章系統 (科技掃光版)           */
+/* 🎨 全域狀態色盤引擎 (Global Status Palette)  */
 /* ========================================== */
 
-/* 1. 基礎徽章屬性 (用於目錄與文章內文) */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.65rem;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-    vertical-align: middle;
-    cursor: default;
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s ease;
-}
-.title-badge { margin-left: 8px; }
+/* ✨ 1. 在這裡定義你的標籤顏色！未來擴充只需加一行 */
+[data-status="NEW"]      { --s-color: var(--error-color); --s-shadow: var(--error-shadow); }
+[data-status="UPDATED"]  { --s-color: var(--accent);      --s-shadow: rgba(64, 120, 153, 0.4); }
+[data-status="WIP"]      { --s-color: #F59E0B;            --s-shadow: rgba(245, 158, 11, 0.4); } /* 黃橘色 */
+[data-status="ARCHIVED"] { --s-color: var(--muted);       --s-shadow: transparent; }           /* 灰色 */
 
-/* ✨ 共用斜向掃光動畫 (與骨架佔位圖同款) */
+
+/* ========================================== */
+/* ✨ 共用斜向掃光動畫關鍵格 (補回遺失的靈魂)    */
+/* ========================================== */
 @keyframes badge-sweep {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
 
-/* 2. NEW 狀態 (紅色系斜光) */
-.badge-new {
-    /* ✨ 核心修復：改用 background-image，放開對 position 的控制權，讓動畫能順利運作！ */
-    background-image: linear-gradient(110deg, var(--error-color) 35%, rgba(255,255,255,0.4) 50%, var(--error-color) 65%) !important;
-    background-color: var(--error-color) !important;
-    background-size: 200% 100% !important;
-    color: #fff !important; 
-    animation: badge-sweep 2.5s infinite linear;
-    box-shadow: 0 0 8px var(--error-shadow);
-    border: none !important; 
-}
-
-/* 3. UPDATED 狀態 (主題色系斜光) */
-.badge-updated {
-    /* ✨ 同樣改用 background-image 解除動畫封印 */
-    background-image: linear-gradient(110deg, var(--accent) 35%, rgba(255,255,255,0.4) 50%, var(--accent) 65%) !important;
-    background-color: var(--accent) !important;
-    background-size: 200% 100% !important;
-    color: #fff !important; 
-    animation: badge-sweep 2.5s infinite linear;
-    box-shadow: 0 0 8px var(--accent);
-    border: none !important;
-}
-
 /* ========================================== */
-/* ✨ Hover 動畫分歧處理 (卡片標籤 vs 內容索引) */
+/* ✨ 文章與目錄徽章 (.status-badge)          */
 /* ========================================== */
 
-/* A. 卡片中的標籤 (統一 Hover 與「被選中」行為：全部變成 accent-2 並保留掃光) */
-.tag.badge-new:hover,
-.tag.badge-new.active-tag,        /* ✨ 新增：被點擊選中時維持樣式 */
-.tag.badge-updated:hover,
-.tag.badge-updated.active-tag {   /* ✨ 新增：被點擊選中時維持樣式 */
+.status-badge {
+    display: inline-flex; align-items: center; font-size: 0.65rem; font-weight: bold;
+    padding: 2px 6px; border-radius: 4px; vertical-align: middle; cursor: default;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
     
-    /* 懸浮與選中時的微小高度提升與光暈 */
+    /* 🤖 自動吃變數色與掃光動畫 */
+    background-image: linear-gradient(110deg, var(--s-color) 35%, rgba(255,255,255,0.4) 50%, var(--s-color) 65%) !important;
+    background-color: var(--s-color) !important;
+    background-size: 200% 100% !important;
+    color: #fff !important;
+    box-shadow: 0 0 8px var(--s-shadow);
+    border: none !important;
+    animation: badge-sweep 2.5s infinite linear;
+}
+.title-badge { margin-left: 8px; }
+
+/* ========================================== */
+/* ✨ 卡片實體標籤 (.tag.status-tag)          */
+/* ========================================== */
+.tag.status-tag {
+    /* 🤖 自動吃變數色與掃光動畫 */
+    background-image: linear-gradient(110deg, var(--s-color) 35%, rgba(255,255,255,0.4) 50%, var(--s-color) 65%) !important;
+    background-color: var(--s-color) !important;
+    background-size: 200% 100% !important;
+    color: #fff !important;
+    box-shadow: 0 0 8px var(--s-shadow);
+    border: none !important;
+    animation: badge-sweep 2.5s infinite linear;
+}
+
+/* Hover 與過濾點擊時的統一變身特效 (黃綠反光) */
+.tag.status-tag:hover, .tag.status-tag.active-tag {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px var(--accent-2);
-    
-    /* ✨ 魔法 1：將背景漸層的基底色換成 accent-2，完美保留 110 度斜向掃光！ */
     background-image: linear-gradient(110deg, var(--accent-2) 35%, rgba(255,255,255,0.5) 50%, var(--accent-2) 65%) !important;
     background-color: var(--accent-2) !important;
-    
-    /* ✨ 魔法 2：文字換成卡片底色 (反白效果) */
     color: var(--card) !important;
 }
 
-/* B. 內容索引 (TOC) 專屬 Hover 動畫 (微放大 + 俏皮旋轉) */
-.toc-dropdown a:hover .status-badge {
-    transform: scale(1.15) rotate(5deg) translateZ(0);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
 /* ========================================== */
-/* ✨ 跑馬燈專屬：狀態文字特效 (緊湊實體底色版) */
+/* ✨ 跑馬燈專屬 (.clickable-ticker-tag)      */
 /* ========================================== */
-
-/* 1. 讓跑馬燈項目有微小的浮動互動感 */
-.clickable-ticker-tag {
-    display: inline-block;
-    transition: transform 0.3s ease;
-}
-.clickable-ticker-tag:hover {
-    transform: translateY(-2px);
-}
-
-/* 2. 針對 NEW 與 UPDATED 的「文字本身 (.ticker-name)」獨立上色與排版 */
-.clickable-ticker-tag[data-tag="NEW"] .ticker-name,
-.clickable-ticker-tag[data-tag="UPDATED"] .ticker-name {
-    display: inline-block;
-    /* ✨ 加上內距與圓角，讓背景色變成精緻的小標籤，不再緊貼文字 */
-    padding: 2px 8px;           
-    border-radius: 4px;         
-    color: #fff !important;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    /* ✨ 加上 transition，讓所有顏色與放大的變化都像奶油般絲滑 */
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
-}
-
-/* 預設狀態：各自的底色與微弱的環境光暈 */
-.clickable-ticker-tag[data-tag="NEW"] .ticker-name {
-    background-color: var(--error-color);
-    box-shadow: 0 0 6px var(--error-shadow); 
-}
-
-.clickable-ticker-tag[data-tag="UPDATED"] .ticker-name {
-    background-color: var(--accent);
-    box-shadow: 0 0 6px rgba(64, 120, 153, 0.4);
-}
-
-/* 3. ✨ 終極連動：Hover 與「被點擊選中 (.active-tag)」時的狀態統一 */
-.clickable-ticker-tag[data-tag="NEW"]:hover .ticker-name,
-.clickable-ticker-tag.active-tag[data-tag="NEW"] .ticker-name,
-.clickable-ticker-tag[data-tag="UPDATED"]:hover .ticker-name,
-.clickable-ticker-tag.active-tag[data-tag="UPDATED"] .ticker-name {
+.clickable-ticker-tag[data-status] .ticker-name {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    color: #fff !important; font-weight: 800; letter-spacing: 0.05em;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     
+    /* 🤖 自動吃變數色 */
+    background-color: var(--s-color);
+    box-shadow: 0 0 6px var(--s-shadow); 
+
+    /* ✨ 防抖動魔法：強制開啟 GPU 渲染，鎖定 3D 空間，消滅文字邊緣鋸齒與抽搐 */
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+/* 跑馬燈 Hover 與點擊時的變身特效 */
+.clickable-ticker-tag[data-status]:hover .ticker-name,
+.clickable-ticker-tag.active-tag[data-status] .ticker-name {
     background-color: var(--accent-2);
-    
-    /* ✨ 由於 accent-2 通常是亮黃/亮綠色，白字會看不清楚，所以反轉為卡片底色 (黑/白) */
     color: var(--card) !important; 
+    text-shadow: none; box-shadow: 0 0 15px var(--accent-2), 0 0 5px var(--accent-2);
     
-    /* 拔除文字發光，將火力集中在區塊的外圍光暈，並稍微放大突出 */
-    text-shadow: none;
-    box-shadow: 0 0 15px var(--accent-2), 0 0 5px var(--accent-2);
-    transform: scale(1.08); 
+    /* ✨ 補上 translateZ(0)，確保動畫放大時依然維持在 3D 硬體加速層 */
+    transform: scale(1.08) translateZ(0); 
 }
+
+/* ========================================== */
+/* 🛑 特殊例外狀態處理 (Exceptions)           */
+/* ========================================== */
+/* ARCHIVED 代表死水，剝奪它的發光掃光動畫與浮動特效 */
+[data-status="ARCHIVED"] { animation: none !important; background-image: none !important; }
 
 /* ========================================== */
 /* ✨ 內容索引 (Modal TOC) 磁吸平移與聚光燈動畫  */
@@ -2070,4 +2038,21 @@ img.is-broken {
 #modal-body li a:hover span[style*="font-size: 1.15rem"] {
     color: var(--accent-hover) !important;
     text-shadow: 0 0 8px var(--glow-1);
+}
+
+/* ========================================== */
+/* ✨ 模態框內部切換平滑過渡 (Content Swap Animation) */
+/* ========================================== */
+
+/* 1. 接管內容區塊、左側返回按鈕、右側目錄按鈕的動畫權限 */
+#modal-body, #modal-top-left, #toc-mount-point {
+    transition: opacity 0.12s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    will-change: opacity, transform;
+}
+
+/* 2. 觸發切換時的隱藏狀態 (往下沉並消失) */
+.content-fade-out {
+    opacity: 0 !important;
+    transform: translateY(10px) !important;
+    pointer-events: none; /* 隱藏期間禁止點擊 */
 }

@@ -6,5 +6,7 @@
   "description": "一個小品進度條",
   "tags": ["Python", "azubar", "Beta"],
   "link": "https://github.com/Kazekawa-azusa/azubar",
-  "cover": "./logo.webp"
+  "cover": "./logo.webp",
+  "date": "2026-06-08",
+  "version": "0.0.4.1"
 }

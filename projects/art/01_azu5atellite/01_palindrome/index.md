@@ -8,8 +8,10 @@
 <div class="gallery" style="--g-width: 200px; --g-rows: 1;">
   <figure><img src="./confused.webp" alt="confused" loading="lazy" decoding="async"><figcaption>困惑</figcaption></figure>
   <figure><img src="./sad.webp" alt="sad" loading="lazy" decoding="async"><figcaption>難過</figcaption></figure>
+  <figure><img src="./shivering.webp" alt="sad" loading="lazy" decoding="async"><figcaption>顫抖</figcaption></figure>
 </div>
-(coc7th | OC)  
+
+> (coc7th | OC)  
 
 Tag：  
 作家、博士、偵探  

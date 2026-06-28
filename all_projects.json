@@ -47,11 +47,14 @@
       ],
       "link": "https://github.com/Kazekawa-azusa/azubar",
       "cover": "./logo.webp",
+      "date": "2026-06-08",
+      "version": "0.0.4.1",
       "id": "01_azubar",
-      "date": "",
       "pinned": false,
       "is_new": false,
       "is_updated": false,
+      "is_wip": false,
+      "is_archived": false,
       "cover_image": "projects/code/01_azubar/./logo.webp"
     },
     {
@@ -68,11 +71,15 @@
       ],
       "link": "",
       "cover": "logo.webp",
+      "archived": true,
+      "version": "0.0.1",
+      "date": "2025-12-18",
       "id": "02_azustock",
-      "date": "",
       "pinned": false,
       "is_new": false,
       "is_updated": false,
+      "is_wip": false,
+      "is_archived": true,
       "cover_image": "projects/code/02_azustock/logo.webp"
     },
     {
@@ -90,9 +97,12 @@
       "link": "",
       "id": "03_DCbot",
       "date": "",
+      "version": "",
       "pinned": false,
       "is_new": false,
-      "is_updated": false
+      "is_updated": false,
+      "is_wip": false,
+      "is_archived": false
     },
     {
       "order": 1,
@@ -108,31 +118,58 @@
       "id": "01_azu5atellite",
       "category": "art",
       "date": "",
+      "version": "",
       "is_new": false,
       "is_updated": false,
+      "is_wip": false,
+      "is_archived": false,
       "cover_image": "projects/art/01_azu5atellite/architecture.webp",
       "articles": [
         {
           "title": "高松彩空",
           "description": "",
           "cover_image": "projects/art/01_azu5atellite/02_reporter/basic.webp",
-          "content": "# 『高松彩空』\n<figure class=\"float-right\">\n  <img src=\"./projects/art/01_azu5atellite/02_reporter/basic.webp\" alt=\"主視覺\" loading=\"lazy\" decoding=\"async\">\n  <figcaption>基礎方塊</figcaption>\n</figure>\n\n（coc6th | OC）\n\nTag：\n記者、爬山、隨性\n\n—— 「好想去那邊看看，可是離大家太遠感覺很危險。」\n\n經歷：\n從社會新聞轉戰體育新聞的記者，為了宏大的目標（~~賺錢~~），決定加入登上傳說的行列！ < —— 現在在這裡",
+          "content": "# 『高松彩空』\n<figure class=\"float-right\">\n  <img src=\"./projects/art/01_azu5atellite/02_reporter/basic.webp\" alt=\"主視覺\" loading=\"lazy\" decoding=\"async\">\n  <figcaption>基礎方塊</figcaption>\n</figure>\n\n>（coc6th | OC）\n\nTag：\n記者、爬山、隨性\n\n—— 「好想去那邊看看，可是離大家太遠感覺很危險。」\n\n經歷：\n從社會新聞轉戰體育新聞的記者，為了宏大的目標（~~賺錢~~），決定加入登上傳說的行列！ < —— 現在在這裡",
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "梓川風",
           "description": "",
           "cover_image": "projects/art/01_azu5atellite/01_palindrome/basic.webp",
-          "content": "# 『梓川風』\n<figure class=\"float-right\">\n  <img src=\"./projects/art/01_azu5atellite/01_palindrome/basic.webp\" alt=\"主視覺\" loading=\"lazy\" decoding=\"async\">\n  <figcaption>基礎方塊</figcaption>\n</figure>\n\n## 表情\n<div class=\"gallery\" style=\"--g-width: 200px; --g-rows: 1;\">\n  <figure><img src=\"./projects/art/01_azu5atellite/01_palindrome/confused.webp\" alt=\"confused\" loading=\"lazy\" decoding=\"async\"><figcaption>困惑</figcaption></figure>\n  <figure><img src=\"./projects/art/01_azu5atellite/01_palindrome/sad.webp\" alt=\"sad\" loading=\"lazy\" decoding=\"async\"><figcaption>難過</figcaption></figure>\n</div>\n(coc7th | OC)  \n\nTag：  \n作家、博士、偵探  \n\n經歷：  \n為了和編輯討論下一部作品而搭上了末班車，結果發生了不可思議的事情。  \n不久後為了新作品的取材而參訪了神秘的研究機構，還沒開始工作就先睡了兩小時，醒來後… <—— 現在在這",
+          "content": "# 『梓川風』\n<figure class=\"float-right\">\n  <img src=\"./projects/art/01_azu5atellite/01_palindrome/basic.webp\" alt=\"主視覺\" loading=\"lazy\" decoding=\"async\">\n  <figcaption>基礎方塊</figcaption>\n</figure>\n\n## 表情\n<div class=\"gallery\" style=\"--g-width: 200px; --g-rows: 1;\">\n  <figure><img src=\"./projects/art/01_azu5atellite/01_palindrome/confused.webp\" alt=\"confused\" loading=\"lazy\" decoding=\"async\"><figcaption>困惑</figcaption></figure>\n  <figure><img src=\"./projects/art/01_azu5atellite/01_palindrome/sad.webp\" alt=\"sad\" loading=\"lazy\" decoding=\"async\"><figcaption>難過</figcaption></figure>\n  <figure><img src=\"./projects/art/01_azu5atellite/01_palindrome/shivering.webp\" alt=\"sad\" loading=\"lazy\" decoding=\"async\"><figcaption>顫抖</figcaption></figure>\n</div>\n\n> (coc7th | OC)  \n\nTag：  \n作家、博士、偵探  \n\n經歷：  \n為了和編輯討論下一部作品而搭上了末班車，結果發生了不可思議的事情。  \n不久後為了新作品的取材而參訪了神秘的研究機構，還沒開始工作就先睡了兩小時，醒來後… <—— 現在在這",
           "date": "",
           "pinned": true,
           "is_new": false,
-          "is_updated": true
+          "is_updated": true,
+          "is_wip": false,
+          "is_archived": false
         }
       ]
+    },
+    {
+      "order": 1,
+      "title": "[project FV]",
+      "category": "music",
+      "meta": "音、歌、樂、唱",
+      "description": "一個疑似是音樂專案的佔位卡片",
+      "tags": [
+        "Music",
+        "A2U5A"
+      ],
+      "wip": true,
+      "id": "01_projectFV",
+      "date": "",
+      "version": "",
+      "pinned": false,
+      "is_new": false,
+      "is_updated": false,
+      "is_wip": true,
+      "is_archived": false
     },
     {
       "order": 1,
@@ -146,9 +183,12 @@
       "link": "",
       "id": "01_note",
       "date": "",
+      "version": "",
       "pinned": false,
       "is_new": false,
       "is_updated": false,
+      "is_wip": false,
+      "is_archived": false,
       "articles": [
         {
           "title": "盒子",
@@ -158,7 +198,9 @@
           "date": "",
           "pinned": false,
           "is_new": true,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "閱讀",
@@ -168,7 +210,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "洋裝",
@@ -178,7 +222,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "書蟲",
@@ -188,7 +234,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "房門",
@@ -198,7 +246,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "明天、今天和明天的今天",
@@ -208,7 +258,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "隨夢客",
@@ -218,7 +270,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "船",
@@ -228,7 +282,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "陽光",
@@ -238,7 +294,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "恆者",
@@ -248,7 +306,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         }
       ]
     },
@@ -264,9 +324,12 @@
       "link": "",
       "id": "02_mind",
       "date": "",
+      "version": "",
       "pinned": false,
       "is_new": false,
       "is_updated": false,
+      "is_wip": false,
+      "is_archived": false,
       "articles": [
         {
           "title": "薛丁格的貓",
@@ -276,7 +339,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "邏輯",
@@ -286,7 +351,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "測不準原理",
@@ -296,7 +363,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "你覺得",
@@ -306,7 +375,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "致 十年後的你",
@@ -316,7 +387,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "第一份解構紀錄",
@@ -326,7 +399,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "三分鐘熱度",
@@ -336,7 +411,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "文學",
@@ -346,7 +423,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "程式",
@@ -356,7 +435,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "迷失",
@@ -366,7 +447,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "主觀",
@@ -376,7 +459,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "忒修斯之船",
@@ -386,7 +471,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "三聯單",
@@ -396,7 +483,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "時間",
@@ -406,7 +495,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "第一類人",
@@ -416,7 +507,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "客觀性虛無主義",
@@ -426,7 +519,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "均衡",
@@ -436,7 +531,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "生，而後，死，而後，死，而後，死。",
@@ -446,7 +543,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "產物",
@@ -456,7 +555,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "創造者",
@@ -466,7 +567,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         }
       ]
     },
@@ -480,12 +583,14 @@
         "azusa"
       ],
       "link": "",
-      "new": true,
       "id": "03_azusa",
       "date": "",
+      "version": "",
       "pinned": false,
-      "is_new": true,
+      "is_new": false,
       "is_updated": false,
+      "is_wip": false,
+      "is_archived": false,
       "articles": [
         {
           "title": "旅行",
@@ -495,7 +600,9 @@
           "date": "",
           "pinned": false,
           "is_new": true,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "名言",
@@ -505,7 +612,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "社畜",
@@ -515,7 +624,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "自我介紹",
@@ -525,7 +636,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "致 梓",
@@ -535,7 +648,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         },
         {
           "title": "自介",
@@ -545,7 +660,9 @@
           "date": "",
           "pinned": false,
           "is_new": false,
-          "is_updated": false
+          "is_updated": false,
+          "is_wip": false,
+          "is_archived": false
         }
       ]
     }

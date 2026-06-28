@@ -19,6 +19,22 @@ const CONFIG = {
     DATA_SOURCE: "./all_projects.json" 
 };
 
+// ==========================================
+// ✨ 全域狀態標籤系統 (支援快速擴充)
+// ==========================================
+window.STATUS_LIST = ['NEW', 'UPDATED', 'WIP', 'ARCHIVED'];
+
+// 共用函數：自動判斷物件屬性並回傳對應的 HTML 徽章
+window.getStatusBadgeHtml = function(item, isTitle = false) {
+    const titleClass = isTitle ? ' title-badge' : '';
+    // 優先權：NEW > UPDATED > WIP > ARCHIVED
+    if (item.is_new) return `<span class="status-badge${titleClass}" data-status="NEW">NEW</span>`;
+    if (item.is_updated) return `<span class="status-badge${titleClass}" data-status="UPDATED">UPDATED</span>`;
+    if (item.is_wip) return `<span class="status-badge${titleClass}" data-status="WIP">WIP</span>`;
+    if (item.is_archived) return `<span class="status-badge${titleClass}" data-status="ARCHIVED">ARCHIVED</span>`;
+    return '';
+};
+
 // 自動將版本號注入到 Footer
 const sysVersionEl = document.getElementById('sys-version');
 if (sysVersionEl) sysVersionEl.innerText = CONFIG.VERSION;
@@ -178,10 +194,12 @@ async function loadProjects() {
       }
       p.computed_is_updated = isCardUpdated; // 存起來備用
 
-      // 核心魔法：將狀態化為實體 Tag，直接塞入卡片的標籤陣列最前方！
+      // 核心魔法：將狀態化為實體 Tag，按照「最低到最高優先權」塞入陣列最前方
       p.tags = p.tags || [];
+      if (p.is_archived && !p.tags.includes('ARCHIVED')) p.tags.unshift('ARCHIVED');
+      if (p.is_wip && !p.tags.includes('WIP')) p.tags.unshift('WIP');
+      if (isCardUpdated && !p.tags.includes('UPDATED')) p.tags.unshift('UPDATED');
       if (p.is_new && !p.tags.includes('NEW')) p.tags.unshift('NEW');
-      else if (isCardUpdated && !p.tags.includes('UPDATED')) p.tags.unshift('UPDATED');
     });
 
     window.siteProjects = projects;
@@ -198,8 +216,9 @@ async function loadProjects() {
             const colorClass = isUp ? 'stock-up' : 'stock-down';
             const sign = isUp ? '+' : '-';
             
-            // ✨ 核心修改：將標籤文字獨立用 <span class="ticker-name"> 包起來，與後方的漲跌幅徹底分離！
-            return `<span class="clickable-ticker-tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event)"><span class="ticker-name">${tag}</span> <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
+            // ✨ 讓跑馬燈自動感知它是不是一個「狀態標籤」並掛上 data-status
+            const statusAttr = window.STATUS_LIST.includes(tag) ? `data-status="${tag}"` : '';
+            return `<span class="clickable-ticker-tag" data-tag="${tag}" ${statusAttr} onclick="window.filterByTag('${tag}', event)"><span class="ticker-name">${tag}</span> <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
         }).join('<span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span>');
 
         const container = marquee.parentElement;
@@ -318,13 +337,11 @@ async function loadProjects() {
         }
 
         // ==========================================
-        // ✨ 將標籤渲染 (攔截 NEW 與 UPDATED，套用專屬發光 Class)
+        // ✨ 動態標籤渲染 (自動套用 data-status 發光屬性)
         // ==========================================
         let tagsHTML = (data.tags || []).map(tag => {
-            if (tag === 'NEW') {
-                return `<span class="tag badge-new" data-tag="NEW" onclick="window.filterByTag('NEW', event, this)">NEW</span>`;
-            } else if (tag === 'UPDATED') {
-                return `<span class="tag badge-updated" data-tag="UPDATED" onclick="window.filterByTag('UPDATED', event, this)">UPDATED</span>`;
+            if (window.STATUS_LIST.includes(tag)) {
+                return `<span class="tag status-tag" data-tag="${tag}" data-status="${tag}" onclick="window.filterByTag('${tag}', event, this)">${tag}</span>`;
             }
             // 一般標籤維持原樣
             return `<span class="tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event, this)">${tag}</span>`;
@@ -385,27 +402,24 @@ async function loadProjects() {
             ? `<div class="card-pin">${techPinSvg}</div>`
             : '';
 
-        // ✨ 原有的日期與 NEW 徽章保持不變
-        const cardDateHtml = data.date
-            ? `<span style="font-family: monospace; font-size: 0.8rem; color: var(--accent); opacity: 0.8; margin-right: 0.8rem;">[${data.date}]</span>`
+        // ==========================================
+        // ✨ 日期與版本號智慧組合 (Metadata)
+        // ==========================================
+        let metaParts = [];
+        if (data.date) metaParts.push(data.date);
+        if (data.version) metaParts.push(`v${data.version}`); // 自動幫前面加上 v
+        
+        // ✨ 升級為絕對定位：懸浮於卡片左上角的 padding 空白區，完全不影響標題排版！
+        const cardDateHtml = metaParts.length > 0
+            ? `<div style="position: absolute; top: 0.5rem; left: 1.6rem; font-family: monospace; font-size: 0.72rem; font-weight: 600; color: var(--accent); opacity: 0.6; letter-spacing: 0.05em;">[${metaParts.join(' • ')}]</div>`
             : '';
 
-        // ✨ 智慧狀態徽章 (互斥邏輯：NEW 優先，UPDATE 次之)
-        let statusBadgeHtml = '';
-        if (data.is_new) {
-            statusBadgeHtml = `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>`;
-        } else if (data.is_updated) {
-            statusBadgeHtml = `<span style="background: var(--accent); color: var(--card); font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--accent);">UPDATED</span>`;
-        }
-
-        // 3. ✨ 組合 HTML：將 absolutePinHtml 放在最外層，還原最乾淨的排版
+        // 3. ✨ 組合 HTML：將 absolutePinHtml 與 cardDateHtml 都拉到排版流之外
         card.innerHTML = `
             ${absolutePinHtml}
-            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;">
+            ${cardDateHtml} <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;">
             <h3 style="display: flex; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.2rem; margin-top: 0;">
-                ${cardDateHtml}
-                ${data.title}
-                ${cardMetaHtml}
+                ${data.title}   ${cardMetaHtml}
             </h3>
             ${cardImageHtml}
             </div>
@@ -509,323 +523,294 @@ const modalOverlay = document.getElementById('md-modal');
 const closeModalBtn = document.getElementById('close-modal');
 const modalBody = document.getElementById('modal-body');
 
-// 打開該專案的「目錄頁面」
-window.openProjectIndex = function(projectId, restoreScroll = false) {
-    document.getElementById('modal-top-left').innerHTML = '';
-    document.getElementById('toc-mount-point').innerHTML = '';
-
-    // ✨ 1. 加入這行：切換為「索引頁模式」，讓目錄列隱形，X 按鈕變回浮動狀態
-    document.querySelector('.modal-top-bar').classList.add('is-index-mode');
-
-    const proj = window.siteProjects.find(p => p.id === projectId);
-    if (!proj || !proj.articles) return;
-
-    // ✨ 核心修復：加上 style="padding-right: 4.5rem;" 預留出 X 按鈕的專屬空間
-    let indexHtml = `<h1 style="padding-right: 4.5rem;">${proj.title} - 內容索引</h1><ul style="list-style:none; padding-left:0; margin-top:1.5rem;">`;
-    // ==========================================
-    // ✨ 新增：文章智慧排序 (將置頂文章推到最上面，其餘維持原本的章節順序)
-    // ==========================================
-    proj.articles.sort((a, b) => {
-        const aPinned = a.pinned ? 1 : 0;
-        const bPinned = b.pinned ? 1 : 0;
-        return bPinned - aPinned;
-    });
-    proj.articles.forEach((art, idx) => {
-        // 1. 處理描述文字
-        let descHtml = art.description 
-            ? `<span style="font-size: 0.95rem; color: var(--muted); line-height: 1.4;">- ${art.description}</span>` 
-            : '';
-
-        // 2. 處理右側的日期與 NEW 徽章
-        let dateHtml = art.date
-            ? `<span style="font-family: monospace; font-size: 0.85rem; color: var(--muted); margin-left: auto; padding-left: 1rem; flex-shrink: 0;">${art.date}</span>`
-            : '';
-            
-        // ✨ 終極淨化：改用 CSS Class 統一管理狀態徽章
-        let statusBadgeHtml = '';
-        if (art.is_new) {
-            statusBadgeHtml = `<span class="status-badge title-badge badge-new">NEW</span>`;
-        } else if (art.is_updated) {
-            statusBadgeHtml = `<span class="status-badge title-badge badge-updated">UPDATED</span>`;
-        }
-
-        // ==========================================
-        // ✨ 3. 處理左側的縮圖與「絕對定位」圖釘徽章 (圖層覆蓋版)
-        // ==========================================
-        
-        // 維持 -45deg 的傾斜科技圖釘
-        const techPinSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(-45deg);"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`;
-
-        // ✨ 關鍵修改 1：幫縮圖與預設圖示加上 `position: relative; z-index: 2;`，讓它們浮在最上層！
-        let baseIconHtml = art.cover_image
-            ? `<img src="${art.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="position: relative; z-index: 2; width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid var(--card-border);">`
-            : `<div style="position: relative; z-index: 2; width: 44px; height: 44px; flex-shrink: 0; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--card-border);">📄</div>`;
-
-        // ✨ 終極淨化：將冗長的 inline-style 徹底拔除，交給 .modal-pin 全權處理
-        let pinnedBadgeHtml = art.pinned
-            ? `<div class="modal-pin">${techPinSvg}</div>`
-            : '';
-
-        // 將它們用一個 relative 容器包裝起來
-        let iconHtml = `
-            <div style="position: relative; flex-shrink: 0; display: flex;">
-                ${pinnedBadgeHtml}
-                ${baseIconHtml}
-            </div>
-        `;
-
-        // 4. ✨ 組合 HTML (這裡接續你原本的 indexHtml += ...)
-        indexHtml += `
-            <li style="margin-bottom: 1rem; border-bottom: 1px dashed var(--divider-line); padding-bottom: 0.8rem;">
-            <a href="#" onclick="event.preventDefault(); openArticle('${projectId}', ${idx})" 
-                style="display: flex; align-items: center; gap: 1rem; text-decoration: none; padding: 0.5rem; border-radius: 0.8rem; transition: background-color 0.2s;">
-                
-                ${iconHtml}
-                
-                <div style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; row-gap: 0.4rem;">
-                    <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
-                        <span style="font-size: 1.15rem; color: var(--accent); font-weight: bold;">
-                            ${art.title}${statusBadgeHtml}
-                        </span>
-                        ${descHtml}
-                    </div>
-                    ${dateHtml}
-                </div>
-
-            </a>
-            </li>`;
-    });
-    indexHtml += `</ul>`;
-
-    // 加上一個微小的 CSS，限定只在 modal-body 裡面的 a 標籤才有背景反饋
-    indexHtml += `
-    <style>
-        #modal-body li a:hover { background: rgba(128, 128, 128, 0.05); }
-    </style>
-    `;
-
-    modalBody.innerHTML = indexHtml;
-    modalOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // 👇 2. 替換原本的 document.querySelector('.modal-content').scrollTop = 0;
-    // 改成這個「智慧記憶捲動」邏輯：
+// ==========================================
+// ✨ 核心升級：統一的內部平滑切換引擎 (Smooth Swap 2.0 - 高度自適應拉伸版)
+// ==========================================
+function switchModalContent(updateDOMCallback) {
+    const isModalOpen = modalOverlay.classList.contains('active');
+    const topLeft = document.getElementById('modal-top-left');
+    const tocMount = document.getElementById('toc-mount-point');
     const modalContainer = document.querySelector('.modal-content');
-    if (restoreScroll && window.lastIndexScrollPos) {
-    // 給瀏覽器一點時間 (10毫秒) 把 DOM 畫出來，再把捲軸拉回存檔點
-    setTimeout(() => { modalContainer.scrollTop = window.lastIndexScrollPos; }, 10);
+    
+    if (isModalOpen) {
+        // 1. 鎖定當前高度，準備進行「拉伸」動畫
+        const currentHeight = modalContainer.getBoundingClientRect().height;
+        modalContainer.style.height = currentHeight + 'px';
+
+        // 2. 觸發極速淡出 (從 200ms 加速至 120ms)
+        modalBody.classList.add('content-fade-out');
+        if (topLeft) topLeft.classList.add('content-fade-out');
+        if (tocMount) tocMount.classList.add('content-fade-out');
+        
+        setTimeout(() => {
+            // 3. 在完全透明的狀態下，偷偷抽換 DOM 內容與捲軸位置
+            updateDOMCallback();
+            
+            // 4. 瞬間放開高度限制，測量新內容「應該要多高」
+            modalContainer.style.height = 'auto';
+            const newHeight = modalContainer.getBoundingClientRect().height;
+            
+            // 5. 把高度拉回舊的狀態，然後強制瀏覽器重繪 (Reflow)
+            modalContainer.style.height = currentHeight + 'px';
+            void modalContainer.offsetHeight; 
+            
+            // 6. 設定目標新高度，觸發 CSS height 彈性過渡動畫
+            modalContainer.style.height = newHeight + 'px';
+            
+            // 7. 同時觸發新內容極速淡入
+            modalBody.classList.remove('content-fade-out');
+            if (topLeft) topLeft.classList.remove('content-fade-out');
+            if (tocMount) tocMount.classList.remove('content-fade-out');
+
+            // 8. 等待高度拉伸動畫結束 (約 250ms)，拔除 inline style 讓它恢復響應式
+            setTimeout(() => {
+                modalContainer.style.height = '';
+            }, 250);
+
+        }, 120); // ✨ 淡出只需 120ms，體感速度大幅提升！
     } else {
-    // 如果是從首頁點進來的，就乖乖回到最上面
-    modalContainer.scrollTop = 0;
+        updateDOMCallback();
+        modalBody.classList.remove('content-fade-out');
+        if (topLeft) topLeft.classList.remove('content-fade-out');
+        if (tocMount) tocMount.classList.remove('content-fade-out');
     }
+}
+
+// ==========================================
+// 打開該專案的「目錄頁面」
+// ==========================================
+window.openProjectIndex = function(projectId, restoreScroll = false) {
+    // ✨ 將原本的邏輯包進 switchModalContent
+    switchModalContent(() => {
+        document.getElementById('modal-top-left').innerHTML = '';
+        document.getElementById('toc-mount-point').innerHTML = '';
+
+        document.querySelector('.modal-top-bar').classList.add('is-index-mode');
+
+        const proj = window.siteProjects.find(p => p.id === projectId);
+        if (!proj || !proj.articles) return;
+
+        let indexHtml = `<h1 style="padding-right: 4.5rem;">${proj.title} - 內容索引</h1><ul style="list-style:none; padding-left:0; margin-top:1.5rem;">`;
+        
+        proj.articles.sort((a, b) => {
+            const aPinned = a.pinned ? 1 : 0;
+            const bPinned = b.pinned ? 1 : 0;
+            return bPinned - aPinned;
+        });
+        
+        proj.articles.forEach((art, idx) => {
+            let descHtml = art.description ? `<span style="font-size: 0.95rem; color: var(--muted); line-height: 1.4;">- ${art.description}</span>` : '';
+            let dateHtml = art.date ? `<span style="font-family: monospace; font-size: 0.85rem; color: var(--muted); margin-left: auto; padding-left: 1rem; flex-shrink: 0;">${art.date}</span>` : '';
+            let statusBadgeHtml = window.getStatusBadgeHtml(art, true);
+
+            const techPinSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(-45deg);"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`;
+
+            let baseIconHtml = art.cover_image
+                ? `<img src="${art.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="position: relative; z-index: 2; width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid var(--card-border);">`
+                : `<div style="position: relative; z-index: 2; width: 44px; height: 44px; flex-shrink: 0; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--card-border);">📄</div>`;
+
+            let pinnedBadgeHtml = art.pinned ? `<div class="modal-pin">${techPinSvg}</div>` : '';
+
+            let iconHtml = `<div style="position: relative; flex-shrink: 0; display: flex;">${pinnedBadgeHtml}${baseIconHtml}</div>`;
+
+            indexHtml += `
+                <li style="margin-bottom: 1rem; border-bottom: 1px dashed var(--divider-line); padding-bottom: 0.8rem;">
+                <a href="#" onclick="event.preventDefault(); openArticle('${projectId}', ${idx})" 
+                    style="display: flex; align-items: center; gap: 1rem; text-decoration: none; padding: 0.5rem; border-radius: 0.8rem; transition: background-color 0.2s;">
+                    
+                    ${iconHtml}
+                    
+                    <div style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; row-gap: 0.4rem;">
+                        <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+                            <span style="font-size: 1.15rem; color: var(--accent); font-weight: bold;">
+                                ${art.title}${statusBadgeHtml}
+                            </span>
+                            ${descHtml}
+                        </div>
+                        ${dateHtml}
+                    </div>
+                </a>
+                </li>`;
+        });
+        indexHtml += `</ul>`;
+        indexHtml += `<style>#modal-body li a:hover { background: rgba(128, 128, 128, 0.05); }</style>`;
+
+        modalBody.innerHTML = indexHtml;
+        modalOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        const modalContainer = document.querySelector('.modal-content');
+        if (restoreScroll && window.lastIndexScrollPos) {
+            setTimeout(() => { modalContainer.scrollTop = window.lastIndexScrollPos; }, 10);
+        } else {
+            modalContainer.scrollTop = 0;
+        }
+    }); // ✨ switchModalContent 結束
 };
 
+// ==========================================
 // 打開具體的「文章內文」
+// ==========================================
 window.openArticle = function(projectId, articleIndex) {
+    // ✨ 在淡出前，先記住目前的捲軸位置
     window.lastIndexScrollPos = document.querySelector('.modal-content').scrollTop;
 
-    // ✨ 👇 就是漏了這最關鍵的一行！
-    // 點進文章時，強制卸除「索引模式」，讓目錄列恢復高度與毛玻璃背景！
-    document.querySelector('.modal-top-bar').classList.remove('is-index-mode');
+    // ✨ 將原本的邏輯包進 switchModalContent
+    switchModalContent(() => {
+        document.querySelector('.modal-top-bar').classList.remove('is-index-mode');
 
-    const proj = window.siteProjects.find(p => p.id === projectId);
-    const article = proj.articles[articleIndex];
-    
-    // 1. 渲染文章內容
-    const articleHtml = marked.parse(article.content);
-    modalBody.innerHTML = articleHtml;
-    document.querySelector('.modal-content').scrollTop = 0;
-
-    // ==========================================
-    // ✨ 新增：在文章標題 (H1) 右側動態插入日期與 NEW 標籤
-    // ==========================================
-    const firstH1 = modalBody.querySelector('h1');
-    if (firstH1 && (article.date || article.is_new || article.is_updated)) {
-        // 建立一個 Flex 彈性容器來包裝標題與日期
-        const wrapper = document.createElement('div');
-        wrapper.style.display = 'flex';
-        wrapper.style.alignItems = 'baseline';
-        wrapper.style.justifyContent = 'space-between';
-        wrapper.style.flexWrap = 'wrap';
-        wrapper.style.borderBottom = '2px solid var(--card-border)';
-        wrapper.style.paddingBottom = '0.3rem';
-        wrapper.style.marginBottom = '0.8rem';
+        const proj = window.siteProjects.find(p => p.id === projectId);
+        const article = proj.articles[articleIndex];
         
-        // 處理頂部間距 (如果 H1 是文章的第一個元素就不要有 margin-top)
-        wrapper.style.marginTop = (firstH1 === modalBody.firstElementChild) ? '0' : '0.8rem';
+        const articleHtml = marked.parse(article.content);
+        modalBody.innerHTML = articleHtml;
+        document.querySelector('.modal-content').scrollTop = 0;
 
-        // 消除 H1 本身的底線與外距 (交給我們新做的 wrapper 統一處理)
-        firstH1.style.borderBottom = 'none';
-        firstH1.style.paddingBottom = '0';
-        firstH1.style.margin = '0';
+        const firstH1 = modalBody.querySelector('h1');
+        if (firstH1 && (article.date || article.is_new || article.is_updated || article.is_wip || article.is_archived)){
+            const wrapper = document.createElement('div');
+            wrapper.style.display = 'flex';
+            wrapper.style.alignItems = 'baseline';
+            wrapper.style.justifyContent = 'space-between';
+            wrapper.style.flexWrap = 'wrap';
+            wrapper.style.borderBottom = '2px solid var(--card-border)';
+            wrapper.style.paddingBottom = '0.3rem';
+            wrapper.style.marginBottom = '0.8rem';
+            wrapper.style.marginTop = (firstH1 === modalBody.firstElementChild) ? '0' : '0.8rem';
 
-        // 將 wrapper 插入到 H1 原本的位置，並把 H1 搬進去
-        firstH1.parentNode.insertBefore(wrapper, firstH1);
-        wrapper.appendChild(firstH1);
+            firstH1.style.borderBottom = 'none';
+            firstH1.style.paddingBottom = '0';
+            firstH1.style.margin = '0';
 
-        // ✨ 終極淨化：改用 CSS Class 統一管理狀態徽章 (文章內文的 Flex 已經有間距，不需要 title-badge)
-        let statusBadge = '';
-        if (article.is_new) {
-            statusBadge = `<span class="status-badge badge-new">NEW</span>`;
-        } else if (article.is_updated) {
-            statusBadge = `<span class="status-badge badge-updated">UPDATED</span>`;
+            firstH1.parentNode.insertBefore(wrapper, firstH1);
+            wrapper.appendChild(firstH1);
+
+            let statusBadge = window.getStatusBadgeHtml(article, false);
+            const metaHtml = `
+                <div style="display: flex; align-items: center; gap: 0.8rem; font-family: monospace; font-size: 0.95rem; color: var(--muted);">
+                    ${statusBadge}
+                    ${article.date ? `<span>${article.date}</span>` : ''}
+                </div>
+            `;
+            wrapper.insertAdjacentHTML('beforeend', metaHtml);
         }
 
-        // 準備右側的資訊區塊
-        const metaHtml = `
-            <div style="display: flex; align-items: center; gap: 0.8rem; font-family: monospace; font-size: 0.95rem; color: var(--muted);">
-                ${statusBadge}
-                ${article.date ? `<span>${article.date}</span>` : ''}
-            </div>
-        `;
-        // 把日期塞到 Wrapper 的最右邊
-        wrapper.insertAdjacentHTML('beforeend', metaHtml);
-    }
+        modalBody.querySelectorAll('img').forEach(img => {
+          if (img.complete && img.naturalWidth === 0) {
+            window.handleImageError(img);
+          } else if (!img.complete) {
+            img.classList.add('is-loading');
+            img.onload = () => img.classList.remove('is-loading');
+            img.onerror = () => window.handleImageError(img);
+          }
+        });
 
-    // ==========================================
-    // ✨ 終極升級：智慧骨架與破圖防塌陷偵測
-    // ==========================================
-    modalBody.querySelectorAll('img').forEach(img => {
-      if (img.complete && img.naturalWidth === 0) {
-        // 如果瞬間判定破圖，直接交給攔截器
-        window.handleImageError(img);
-      } else if (!img.complete) {
-        img.classList.add('is-loading');
-        img.onload = () => img.classList.remove('is-loading');
-        // 下載失敗時，直接交給攔截器
-        img.onerror = () => window.handleImageError(img);
-      }
-    });
-
-    // ==========================================
-    // 2. 建立返回按鈕並放進「導覽列左側」
-    // ==========================================
-    const topLeft = document.getElementById('modal-top-left');
-    topLeft.innerHTML = ''; // 清空舊的
-    
-    const backBtn = document.createElement('button');
-    // ✨ 核心升級：直接套用剛剛寫好的專屬 CSS 類別，告別 Inline Style！
-    backBtn.className = 'modal-back-btn'; 
-    backBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> <span>返回索引</span>`;
-    
-    backBtn.onclick = () => openProjectIndex(projectId, true);
-    
-    topLeft.appendChild(backBtn);
-
-    // ==========================================
-    // 3. 建立漢堡目錄並放進「導覽列右側」
-    // ==========================================
-    const tocMount = document.getElementById('toc-mount-point');
-    tocMount.innerHTML = ''; // 清空舊的
-    
-    const headings = modalBody.querySelectorAll('h1, h2, h3'); 
-    if (headings.length > 1) {
-    const tocWrapper = document.createElement('div');
-    tocWrapper.className = 'toc-wrapper';
-
-    const tocBtn = document.createElement('div');
-    tocBtn.className = 'toc-toggle-btn';
-    // 恢復純漢堡圖示
-    tocBtn.innerHTML = '<span class="bar"></span><span class="bar"></span><span class="bar"></span>';
-
-    const tocDropdown = document.createElement('div');
-    tocDropdown.className = 'toc-dropdown';
-    tocDropdown.innerHTML = '<ul class="toc-list"></ul>';
-    const tocList = tocDropdown.querySelector('.toc-list');
-
-    headings.forEach((h, index) => {
-        const id = `article-heading-${index}`;
-        h.id = id;
-
-        const li = document.createElement('li');
-        li.className = `toc-${h.tagName.toLowerCase()}`; 
+        const topLeft = document.getElementById('modal-top-left');
+        topLeft.innerHTML = ''; 
         
-        const a = document.createElement('a');
-        a.innerText = h.innerText;
-        a.href = "javascript:void(0)"; 
+        const backBtn = document.createElement('button');
+        backBtn.className = 'modal-back-btn'; 
+        backBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> <span>返回索引</span>`;
+        backBtn.onclick = () => openProjectIndex(projectId, true);
+        topLeft.appendChild(backBtn);
+
+        const tocMount = document.getElementById('toc-mount-point');
+        tocMount.innerHTML = ''; 
         
-        a.onclick = () => {
-        const modalContainer = document.querySelector('.modal-content');
-        // 執行平滑滾動
-        modalContainer.scrollTo({ top: h.offsetTop - 90, behavior: 'smooth' }); 
-        
-        // ✨ 加上高亮特效！
-        h.classList.add('highlight-flash');
-        
-        // ✨ 設定 1 秒後自動移除高亮，讓它像呼吸一樣變回原色
-        setTimeout(() => {
-            h.classList.remove('highlight-flash');
-        }, 1000);
-        
-        // 關閉目錄
-        tocBtn.classList.remove('open');
-        tocDropdown.classList.remove('active');
-        };
-        
-        li.appendChild(a);
-        tocList.appendChild(li);
-    });
+        const headings = modalBody.querySelectorAll('h1, h2, h3'); 
+        if (headings.length > 1) {
+            const tocWrapper = document.createElement('div');
+            tocWrapper.className = 'toc-wrapper';
 
-    tocBtn.onclick = () => {
-        tocBtn.classList.toggle('open');
-        tocDropdown.classList.toggle('active');
-    };
+            const tocBtn = document.createElement('div');
+            tocBtn.className = 'toc-toggle-btn';
+            tocBtn.innerHTML = '<span class="bar"></span><span class="bar"></span><span class="bar"></span>';
 
-    tocWrapper.appendChild(tocBtn);
-    tocWrapper.appendChild(tocDropdown);
-    tocMount.appendChild(tocWrapper);
-    }
+            const tocDropdown = document.createElement('div');
+            tocDropdown.className = 'toc-dropdown';
+            tocDropdown.innerHTML = '<ul class="toc-list"></ul>';
+            const tocList = tocDropdown.querySelector('.toc-list');
 
-    // 👇 Markdown 畫廊的雙向精準偵測
-    const galleries = modalBody.querySelectorAll('.gallery');
-    galleries.forEach(gallery => {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'scroll-wrapper';
-    gallery.parentNode.insertBefore(wrapper, gallery);
+            headings.forEach((h, index) => {
+                const id = `article-heading-${index}`;
+                h.id = id;
 
-    // 建立左箭頭
-    const hintLeft = document.createElement('div');
-    hintLeft.className = 'scroll-hint hint-left';
-    wrapper.appendChild(hintLeft);
+                const li = document.createElement('li');
+                li.className = `toc-${h.tagName.toLowerCase()}`; 
+                
+                const a = document.createElement('a');
+                a.innerText = h.innerText;
+                a.href = "javascript:void(0)"; 
+                
+                a.onclick = () => {
+                    const modalContainer = document.querySelector('.modal-content');
+                    modalContainer.scrollTo({ top: h.offsetTop - 90, behavior: 'smooth' }); 
+                    h.classList.add('highlight-flash');
+                    setTimeout(() => { h.classList.remove('highlight-flash'); }, 1000);
+                    tocBtn.classList.remove('open');
+                    tocDropdown.classList.remove('active');
+                };
+                
+                li.appendChild(a);
+                tocList.appendChild(li);
+            });
 
-    // 放入畫廊本體
-    wrapper.appendChild(gallery);
+            tocBtn.onclick = () => {
+                tocBtn.classList.toggle('open');
+                tocDropdown.classList.toggle('active');
+            };
 
-    // 建立右箭頭
-    const hintRight = document.createElement('div');
-    hintRight.className = 'scroll-hint hint-right';
-    wrapper.appendChild(hintRight);
+            tocWrapper.appendChild(tocBtn);
+            tocWrapper.appendChild(tocDropdown);
+            tocMount.appendChild(tocWrapper);
+        }
 
-    const checkScroll = () => {
-        const isScrollable = gallery.scrollWidth > gallery.clientWidth + 5;
-        const isAtEnd = Math.ceil(gallery.scrollLeft + gallery.clientWidth) >= Math.floor(gallery.scrollWidth) - 10;
-        const isAtStart = gallery.scrollLeft <= 10;
+        const galleries = modalBody.querySelectorAll('.gallery');
+        galleries.forEach(gallery => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'scroll-wrapper';
+            gallery.parentNode.insertBefore(wrapper, gallery);
 
-        if (isScrollable && !isAtEnd) hintRight.classList.add('visible');
-        else hintRight.classList.remove('visible');
+            const hintLeft = document.createElement('div');
+            hintLeft.className = 'scroll-hint hint-left';
+            wrapper.appendChild(hintLeft);
+            wrapper.appendChild(gallery);
 
-        if (isScrollable && !isAtStart) hintLeft.classList.add('visible');
-        else hintLeft.classList.remove('visible');
-    };
-    
-    gallery.addEventListener('scroll', checkScroll);
-    
-    const imgs = gallery.querySelectorAll('img');
-    imgs.forEach(img => {
-        if (img.complete) checkScroll();
-        else img.addEventListener('load', checkScroll);
-    });
+            const hintRight = document.createElement('div');
+            hintRight.className = 'scroll-hint hint-right';
+            wrapper.appendChild(hintRight);
 
-    new ResizeObserver(checkScroll).observe(gallery);
-    setTimeout(checkScroll, 100); 
-    });
+            const checkScroll = () => {
+                const isScrollable = gallery.scrollWidth > gallery.clientWidth + 5;
+                const isAtEnd = Math.ceil(gallery.scrollLeft + gallery.clientWidth) >= Math.floor(gallery.scrollWidth) - 10;
+                const isAtStart = gallery.scrollLeft <= 10;
 
-    const figures = modalBody.querySelectorAll('.gallery figure');
-    figures.forEach(figure => {
-    figure.addEventListener('click', () => {
-        figure.classList.toggle('hide-caption');
-    });
-    });
+                if (isScrollable && !isAtEnd) hintRight.classList.add('visible');
+                else hintRight.classList.remove('visible');
+
+                if (isScrollable && !isAtStart) hintLeft.classList.add('visible');
+                else hintLeft.classList.remove('visible');
+            };
+            
+            gallery.addEventListener('scroll', checkScroll);
+            
+            const imgs = gallery.querySelectorAll('img');
+            imgs.forEach(img => {
+                if (img.complete) checkScroll();
+                else img.addEventListener('load', checkScroll);
+            });
+
+            new ResizeObserver(checkScroll).observe(gallery);
+            setTimeout(checkScroll, 100); 
+        });
+
+        const figures = modalBody.querySelectorAll('.gallery figure');
+        figures.forEach(figure => {
+            figure.addEventListener('click', () => {
+                figure.classList.toggle('hide-caption');
+            });
+        });
+    }); // ✨ switchModalContent 結束
 };
 
 // === 5. 標籤點擊聚焦邏輯 (Focus Highlight) ===

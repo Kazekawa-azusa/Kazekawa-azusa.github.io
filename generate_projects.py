@@ -81,9 +81,12 @@ def generate_projects_json():
             # ✨ 新增：讀取專案 (Card) 的擴充標籤
             # ==========================================
             proj_data['date'] = proj_data.get('date', "")
+            proj_data['version'] = str(proj_data.get('version', ""))
             proj_data['pinned'] = bool(proj_data.get('pinned', False))
             proj_data['is_new'] = bool(proj_data.get('new', False))
             proj_data['is_updated'] = bool(proj_data.get('updated', False))
+            proj_data['is_wip'] = bool(proj_data.get('wip', False))
+            proj_data['is_archived'] = bool(proj_data.get('archived', False))
             
             proj_cover = proj_data.get('cover')
             if proj_cover:
@@ -143,7 +146,9 @@ def generate_projects_json():
                                 "date": sub_data.get('date', ""),
                                 "pinned": bool(sub_data.get('pinned', False)),
                                 "is_new": bool(sub_data.get('new', False)),
-                                "is_updated": bool(sub_data.get('updated', False))
+                                "is_updated": bool(sub_data.get('updated', False)),
+                                "is_wip": bool(sub_data.get('wip', False)),             # ✨ 新增 WIP 狀態
+                                "is_archived": bool(sub_data.get('archived', False))    # ✨ 新增歸檔狀態
                             })
                     except Exception as e:
                         print(f"⚠️ Error reading Markdown {md_file_path}: {e}")
