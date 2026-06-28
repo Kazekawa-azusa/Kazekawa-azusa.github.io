@@ -599,6 +599,7 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
         indexHtml += `<style>#modal-body li a:hover { background: rgba(128, 128, 128, 0.05); }</style>`;
 
         modalBody.innerHTML = indexHtml;
+        document.querySelector('.modal-content').style.viewTransitionName = 'modal-content';
         modalOverlay.classList.add('active');
         document.body.style.overflow = 'hidden';
         
@@ -1000,15 +1001,25 @@ window.scrollToNextCard = function(event) {
 // 為了保留首頁的測試按鈕，加入這個純文字渲染函數
 window.openMarkdownModal = function(markdownText) {
     modalBody.innerHTML = marked.parse(markdownText);
+    document.querySelector('.modal-content').style.viewTransitionName = 'modal-content';
     modalOverlay.classList.add('active');
     document.body.style.overflow = 'hidden';
     document.querySelector('.modal-content').scrollTop = 0;
 };
 
-// 關閉 Modal 的函數與事件綁定
 function closeModal() {
+
+    const modalContent =
+        document.querySelector('.modal-content');
+
+    modalContent.style.viewTransitionName = 'none';
+
     modalOverlay.classList.remove('active');
-    document.body.style.overflow = ''; 
+    document.body.style.overflow = '';
+
+    requestAnimationFrame(() => {
+        modalContent.style.removeProperty('view-transition-name');
+    });
 }
 
 closeModalBtn.addEventListener('click', closeModal);

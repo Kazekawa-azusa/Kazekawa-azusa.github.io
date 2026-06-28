@@ -809,7 +809,6 @@ footer {
 .modal-content {
     background: var(--card);
     border: 1px solid var(--card-border);
-    view-transition-name: modal-content;
     border-radius: 1.1rem;
     
     /* ✨ 核心防禦 1：改為 border-box，徹底消滅「推過頭又拉回」的 Padding 計算誤差！ */
