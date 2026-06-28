@@ -899,15 +899,15 @@ footer {
 /* ========================= */
 .modal-top-bar {
     position: sticky;
-    top: 0; /* ✨ 因為沒有負邊距了，從此再也不會被瀏覽器切掉 */
     
-    /* ✨ 核心重構 2：移除 margin-top 的負數 */
+    /* ✨ 終極修復：設定 -2px 強制往上咬合，徹底消滅次像素渲染導致的上方漏光！ */
+    top: -2px; 
+    
     margin: 0 -3rem 1.5rem -3rem; 
     
-    /* ✨ 加上充足的頂部留白 (1.5rem) 確保按鈕有呼吸空間 */
-    padding: 1.5rem 1.5rem 1.2rem 3rem; 
+    /* ✨ 利用 calc() 補償往上的 2px，讓裡面的按鈕視覺上 100% 維持原位 */
+    padding: calc(1.5rem + 2px) 1.5rem 1.2rem 3rem; 
     
-    /* 加上跟外層一樣的圓角，完美貼合邊緣 */
     border-top-left-radius: 1.1rem;
     border-top-right-radius: 1.1rem;
     background: var(--glass-bg);
@@ -929,11 +929,11 @@ footer {
     height: 0;
     margin: 0 -3rem; 
     
-    /* ✨ 核心修復 1：讓頂部留白跟一般模式一樣是 1.5rem，維持數學對稱 */
-    padding: 1.5rem 3rem 0 3rem; 
+    /* ✨ 同步補償 */
+    padding: calc(1.5rem + 2px) 3rem 0 3rem; 
     
     position: sticky; 
-    top: 0; 
+    top: -2px; /* ✨ 同步負數咬合 */
 }
 
 /* 2. 精確鎖定 X 按鈕對齊標題第一行 */
@@ -1316,7 +1316,7 @@ footer {
     /* ✨ 宣告預設變數 (如果 Markdown 沒寫，就用這裡的預設值) */
     --g-width: 200px;   /* 預設寬度 */
     --g-rows: 1;        /* 預設行數 */
-    --g-ratio: auto;    /* 預設比例 (auto 代表由圖片原始比例決定) */
+    --g-ratio: 1/1;    /* 預設比例 (auto 代表由圖片原始比例決定) */
 
     display: grid;
     gap: 1rem;
@@ -1699,23 +1699,23 @@ footer {
     padding: 0 1.5rem 5rem 1.5rem; 
     }
 
-    /* 1. 修改手機版：一般文章模式的導覽列 (讓上方與右方的留白一模一樣) */
+    /* 1. 修改手機版：一般文章模式的導覽列 */
     .modal-top-bar {
-    top: 0; 
-    margin: 0 -1.5rem 1.5rem -1.5rem; 
-    
-    /* ✨ 核心修改 1：把 padding 的 Top (1.5rem) 與 Right (1.5rem) 統一，形成完美正方角落 */
-    padding: 1.5rem 1.5rem 1.2rem 1.5rem; 
-    
-    border-top-left-radius: 1.1rem;
-    border-top-right-radius: 1.1rem;
+        top: -2px; /* ✨ 手機版同步負數咬合 */
+        margin: 0 -1.5rem 1.5rem -1.5rem; 
+        
+        /* ✨ 加上 calc(1.5rem + 2px) 補償 */
+        padding: calc(1.5rem + 2px) 1.5rem 1.2rem 1.5rem; 
+        
+        border-top-left-radius: 1.1rem;
+        border-top-right-radius: 1.1rem;
     }
 
     /* 2. 手機版：索引頁模式 (底色隱藏狀態) */
     .modal-top-bar.is-index-mode {
-    margin: 0 -1.5rem;
-    /* ✨ 同步調整這裡的 padding 保持排版邏輯一致 */
-    padding: 1.5rem 1.5rem 0 1.5rem;
+        margin: 0 -1.5rem;
+        /* ✨ 同步補償 */
+        padding: calc(1.5rem + 2px) 1.5rem 0 1.5rem;
     }
 
     /* 3. 手機版：索引頁模式下的右上角 X 按鈕絕對座標 */
@@ -1904,26 +1904,33 @@ img.is-broken {
 /* ✨ 文章與畫廊防塌陷 (冗餘清除版) */
 /* ========================================== */
 
-/* A. Loading 時的保底高度 */
+/* ========================================== */
+/* ✨ 文章與畫廊防塌陷 (完美比例骨架版) */
+/* ========================================== */
+
+/* A. Loading 時的保底高度與黃金比例 */
+
+/* 1. 一般文章內的大圖：給予 16:9 的橫向寬螢幕比例 */
 .markdown-body img.is-loading { 
     min-height: 250px; 
-    
-    /* ✨ 核心修復 1：強制轉為區塊元素，這樣 min-height 才會生效，讓佔位圖擁有真實的物理體積！ */
     display: block; 
-    
-    /* ✨ 核心修復 2：給予完整寬度，讓灰色掃描動畫可以填滿畫面 */
     width: 100%; 
+    
+    /* ✨ 升級防護：載入時預設呈現 1:1 的寬螢幕比例，不再是奇怪的細長條！ 
+       (如果 Markdown 有傳入 --img-ratio 變數則優先使用) */
+    aspect-ratio: var(--img-ratio, 1 / 1); 
 }
 
+/* 2. 右側文繞圖 (float-right)：通常偏向方形，給予 4:3 比例 */
 .markdown-body img[alt="float-right"].is-loading,
-/* 修改這段，確保即使 float 元素內的圖片還在 loading，父容器也能感知到高度 */
-.markdown-body img.is-loading,
 .markdown-body figure.float-right img.is-loading { 
     min-height: 150px; 
     display: block; 
     width: 100%;
-    /* 這裡加上這行，確保它在還沒載入時，就能撐開 float 容器 */
     background: var(--bg); 
+    
+    /* ✨ 升級防護：載入時預設呈現 1:1 的微長方比例，與右側欄寬度完美契合 */
+    aspect-ratio: var(--img-ratio, 1 / 1); 
 }
 
 /* B. Broken 破圖時的幾何防塌陷支撐 */
