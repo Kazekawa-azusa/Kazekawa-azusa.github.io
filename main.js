@@ -527,67 +527,39 @@ const modalBody = document.getElementById('modal-body');
 // ✨ 核心升級：同步自適應高度切換 (完美 CSS FLIP 引擎)
 // ==========================================
 function switchModalContent(updateDOMCallback) {
-    const isModalOpen = modalOverlay.classList.contains('active');
+
     const topLeft = document.getElementById('modal-top-left');
     const tocMount = document.getElementById('toc-mount-point');
-    const modalContainer = document.querySelector('.modal-content');
-    
-    if (isModalOpen) {
-        // 1. 取得當前真實高度並鎖定
-        const currentHeight = modalContainer.offsetHeight; 
-        modalContainer.style.height = currentHeight + 'px';
-        modalContainer.style.overflow = 'hidden'; 
 
-        // 2. 淡出舊內容
-        modalBody.classList.add('content-fade-out');
-        if (topLeft) topLeft.classList.add('content-fade-out');
-        if (tocMount) tocMount.classList.add('content-fade-out');
-        
-        setTimeout(() => {
-            // 3. 關閉 CSS 過渡，準備偷偷換內容
-            modalContainer.style.transition = 'none'; 
-            
-            // 4. 執行 DOM 替換
-            updateDOMCallback();
-            
-            // 5. 解除鎖定，讓瀏覽器自然撐開，精準測量新高度
-            modalContainer.style.height = ''; 
-            const newHeight = modalContainer.offsetHeight;
-            
-            // 6. ✨ 核心修復：立刻將高度「死死鎖在起點 (currentHeight)」
-            // 絕對不能先設為 newHeight！讓瀏覽器保持在舊的尺寸，準備當作動畫的完美起點
-            modalContainer.style.height = currentHeight + 'px';
-            
-            // 7. 強制重繪：強迫瀏覽器把「鎖定在起點」的狀態畫到螢幕上
-            void modalContainer.offsetHeight; 
-            
-            // 8. 重新開啟 CSS 過渡動畫
-            modalContainer.style.transition = ''; 
-            
-            // 9. ✨ 終極防漏魔法：利用下一幀才觸發拉伸，讓 CSS 完美接管雙向切換
-            requestAnimationFrame(() => {
-                // 設定目標新高度，觸發平滑拉伸
-                modalContainer.style.height = newHeight + 'px';
-                
-                // 同步淡入新內容
-                modalBody.classList.remove('content-fade-out'); 
-                if (topLeft) topLeft.classList.remove('content-fade-out');
-                if (tocMount) tocMount.classList.remove('content-fade-out');
 
-                // 動畫結束後清理內聯樣式 (0.25s 需與 CSS transition 時間對齊)
-                setTimeout(() => {
-                    modalContainer.style.height = '';
-                    modalContainer.style.overflow = '';
-                }, 250);
-            });
+    function update() {
 
-        }, 120); // 配合淡出時間
-    } else {
         updateDOMCallback();
-        modalBody.classList.remove('content-fade-out');
-        if (topLeft) topLeft.classList.remove('content-fade-out');
-        if (tocMount) tocMount.classList.remove('content-fade-out');
+
+        topLeft?.classList.remove('content-fade-out');
+        tocMount?.classList.remove('content-fade-out');
+
     }
+
+
+    // Chrome View Transition API
+    if (document.startViewTransition) {
+
+
+        document.startViewTransition(() => {
+
+            update();
+
+        });
+
+
+    } else {
+
+        // fallback
+        update();
+
+    }
+
 }
 
 // ==========================================
@@ -654,11 +626,8 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
         document.body.style.overflow = 'hidden';
         
         const modalContainer = document.querySelector('.modal-content');
-        if (restoreScroll && window.lastIndexScrollPos) {
-            setTimeout(() => { modalContainer.scrollTop = window.lastIndexScrollPos; }, 10);
-        } else {
-            modalContainer.scrollTop = 0;
-        }
+        window.pendingModalScroll =
+        window.lastIndexScrollPos ?? 0;
     }); // ✨ switchModalContent 結束
 };
 
@@ -758,7 +727,13 @@ window.openArticle = function(projectId, articleIndex) {
                 
                 a.onclick = () => {
                     const modalContainer = document.querySelector('.modal-content');
-                    modalContainer.scrollTo({ top: h.offsetTop - 90, behavior: 'smooth' }); 
+
+                    requestAnimationFrame(() => {
+                        if(window.lastIndexScrollPos !== undefined){
+                            modalContainer.scrollTop =
+                                window.lastIndexScrollPos;
+                        }
+                    });
                     h.classList.add('highlight-flash');
                     setTimeout(() => { h.classList.remove('highlight-flash'); }, 1000);
                     tocBtn.classList.remove('open');

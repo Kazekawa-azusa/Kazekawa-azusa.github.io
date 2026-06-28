@@ -809,6 +809,7 @@ footer {
 .modal-content {
     background: var(--card);
     border: 1px solid var(--card-border);
+    view-transition-name: modal-content;
     border-radius: 1.1rem;
     
     /* ✨ 核心防禦 1：改為 border-box，徹底消滅「推過頭又拉回」的 Padding 計算誤差！ */
@@ -828,8 +829,10 @@ footer {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     transform: translateY(30px) scale(0.95);
     
-    /* ✨ 補回遺失的高度拉伸動畫 (height 0.25s) */
-    transition: height 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.5s ease, border-color 0.5s ease;
+    transition:
+    transform 0.2s cubic-bezier(0.25,0.8,0.25,1),
+    background-color 0.5s ease,
+    border-color 0.5s ease;
 }
 
 /* ========================================== */
@@ -2050,19 +2053,52 @@ img.is-broken {
 /* ✨ 模態框內部切換平滑過渡 (Magnetic Rebound 磁吸回彈版) */
 /* ========================================== */
 
-/* 1. 配合磁吸的過渡動畫權限 */
-#modal-body, #modal-top-left, #toc-mount-point {
-    /* ✨ 磁吸彈簧張力曲線 (Magnetic Spring Curve)：
-       透明度快速變化 (0.15s)，但位移具有 Q 彈的回彈感 (0.3s) */
-    transition: opacity 0.15s ease-out, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    will-change: opacity, transform;
+/* ==========================================
+   View Transition Modal Content Switch
+========================================== */
+
+::view-transition-old(modal-content),
+::view-transition-new(modal-content) {
+    animation-duration: 0.28s;
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* 2. 隱藏狀態 (順著 TOC 的推力往右偏移) */
-.content-fade-out {
-    opacity: 0 !important;
-    transform: translateX(12px) !important; /* ✨ 順著磁吸方向往右推 */
-    pointer-events: none;
+
+/* 舊內容退出 */
+::view-transition-old(modal-content) {
+    animation-name: modal-slide-out;
+}
+
+
+/* 新內容進入 */
+::view-transition-new(modal-content) {
+    animation-name: modal-slide-in;
+}
+
+
+@keyframes modal-slide-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-15px);
+    }
+}
+
+
+@keyframes modal-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 /* ========================================== */
 /* ✨ 模態框內部切換平滑過渡 (磁吸回彈版) */
@@ -2080,14 +2116,4 @@ img.is-broken {
     opacity: 0 !important;
     transform: translateX(15px) !important; /* ✨ 往右推擠 */
     pointer-events: none;
-}
-
-/* ========================================== */
-/* ✨ 終極測量魔法：時空暫停 (Time Stop)       */
-/* ========================================== */
-/* 施加這個類別時，全站所有元素的動畫會瞬間停止，讓我們能測量到「最終」的幾何高度 */
-.no-transition-measure, 
-.no-transition-measure * {
-    transition: none !important;
-    animation: none !important;
 }
