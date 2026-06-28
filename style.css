@@ -2052,53 +2052,36 @@ img.is-broken {
 /* ========================================== */
 /* ✨ 模態框內部切換平滑過渡 (Magnetic Rebound 磁吸回彈版) */
 /* ========================================== */
-
-/* ==========================================
-   View Transition Modal Content Switch
-========================================== */
-
-::view-transition-old(modal-content),
-::view-transition-new(modal-content) {
-    animation-duration: 0.28s;
-    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-
-/* 舊內容退出 */
-::view-transition-old(modal-content) {
-    animation-name: modal-slide-out;
-}
-
-
-/* 新內容進入 */
-::view-transition-new(modal-content) {
-    animation-name: modal-slide-in;
-}
-
-
 @keyframes modal-slide-out {
     from {
-        opacity: 1;
-        transform: translateX(0);
+        opacity:1;
+        transform:translateX(0);
     }
-
     to {
-        opacity: 0;
-        transform: translateX(-15px);
+        opacity:0;
+        transform:translateX(-15px);
     }
 }
-
 
 @keyframes modal-slide-in {
     from {
-        opacity: 0;
-        transform: translateX(15px);
+        opacity:0;
+        transform:translateX(15px);
     }
-
     to {
-        opacity: 1;
-        transform: translateX(0);
+        opacity:1;
+        transform:translateX(0);
     }
+}
+
+@keyframes modal-fade-out {
+    from { opacity:1; }
+    to { opacity:0; }
+}
+
+@keyframes modal-fade-in {
+    from { opacity:0; }
+    to { opacity:1; }
 }
 /* ========================================== */
 /* ✨ 模態框內部切換平滑過渡 (磁吸回彈版) */

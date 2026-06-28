@@ -527,39 +527,16 @@ const modalBody = document.getElementById('modal-body');
 // ✨ 核心升級：同步自適應高度切換 (完美 CSS FLIP 引擎)
 // ==========================================
 function switchModalContent(updateDOMCallback) {
-
-    const topLeft = document.getElementById('modal-top-left');
-    const tocMount = document.getElementById('toc-mount-point');
-
-
     function update() {
-
         updateDOMCallback();
-
-        topLeft?.classList.remove('content-fade-out');
-        tocMount?.classList.remove('content-fade-out');
-
     }
-
-
-    // Chrome View Transition API
     if (document.startViewTransition) {
-
-
         document.startViewTransition(() => {
-
             update();
-
         });
-
-
     } else {
-
-        // fallback
         update();
-
     }
-
 }
 
 // ==========================================
