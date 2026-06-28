@@ -5,3 +5,4 @@ projects/**/*.jpeg
 __pycache__
 .vscode
 note.txt
+tempCodeRunnerFile.py

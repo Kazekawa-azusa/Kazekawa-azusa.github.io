@@ -4,7 +4,7 @@
   <figcaption>基礎方塊</figcaption>
 </figure>
 
-（coc6th | OC）
+>（coc6th | OC）
 
 Tag：
 記者、爬山、隨性

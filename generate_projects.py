@@ -77,6 +77,17 @@ def generate_projects_json():
             proj_data['title'] = proj_data.get('title', clean_proj_title)
             proj_data['order'] = proj_data.get('order', default_proj_order)
             
+            # ==========================================
+            # ✨ 新增：讀取專案 (Card) 的擴充標籤
+            # ==========================================
+            proj_data['date'] = proj_data.get('date', "")
+            proj_data['version'] = str(proj_data.get('version', ""))
+            proj_data['pinned'] = bool(proj_data.get('pinned', False))
+            proj_data['is_new'] = bool(proj_data.get('new', False))
+            proj_data['is_updated'] = bool(proj_data.get('updated', False))
+            proj_data['is_wip'] = bool(proj_data.get('wip', False))
+            proj_data['is_archived'] = bool(proj_data.get('archived', False))
+            
             proj_cover = proj_data.get('cover')
             if proj_cover:
                 proj_data['cover_image'] = f"{base_dir}/{cat_folder}/{proj_folder}/{proj_cover}"
@@ -127,7 +138,17 @@ def generate_projects_json():
                                 "title": meta_title,
                                 "description": meta_desc,
                                 "cover_image": f"{rel_base}/{meta_cover}" if meta_cover else None, 
-                                "content": content
+                                "content": content,
+                                
+                                # ==========================================
+                                # ✨ 新增：讀取文章 (Article) 的擴充標籤
+                                # ==========================================
+                                "date": sub_data.get('date', ""),
+                                "pinned": bool(sub_data.get('pinned', False)),
+                                "is_new": bool(sub_data.get('new', False)),
+                                "is_updated": bool(sub_data.get('updated', False)),
+                                "is_wip": bool(sub_data.get('wip', False)),             # ✨ 新增 WIP 狀態
+                                "is_archived": bool(sub_data.get('archived', False))    # ✨ 新增歸檔狀態
                             })
                     except Exception as e:
                         print(f"⚠️ Error reading Markdown {md_file_path}: {e}")

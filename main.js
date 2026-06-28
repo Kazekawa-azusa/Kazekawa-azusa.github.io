@@ -5,7 +5,7 @@
 /* ================================================================== */
 const CONFIG = {
     // 🚩 發布前必改
-    VERSION: "U0.4.1",          // 目前系統版本號
+    VERSION: "U0.5.0",          // 目前系統版本號
 
     // 🎨 介面與主題設定
     DEFAULT_THEME: "light",     // 預設主題 (light / dark)
@@ -19,6 +19,22 @@ const CONFIG = {
     DATA_SOURCE: "./all_projects.json" 
 };
 
+// ==========================================
+// ✨ 全域狀態標籤系統 (支援快速擴充)
+// ==========================================
+window.STATUS_LIST = ['NEW', 'UPDATED', 'WIP', 'ARCHIVED'];
+
+// 共用函數：自動判斷物件屬性並回傳對應的 HTML 徽章
+window.getStatusBadgeHtml = function(item, isTitle = false) {
+    const titleClass = isTitle ? ' title-badge' : '';
+    // 優先權：NEW > UPDATED > WIP > ARCHIVED
+    if (item.is_new) return `<span class="status-badge${titleClass}" data-status="NEW">NEW</span>`;
+    if (item.is_updated) return `<span class="status-badge${titleClass}" data-status="UPDATED">UPDATED</span>`;
+    if (item.is_wip) return `<span class="status-badge${titleClass}" data-status="WIP">WIP</span>`;
+    if (item.is_archived) return `<span class="status-badge${titleClass}" data-status="ARCHIVED">ARCHIVED</span>`;
+    return '';
+};
+
 // 自動將版本號注入到 Footer
 const sysVersionEl = document.getElementById('sys-version');
 if (sysVersionEl) sysVersionEl.innerText = CONFIG.VERSION;
@@ -28,6 +44,17 @@ document.documentElement.style.setProperty('--marquee-speed', `${CONFIG.MARQUEE_
 
 // === 全域變數 (系統內部使用) ===
 window.siteProjects = [];
+
+// ==========================================
+// ✨ 新增：全域圖片破圖處理器 (終極解決 Safari/iOS 限制)
+// ==========================================
+window.handleImageError = function(img) {
+    img.classList.remove('is-loading');
+    img.classList.add('is-broken');
+    // ✨ 核心魔法：將破圖瞬間替換為 1x1 透明 SVG！
+    // 這樣 Safari 就會以為「圖片載入成功了」，進而徹底註銷那個醜陋的原生 X 圓圈！
+    img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+};
 
 // === 1. 介面與導覽列邏輯 (Theme & Menu) ===
 document.addEventListener('DOMContentLoaded', () => {
@@ -152,6 +179,29 @@ async function loadProjects() {
     
     const categories = db.categories;
     const projects = db.projects;
+
+    // ==========================================
+    // ✨ 智慧狀態推導與全域標籤注入
+    // ==========================================
+    projects.forEach(p => {
+      let isCardUpdated = p.is_updated;
+      
+      // 狀態推導：如果卡片沒狀態，但裡面的文章有，就自動升級為 UPDATED
+      if (!p.is_new && !isCardUpdated && p.articles && p.articles.length > 0) {
+        if (p.articles.some(art => art.is_new || art.is_updated)) {
+          isCardUpdated = true;
+        }
+      }
+      p.computed_is_updated = isCardUpdated; // 存起來備用
+
+      // 核心魔法：將狀態化為實體 Tag，按照「最低到最高優先權」塞入陣列最前方
+      p.tags = p.tags || [];
+      if (p.is_archived && !p.tags.includes('ARCHIVED')) p.tags.unshift('ARCHIVED');
+      if (p.is_wip && !p.tags.includes('WIP')) p.tags.unshift('WIP');
+      if (isCardUpdated && !p.tags.includes('UPDATED')) p.tags.unshift('UPDATED');
+      if (p.is_new && !p.tags.includes('NEW')) p.tags.unshift('NEW');
+    });
+
     window.siteProjects = projects;
 
     // 1. 處理跑馬燈橫幅 (華爾街報價機版 - 點擊聚焦功能)
@@ -166,8 +216,9 @@ async function loadProjects() {
             const colorClass = isUp ? 'stock-up' : 'stock-down';
             const sign = isUp ? '+' : '-';
             
-            // ✨ 核心修改：加上 data-tag 屬性，方便之後用 JS 找出來讓它發光
-            return `<span class="clickable-ticker-tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event)">${tag} <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
+            // ✨ 讓跑馬燈自動感知它是不是一個「狀態標籤」並掛上 data-status
+            const statusAttr = window.STATUS_LIST.includes(tag) ? `data-status="${tag}"` : '';
+            return `<span class="clickable-ticker-tag" data-tag="${tag}" ${statusAttr} onclick="window.filterByTag('${tag}', event)"><span class="ticker-name">${tag}</span> <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
         }).join('<span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span>');
 
         const container = marquee.parentElement;
@@ -235,9 +286,9 @@ async function loadProjects() {
         ? `<p style="color: var(--muted); margin-top: 0.2rem; margin-bottom: 0; line-height: 1.6; max-width: 800px; font-size: 0.95rem;">${cat.description}</p>`
         : '';
 
-        // ✨ 新增：分類專屬的右上角正方形圖示
+        // ✨ 修改：將 onerror 接入全域防護系統
         const sectionImageHtml = cat.cover_image
-        ? `<img src="${cat.cover_image}" alt="icon" style="width: 72px; height: 72px; border-radius: 16px; object-fit: cover; border: 1px solid var(--card-border); box-shadow: 0 4px 15px var(--shadow-base); flex-shrink: 0;">`
+        ? `<img src="${cat.cover_image}" alt="icon" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="width: 72px; height: 72px; border-radius: 16px; object-fit: cover; border: 1px solid var(--card-border); box-shadow: 0 4px 15px var(--shadow-base); flex-shrink: 0;">`
         : '';
 
         // 利用 Flexbox 讓文字在左、圖片在右
@@ -269,13 +320,32 @@ async function loadProjects() {
         if (targetGrid) {
         const card = document.createElement('div');
         card.className = 'card';
-        // ✨ 新增這行：把這張卡片的所有標籤，變成隱藏的字串存起來 (例如 "Python,API")
         card.setAttribute('data-tags', (data.tags || []).join(','));
-        // ✨ 核心升級：幫卡片內的標籤加上 onclick 事件，並傳入 event 進行攔截
-        // ✨ 核心升級：一樣加上 this 參數
-        const tagsHTML = (data.tags || []).map(tag => 
-            `<span class="tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event, this)">${tag}</span>`
-        ).join('');
+        
+        // ==========================================
+        // ✨ 智慧推導邏輯 (State Bubbling)
+        // ==========================================
+        let isCardNew = data.is_new;
+        let isCardUpdated = data.is_updated;
+        
+        // 如果卡片本身沒設定狀態，但內部文章有新動態，就自動把卡片點亮為 UPDATED！
+        if (!isCardNew && !isCardUpdated && data.articles && data.articles.length > 0) {
+            const hasActiveArticles = data.articles.some(art => art.is_new || art.is_updated);
+            if (hasActiveArticles) {
+                isCardUpdated = true; 
+            }
+        }
+
+        // ==========================================
+        // ✨ 動態標籤渲染 (自動套用 data-status 發光屬性)
+        // ==========================================
+        let tagsHTML = (data.tags || []).map(tag => {
+            if (window.STATUS_LIST.includes(tag)) {
+                return `<span class="tag status-tag" data-tag="${tag}" data-status="${tag}" onclick="window.filterByTag('${tag}', event, this)">${tag}</span>`;
+            }
+            // 一般標籤維持原樣
+            return `<span class="tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event, this)">${tag}</span>`;
+        }).join('');
         
         let actionText = '';
         if (data.articles && data.articles.length > 0) {
@@ -315,17 +385,41 @@ async function loadProjects() {
             ? `<p style="color: var(--text); font-size: 0.95rem; line-height: 1.6; margin-top: 0.5rem; margin-bottom: 1rem;">${data.description}</p>`
             : '';
 
-        // ✨ 新增：卡片專屬的右上角正方形縮圖
+        // ==========================================
+        // ✨ 終極升級：專案卡片的獨立圖釘 (右上角絕對定位)
+        // ==========================================
+        
+        // 1. 基底圖片 (無圖則直接留白，移除 📄 預設框)
         const cardImageHtml = data.cover_image
-            ? `<img src="${data.cover_image}" alt="cover" style="width: 56px; height: 56px; border-radius: 12px; object-fit: cover; border: 1px solid var(--card-border); flex-shrink: 0;">`
+            ? `<img src="${data.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="width: 56px; height: 56px; border-radius: 12px; object-fit: cover; border: 1px solid var(--card-border); flex-shrink: 0; background: var(--bg);">`
             : '';
 
-        // 將原本的標題區塊包進 Flex 容器裡，讓文字跟縮圖並排
+        // 2. 獨立的大型圖釘 (放置於卡片右上角)
+        const techPinSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(45deg);"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`;
+
+        // ✨ 終極淨化：將冗長的 inline-style 徹底拔除，交給 .card-pin 全權處理
+        const absolutePinHtml = data.pinned
+            ? `<div class="card-pin">${techPinSvg}</div>`
+            : '';
+
+        // ==========================================
+        // ✨ 日期與版本號智慧組合 (Metadata)
+        // ==========================================
+        let metaParts = [];
+        if (data.date) metaParts.push(data.date);
+        if (data.version) metaParts.push(`v${data.version}`); // 自動幫前面加上 v
+        
+        // ✨ 升級為絕對定位：懸浮於卡片左上角的 padding 空白區，完全不影響標題排版！
+        const cardDateHtml = metaParts.length > 0
+            ? `<div style="position: absolute; top: 0.5rem; left: 1.6rem; font-family: monospace; font-size: 0.72rem; font-weight: 600; color: var(--accent); opacity: 0.6; letter-spacing: 0.05em;">[${metaParts.join(' • ')}]</div>`
+            : '';
+
+        // 3. ✨ 組合 HTML：將 absolutePinHtml 與 cardDateHtml 都拉到排版流之外
         card.innerHTML = `
-            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;">
+            ${absolutePinHtml}
+            ${cardDateHtml} <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;">
             <h3 style="display: flex; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.2rem; margin-top: 0;">
-                ${data.title}
-                ${cardMetaHtml}
+                ${data.title}   ${cardMetaHtml}
             </h3>
             ${cardImageHtml}
             </div>
@@ -429,217 +523,261 @@ const modalOverlay = document.getElementById('md-modal');
 const closeModalBtn = document.getElementById('close-modal');
 const modalBody = document.getElementById('modal-body');
 
-// 打開該專案的「目錄頁面」
-window.openProjectIndex = function(projectId, restoreScroll = false) {
-    document.getElementById('modal-top-left').innerHTML = '';
-    document.getElementById('toc-mount-point').innerHTML = '';
-
-    // ✨ 1. 加入這行：切換為「索引頁模式」，讓目錄列隱形，X 按鈕變回浮動狀態
-    document.querySelector('.modal-top-bar').classList.add('is-index-mode');
-
-    const proj = window.siteProjects.find(p => p.id === projectId);
-    if (!proj || !proj.articles) return;
-
-    // ✨ 核心修復：加上 style="padding-right: 4.5rem;" 預留出 X 按鈕的專屬空間
-    let indexHtml = `<h1 style="padding-right: 4.5rem;">${proj.title} - 內容索引</h1><ul style="list-style:none; padding-left:0; margin-top:1.5rem;">`;
-    
-    proj.articles.forEach((art, idx) => {
-    // 1. 處理描述文字
-    let descHtml = art.description 
-        ? `<span style="font-size: 0.95rem; color: var(--muted); line-height: 1.4;">- ${art.description}</span>` 
-        : '';
-
-    // 2. ✨ 處理左側的縮圖或圖示
-    let iconHtml = art.cover_image
-        ? `<img src="${art.cover_image}" alt="cover" style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid var(--card-border);">`
-        : `<div style="width: 44px; height: 44px; flex-shrink: 0; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--card-border);">📄</div>`;
-
-    // 3. 組合 HTML：讓整行都可以點擊 (<a> 包裹)，並用 Flexbox 排版
-    indexHtml += `
-        <li style="margin-bottom: 1rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.8rem;">
-        <a href="#" onclick="event.preventDefault(); openArticle('${projectId}', ${idx})" 
-            style="display: flex; align-items: center; gap: 1rem; text-decoration: none; padding: 0.5rem; border-radius: 0.8rem; transition: background-color 0.2s;">
-            
-            ${iconHtml}
-            
-            <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; width: 100%;">
-            <span style="font-size: 1.15rem; color: var(--accent); font-weight: bold;">${art.title}</span>
-            ${descHtml}
-            </div>
-
-        </a>
-        </li>`;
-    });
-    indexHtml += `</ul>`;
-
-    // 加上一個微小的 CSS，限定只在 modal-body 裡面的 a 標籤才有背景反饋
-    indexHtml += `
-    <style>
-        #modal-body li a:hover { background: rgba(128, 128, 128, 0.05); }
-    </style>
-    `;
-
-    modalBody.innerHTML = indexHtml;
-    modalOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // 👇 2. 替換原本的 document.querySelector('.modal-content').scrollTop = 0;
-    // 改成這個「智慧記憶捲動」邏輯：
-    const modalContainer = document.querySelector('.modal-content');
-    if (restoreScroll && window.lastIndexScrollPos) {
-    // 給瀏覽器一點時間 (10毫秒) 把 DOM 畫出來，再把捲軸拉回存檔點
-    setTimeout(() => { modalContainer.scrollTop = window.lastIndexScrollPos; }, 10);
-    } else {
-    // 如果是從首頁點進來的，就乖乖回到最上面
-    modalContainer.scrollTop = 0;
+// ==========================================
+// ✨ 核心升級：同步自適應高度切換 (完美 CSS FLIP 引擎)
+// ==========================================
+function switchModalContent(updateDOMCallback) {
+    function update() {
+        updateDOMCallback();
     }
+    if (document.startViewTransition) {
+        document.startViewTransition(() => {
+            update();
+        });
+    } else {
+        update();
+    }
+}
+
+// ==========================================
+// 打開該專案的「目錄頁面」
+// ==========================================
+window.openProjectIndex = function(projectId, restoreScroll = false) {
+    // ✨ 將原本的邏輯包進 switchModalContent
+    switchModalContent(() => {
+        document.getElementById('modal-top-left').innerHTML = '';
+        document.getElementById('toc-mount-point').innerHTML = '';
+
+        document.querySelector('.modal-top-bar').classList.add('is-index-mode');
+
+        const proj = window.siteProjects.find(p => p.id === projectId);
+        if (!proj || !proj.articles) return;
+
+        let indexHtml = `<h1 style="padding-right: 4.5rem;">${proj.title} - 內容索引</h1><ul style="list-style:none; padding-left:0; margin-top:1.5rem;">`;
+        
+        proj.articles.sort((a, b) => {
+            const aPinned = a.pinned ? 1 : 0;
+            const bPinned = b.pinned ? 1 : 0;
+            return bPinned - aPinned;
+        });
+        
+        proj.articles.forEach((art, idx) => {
+            let descHtml = art.description ? `<span style="font-size: 0.95rem; color: var(--muted); line-height: 1.4;">- ${art.description}</span>` : '';
+            let dateHtml = art.date ? `<span style="font-family: monospace; font-size: 0.85rem; color: var(--muted); margin-left: auto; padding-left: 1rem; flex-shrink: 0;">${art.date}</span>` : '';
+            let statusBadgeHtml = window.getStatusBadgeHtml(art, true);
+
+            const techPinSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(-45deg);"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`;
+
+            let baseIconHtml = art.cover_image
+                ? `<img src="${art.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="position: relative; z-index: 2; width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid var(--card-border);">`
+                : `<div style="position: relative; z-index: 2; width: 44px; height: 44px; flex-shrink: 0; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--card-border);">📄</div>`;
+
+            let pinnedBadgeHtml = art.pinned ? `<div class="modal-pin">${techPinSvg}</div>` : '';
+
+            let iconHtml = `<div style="position: relative; flex-shrink: 0; display: flex;">${pinnedBadgeHtml}${baseIconHtml}</div>`;
+
+            indexHtml += `
+                <li style="margin-bottom: 1rem; border-bottom: 1px dashed var(--divider-line); padding-bottom: 0.8rem;">
+                <a href="#" onclick="event.preventDefault(); openArticle('${projectId}', ${idx})" 
+                    style="display: flex; align-items: center; gap: 1rem; text-decoration: none; padding: 0.5rem; border-radius: 0.8rem; transition: background-color 0.2s;">
+                    
+                    ${iconHtml}
+                    
+                    <div style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; row-gap: 0.4rem;">
+                        <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+                            <span style="font-size: 1.15rem; color: var(--accent); font-weight: bold;">
+                                ${art.title}${statusBadgeHtml}
+                            </span>
+                            ${descHtml}
+                        </div>
+                        ${dateHtml}
+                    </div>
+                </a>
+                </li>`;
+        });
+        indexHtml += `</ul>`;
+        indexHtml += `<style>#modal-body li a:hover { background: rgba(128, 128, 128, 0.05); }</style>`;
+
+        modalBody.innerHTML = indexHtml;
+        document.querySelector('.modal-content').style.viewTransitionName = 'modal-content';
+        modalOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        const modalContainer = document.querySelector('.modal-content');
+        window.pendingModalScroll =
+        window.lastIndexScrollPos ?? 0;
+    }); // ✨ switchModalContent 結束
 };
 
+// ==========================================
 // 打開具體的「文章內文」
+// ==========================================
 window.openArticle = function(projectId, articleIndex) {
+    // ✨ 在淡出前，先記住目前的捲軸位置
     window.lastIndexScrollPos = document.querySelector('.modal-content').scrollTop;
 
-    // ✨ 👇 就是漏了這最關鍵的一行！
-    // 點進文章時，強制卸除「索引模式」，讓目錄列恢復高度與毛玻璃背景！
-    document.querySelector('.modal-top-bar').classList.remove('is-index-mode');
+    // ✨ 將原本的邏輯包進 switchModalContent
+    switchModalContent(() => {
+        document.querySelector('.modal-top-bar').classList.remove('is-index-mode');
 
-    const proj = window.siteProjects.find(p => p.id === projectId);
-    const article = proj.articles[articleIndex];
-    
-    // 1. 渲染文章內容
-    const articleHtml = marked.parse(article.content);
-    modalBody.innerHTML = articleHtml;
-    document.querySelector('.modal-content').scrollTop = 0; 
-
-    // ==========================================
-    // 2. 建立返回按鈕並放進「導覽列左側」
-    // ==========================================
-    const topLeft = document.getElementById('modal-top-left');
-    topLeft.innerHTML = ''; // 清空舊的
-    
-    const backBtn = document.createElement('button');
-    // ✨ 核心升級：直接套用剛剛寫好的專屬 CSS 類別，告別 Inline Style！
-    backBtn.className = 'modal-back-btn'; 
-    backBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> <span>返回索引</span>`;
-    
-    backBtn.onclick = () => openProjectIndex(projectId, true);
-    
-    topLeft.appendChild(backBtn);
-
-    // ==========================================
-    // 3. 建立漢堡目錄並放進「導覽列右側」
-    // ==========================================
-    const tocMount = document.getElementById('toc-mount-point');
-    tocMount.innerHTML = ''; // 清空舊的
-    
-    const headings = modalBody.querySelectorAll('h1, h2, h3'); 
-    if (headings.length > 1) {
-    const tocWrapper = document.createElement('div');
-    tocWrapper.className = 'toc-wrapper';
-
-    const tocBtn = document.createElement('div');
-    tocBtn.className = 'toc-toggle-btn';
-    // 恢復純漢堡圖示
-    tocBtn.innerHTML = '<span class="bar"></span><span class="bar"></span><span class="bar"></span>';
-
-    const tocDropdown = document.createElement('div');
-    tocDropdown.className = 'toc-dropdown';
-    tocDropdown.innerHTML = '<ul class="toc-list"></ul>';
-    const tocList = tocDropdown.querySelector('.toc-list');
-
-    headings.forEach((h, index) => {
-        const id = `article-heading-${index}`;
-        h.id = id;
-
-        const li = document.createElement('li');
-        li.className = `toc-${h.tagName.toLowerCase()}`; 
+        const proj = window.siteProjects.find(p => p.id === projectId);
+        const article = proj.articles[articleIndex];
         
-        const a = document.createElement('a');
-        a.innerText = h.innerText;
-        a.href = "javascript:void(0)"; 
+        const articleHtml = marked.parse(article.content);
+        modalBody.innerHTML = articleHtml;
+        document.querySelector('.modal-content').scrollTop = 0;
+
+        const firstH1 = modalBody.querySelector('h1');
+        if (firstH1 && (article.date || article.is_new || article.is_updated || article.is_wip || article.is_archived)){
+            const wrapper = document.createElement('div');
+            wrapper.style.display = 'flex';
+            wrapper.style.alignItems = 'baseline';
+            wrapper.style.justifyContent = 'space-between';
+            wrapper.style.flexWrap = 'wrap';
+            wrapper.style.borderBottom = '2px solid var(--card-border)';
+            wrapper.style.paddingBottom = '0.3rem';
+            wrapper.style.marginBottom = '0.8rem';
+            wrapper.style.marginTop = (firstH1 === modalBody.firstElementChild) ? '0' : '0.8rem';
+
+            firstH1.style.borderBottom = 'none';
+            firstH1.style.paddingBottom = '0';
+            firstH1.style.margin = '0';
+
+            firstH1.parentNode.insertBefore(wrapper, firstH1);
+            wrapper.appendChild(firstH1);
+
+            let statusBadge = window.getStatusBadgeHtml(article, false);
+            const metaHtml = `
+                <div style="display: flex; align-items: center; gap: 0.8rem; font-family: monospace; font-size: 0.95rem; color: var(--muted);">
+                    ${statusBadge}
+                    ${article.date ? `<span>${article.date}</span>` : ''}
+                </div>
+            `;
+            wrapper.insertAdjacentHTML('beforeend', metaHtml);
+        }
+
+        modalBody.querySelectorAll('img').forEach(img => {
+          if (img.complete && img.naturalWidth === 0) {
+            window.handleImageError(img);
+          } else if (!img.complete) {
+            img.classList.add('is-loading');
+            img.onload = () => img.classList.remove('is-loading');
+            img.onerror = () => window.handleImageError(img);
+          }
+        });
+
+        const topLeft = document.getElementById('modal-top-left');
+        topLeft.innerHTML = ''; 
         
-        a.onclick = () => {
-        const modalContainer = document.querySelector('.modal-content');
-        // 執行平滑滾動
-        modalContainer.scrollTo({ top: h.offsetTop - 90, behavior: 'smooth' }); 
+        const backBtn = document.createElement('button');
+        backBtn.className = 'modal-back-btn'; 
+        backBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> <span>返回索引</span>`;
+        backBtn.onclick = () => openProjectIndex(projectId, true);
+        topLeft.appendChild(backBtn);
+
+        const tocMount = document.getElementById('toc-mount-point');
+        tocMount.innerHTML = ''; 
         
-        // ✨ 加上高亮特效！
-        h.classList.add('highlight-flash');
-        
-        // ✨ 設定 1 秒後自動移除高亮，讓它像呼吸一樣變回原色
-        setTimeout(() => {
-            h.classList.remove('highlight-flash');
-        }, 1000);
-        
-        // 關閉目錄
-        tocBtn.classList.remove('open');
-        tocDropdown.classList.remove('active');
-        };
-        
-        li.appendChild(a);
-        tocList.appendChild(li);
-    });
+        const headings = modalBody.querySelectorAll('h1, h2, h3'); 
+        if (headings.length > 1) {
+            const tocWrapper = document.createElement('div');
+            tocWrapper.className = 'toc-wrapper';
 
-    tocBtn.onclick = () => {
-        tocBtn.classList.toggle('open');
-        tocDropdown.classList.toggle('active');
-    };
+            const tocBtn = document.createElement('div');
+            tocBtn.className = 'toc-toggle-btn';
+            tocBtn.innerHTML = '<span class="bar"></span><span class="bar"></span><span class="bar"></span>';
 
-    tocWrapper.appendChild(tocBtn);
-    tocWrapper.appendChild(tocDropdown);
-    tocMount.appendChild(tocWrapper);
-    }
+            const tocDropdown = document.createElement('div');
+            tocDropdown.className = 'toc-dropdown';
+            tocDropdown.innerHTML = '<ul class="toc-list"></ul>';
+            const tocList = tocDropdown.querySelector('.toc-list');
 
-    // 👇 Markdown 畫廊的雙向精準偵測
-    const galleries = modalBody.querySelectorAll('.gallery');
-    galleries.forEach(gallery => {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'scroll-wrapper';
-    gallery.parentNode.insertBefore(wrapper, gallery);
+            headings.forEach((h, index) => {
+                const id = `article-heading-${index}`;
+                h.id = id;
 
-    // 建立左箭頭
-    const hintLeft = document.createElement('div');
-    hintLeft.className = 'scroll-hint hint-left';
-    wrapper.appendChild(hintLeft);
+                const li = document.createElement('li');
+                li.className = `toc-${h.tagName.toLowerCase()}`; 
+                
+                const a = document.createElement('a');
+                a.innerText = h.innerText;
+                a.href = "javascript:void(0)"; 
+                
+                a.onclick = () => {
+                    const modalContainer = document.querySelector('.modal-content');
 
-    // 放入畫廊本體
-    wrapper.appendChild(gallery);
+                    requestAnimationFrame(() => {
+                        if(window.lastIndexScrollPos !== undefined){
+                            modalContainer.scrollTop =
+                                window.lastIndexScrollPos;
+                        }
+                    });
+                    h.classList.add('highlight-flash');
+                    setTimeout(() => { h.classList.remove('highlight-flash'); }, 1000);
+                    tocBtn.classList.remove('open');
+                    tocDropdown.classList.remove('active');
+                };
+                
+                li.appendChild(a);
+                tocList.appendChild(li);
+            });
 
-    // 建立右箭頭
-    const hintRight = document.createElement('div');
-    hintRight.className = 'scroll-hint hint-right';
-    wrapper.appendChild(hintRight);
+            tocBtn.onclick = () => {
+                tocBtn.classList.toggle('open');
+                tocDropdown.classList.toggle('active');
+            };
 
-    const checkScroll = () => {
-        const isScrollable = gallery.scrollWidth > gallery.clientWidth + 5;
-        const isAtEnd = Math.ceil(gallery.scrollLeft + gallery.clientWidth) >= Math.floor(gallery.scrollWidth) - 10;
-        const isAtStart = gallery.scrollLeft <= 10;
+            tocWrapper.appendChild(tocBtn);
+            tocWrapper.appendChild(tocDropdown);
+            tocMount.appendChild(tocWrapper);
+        }
 
-        if (isScrollable && !isAtEnd) hintRight.classList.add('visible');
-        else hintRight.classList.remove('visible');
+        const galleries = modalBody.querySelectorAll('.gallery');
+        galleries.forEach(gallery => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'scroll-wrapper';
+            gallery.parentNode.insertBefore(wrapper, gallery);
 
-        if (isScrollable && !isAtStart) hintLeft.classList.add('visible');
-        else hintLeft.classList.remove('visible');
-    };
-    
-    gallery.addEventListener('scroll', checkScroll);
-    
-    const imgs = gallery.querySelectorAll('img');
-    imgs.forEach(img => {
-        if (img.complete) checkScroll();
-        else img.addEventListener('load', checkScroll);
-    });
+            const hintLeft = document.createElement('div');
+            hintLeft.className = 'scroll-hint hint-left';
+            wrapper.appendChild(hintLeft);
+            wrapper.appendChild(gallery);
 
-    new ResizeObserver(checkScroll).observe(gallery);
-    setTimeout(checkScroll, 100); 
-    });
+            const hintRight = document.createElement('div');
+            hintRight.className = 'scroll-hint hint-right';
+            wrapper.appendChild(hintRight);
 
-    const figures = modalBody.querySelectorAll('.gallery figure');
-    figures.forEach(figure => {
-    figure.addEventListener('click', () => {
-        figure.classList.toggle('hide-caption');
-    });
-    });
+            const checkScroll = () => {
+                const isScrollable = gallery.scrollWidth > gallery.clientWidth + 5;
+                const isAtEnd = Math.ceil(gallery.scrollLeft + gallery.clientWidth) >= Math.floor(gallery.scrollWidth) - 10;
+                const isAtStart = gallery.scrollLeft <= 10;
+
+                if (isScrollable && !isAtEnd) hintRight.classList.add('visible');
+                else hintRight.classList.remove('visible');
+
+                if (isScrollable && !isAtStart) hintLeft.classList.add('visible');
+                else hintLeft.classList.remove('visible');
+            };
+            
+            gallery.addEventListener('scroll', checkScroll);
+            
+            const imgs = gallery.querySelectorAll('img');
+            imgs.forEach(img => {
+                if (img.complete) checkScroll();
+                else img.addEventListener('load', checkScroll);
+            });
+
+            new ResizeObserver(checkScroll).observe(gallery);
+            setTimeout(checkScroll, 100); 
+        });
+
+        const figures = modalBody.querySelectorAll('.gallery figure');
+        figures.forEach(figure => {
+            figure.addEventListener('click', () => {
+                figure.classList.toggle('hide-caption');
+            });
+        });
+    }); // ✨ switchModalContent 結束
 };
 
 // === 5. 標籤點擊聚焦邏輯 (Focus Highlight) ===
@@ -863,15 +1001,25 @@ window.scrollToNextCard = function(event) {
 // 為了保留首頁的測試按鈕，加入這個純文字渲染函數
 window.openMarkdownModal = function(markdownText) {
     modalBody.innerHTML = marked.parse(markdownText);
+    document.querySelector('.modal-content').style.viewTransitionName = 'modal-content';
     modalOverlay.classList.add('active');
     document.body.style.overflow = 'hidden';
     document.querySelector('.modal-content').scrollTop = 0;
 };
 
-// 關閉 Modal 的函數與事件綁定
 function closeModal() {
+
+    const modalContent =
+        document.querySelector('.modal-content');
+
+    modalContent.style.viewTransitionName = 'none';
+
     modalOverlay.classList.remove('active');
-    document.body.style.overflow = ''; 
+    document.body.style.overflow = '';
+
+    requestAnimationFrame(() => {
+        modalContent.style.removeProperty('view-transition-name');
+    });
 }
 
 closeModalBtn.addEventListener('click', closeModal);
