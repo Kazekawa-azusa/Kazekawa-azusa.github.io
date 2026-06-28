@@ -105,11 +105,10 @@
       ],
       "cover": "architecture.webp",
       "pinned": true,
-      "new": true,
       "id": "01_azu5atellite",
       "category": "art",
       "date": "",
-      "is_new": true,
+      "is_new": false,
       "is_updated": false,
       "cover_image": "projects/art/01_azu5atellite/architecture.webp",
       "articles": [
@@ -481,10 +480,11 @@
         "azusa"
       ],
       "link": "",
+      "new": true,
       "id": "03_azusa",
       "date": "",
       "pinned": false,
-      "is_new": false,
+      "is_new": true,
       "is_updated": false,
       "articles": [
         {

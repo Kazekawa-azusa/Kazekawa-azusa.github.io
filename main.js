@@ -165,22 +165,23 @@ async function loadProjects() {
     const projects = db.projects;
 
     // ==========================================
-    // ✨ 新增：智慧排序引擎
-    // 規則 1：有 pinned: true 的絕對排在最前面
-    // 規則 2：如果都沒置頂，則按照 date 日期「由新到舊」排序
+    // ✨ 智慧狀態推導與全域標籤注入
     // ==========================================
-    projects.sort((a, b) => {
-      // 1. 處理置頂邏輯
-      const aPinned = a.pinned ? 1 : 0;
-      const bPinned = b.pinned ? 1 : 0;
-      if (aPinned !== bPinned) {
-        return bPinned - aPinned; // 1 會排在 0 前面
-      }
+    projects.forEach(p => {
+      let isCardUpdated = p.is_updated;
       
-      // 2. 處理日期邏輯 (確保沒有日期的會排到最後面)
-      const dateA = a.date ? new Date(a.date).getTime() : 0;
-      const dateB = b.date ? new Date(b.date).getTime() : 0;
-      return dateB - dateA; // 數字大的 (較新) 排前面
+      // 狀態推導：如果卡片沒狀態，但裡面的文章有，就自動升級為 UPDATED
+      if (!p.is_new && !isCardUpdated && p.articles && p.articles.length > 0) {
+        if (p.articles.some(art => art.is_new || art.is_updated)) {
+          isCardUpdated = true;
+        }
+      }
+      p.computed_is_updated = isCardUpdated; // 存起來備用
+
+      // 核心魔法：將狀態化為實體 Tag，直接塞入卡片的標籤陣列最前方！
+      p.tags = p.tags || [];
+      if (p.is_new && !p.tags.includes('NEW')) p.tags.unshift('NEW');
+      else if (isCardUpdated && !p.tags.includes('UPDATED')) p.tags.unshift('UPDATED');
     });
 
     window.siteProjects = projects;
@@ -197,8 +198,8 @@ async function loadProjects() {
             const colorClass = isUp ? 'stock-up' : 'stock-down';
             const sign = isUp ? '+' : '-';
             
-            // ✨ 核心修改：加上 data-tag 屬性，方便之後用 JS 找出來讓它發光
-            return `<span class="clickable-ticker-tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event)">${tag} <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
+            // ✨ 核心修改：將標籤文字獨立用 <span class="ticker-name"> 包起來，與後方的漲跌幅徹底分離！
+            return `<span class="clickable-ticker-tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event)"><span class="ticker-name">${tag}</span> <span class="${colorClass}">${arrow} ${sign}${change}%</span></span>`;
         }).join('<span style="color: var(--muted); opacity: 0.5; margin: 0 1rem;">|</span>');
 
         const container = marquee.parentElement;
@@ -300,13 +301,34 @@ async function loadProjects() {
         if (targetGrid) {
         const card = document.createElement('div');
         card.className = 'card';
-        // ✨ 新增這行：把這張卡片的所有標籤，變成隱藏的字串存起來 (例如 "Python,API")
         card.setAttribute('data-tags', (data.tags || []).join(','));
-        // ✨ 核心升級：幫卡片內的標籤加上 onclick 事件，並傳入 event 進行攔截
-        // ✨ 核心升級：一樣加上 this 參數
-        const tagsHTML = (data.tags || []).map(tag => 
-            `<span class="tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event, this)">${tag}</span>`
-        ).join('');
+        
+        // ==========================================
+        // ✨ 智慧推導邏輯 (State Bubbling)
+        // ==========================================
+        let isCardNew = data.is_new;
+        let isCardUpdated = data.is_updated;
+        
+        // 如果卡片本身沒設定狀態，但內部文章有新動態，就自動把卡片點亮為 UPDATED！
+        if (!isCardNew && !isCardUpdated && data.articles && data.articles.length > 0) {
+            const hasActiveArticles = data.articles.some(art => art.is_new || art.is_updated);
+            if (hasActiveArticles) {
+                isCardUpdated = true; 
+            }
+        }
+
+        // ==========================================
+        // ✨ 將標籤渲染 (攔截 NEW 與 UPDATED，套用專屬發光 Class)
+        // ==========================================
+        let tagsHTML = (data.tags || []).map(tag => {
+            if (tag === 'NEW') {
+                return `<span class="tag badge-new" data-tag="NEW" onclick="window.filterByTag('NEW', event, this)">NEW</span>`;
+            } else if (tag === 'UPDATED') {
+                return `<span class="tag badge-updated" data-tag="UPDATED" onclick="window.filterByTag('UPDATED', event, this)">UPDATED</span>`;
+            }
+            // 一般標籤維持原樣
+            return `<span class="tag" data-tag="${tag}" onclick="window.filterByTag('${tag}', event, this)">${tag}</span>`;
+        }).join('');
         
         let actionText = '';
         if (data.articles && data.articles.length > 0) {
@@ -383,7 +405,6 @@ async function loadProjects() {
             <h3 style="display: flex; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.2rem; margin-top: 0;">
                 ${cardDateHtml}
                 ${data.title}
-                ${statusBadgeHtml}
                 ${cardMetaHtml}
             </h3>
             ${cardImageHtml}
@@ -520,12 +541,12 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
             ? `<span style="font-family: monospace; font-size: 0.85rem; color: var(--muted); margin-left: auto; padding-left: 1rem; flex-shrink: 0;">${art.date}</span>`
             : '';
             
-        // ✨ 智慧狀態徽章
+        // ✨ 終極淨化：改用 CSS Class 統一管理狀態徽章
         let statusBadgeHtml = '';
         if (art.is_new) {
-            statusBadgeHtml = `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>`;
+            statusBadgeHtml = `<span class="status-badge title-badge badge-new">NEW</span>`;
         } else if (art.is_updated) {
-            statusBadgeHtml = `<span style="background: var(--accent); color: var(--card); font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; box-shadow: 0 0 8px var(--accent);">UPDATED</span>`;
+            statusBadgeHtml = `<span class="status-badge title-badge badge-updated">UPDATED</span>`;
         }
 
         // ==========================================
@@ -642,11 +663,12 @@ window.openArticle = function(projectId, articleIndex) {
         firstH1.parentNode.insertBefore(wrapper, firstH1);
         wrapper.appendChild(firstH1);
 
+        // ✨ 終極淨化：改用 CSS Class 統一管理狀態徽章 (文章內文的 Flex 已經有間距，不需要 title-badge)
         let statusBadge = '';
         if (article.is_new) {
-            statusBadge = `<span style="background: var(--error-color); color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; box-shadow: 0 0 8px var(--error-shadow); animation: pulse 1s infinite;">NEW</span>`;
+            statusBadge = `<span class="status-badge badge-new">NEW</span>`;
         } else if (article.is_updated) {
-            statusBadge = `<span style="background: var(--accent); color: var(--card); font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; box-shadow: 0 0 8px var(--accent);">UPDATED</span>`;
+            statusBadge = `<span class="status-badge badge-updated">UPDATED</span>`;
         }
 
         // 準備右側的資訊區塊
