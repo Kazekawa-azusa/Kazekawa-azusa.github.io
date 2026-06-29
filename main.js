@@ -5,13 +5,13 @@
 /* ================================================================== */
 const CONFIG = {
     // 🚩 發布前必改
-    VERSION: "U0.5.2",          // 目前系統版本號
+    VERSION: "U0.5.3",          // 目前系統版本號
 
     // 🎨 介面與主題設定
     DEFAULT_THEME: "light",     // 預設主題 (light / dark)
     
     // ✨ 跑馬燈速度設定：跑完一整圈需要的「秒數」(數字越大跑得越慢！)
-    MARQUEE_SPEED: 40,          
+    MARQUEE_SPEED: 60,          
 
     // 🔗 資源路徑
     FAVICON_LIGHT: "https://kazekawa-azusa.github.io/assets/OG_dark.png?v=2",
@@ -620,8 +620,17 @@ function switchModalContent(updateDOMCallback) {
 window.openProjectIndex = function(projectId, restoreScroll = false) {
     // ✨ 將原本的邏輯包進 switchModalContent
     switchModalContent(() => {
-        document.getElementById('modal-top-left').innerHTML = '';
-        document.getElementById('toc-mount-point').innerHTML = '';
+        // ✨ 幽靈替身魔法：放入不可見的返回按鈕與漢堡選單，完美撐開 Flexbox 空間，保證 X 按鈕絕對對齊！
+        document.getElementById('modal-top-left').innerHTML = `
+            <button class="modal-back-btn" style="opacity: 0; pointer-events: none; visibility: hidden;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> <span>返回索引</span>
+            </button>
+        `;
+        document.getElementById('toc-mount-point').innerHTML = `
+            <div class="toc-wrapper" style="opacity: 0; pointer-events: none; visibility: hidden;">
+                <div class="toc-toggle-btn"><span class="bar"></span><span class="bar"></span><span class="bar"></span></div>
+            </div>
+        `;
 
         document.querySelector('.modal-top-bar').classList.add('is-index-mode');
 

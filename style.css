@@ -900,14 +900,18 @@ footer {
 .modal-top-bar {
     position: sticky;
     
-    /* ✨ 終極修復：設定 -2px 強制往上咬合，徹底消滅次像素渲染導致的上方漏光！ */
-    top: -2px; 
+    /* ✨ 完美還原：回歸最純淨的 top: 0，絕對不干擾 Sticky 引擎！ */
+    top: 0; 
     
     margin: 0 -3rem 1.5rem -3rem; 
     
-    /* ✨ 利用 calc() 補償往上的 2px，讓裡面的按鈕視覺上 100% 維持原位 */
-    padding: calc(1.5rem + 2px) 1.5rem 1.2rem 3rem; 
+    /* ✨ 完美還原：拔除 calc，回歸原始的 1.5rem，確保按鈕完美置中對齊 */
+    padding: 1.5rem 1.5rem 1.2rem 3rem; 
     
+    /* ✨ 零佈局遮擋法 (Box-Shadow Seal)：
+       利用視覺陰影向上延伸 2px 來遮擋次像素漏光，因為陰影沒有物理體積，絕對不會破壞排版！ */
+    box-shadow: 0 -2px 0 0 var(--glass-bg);
+
     border-top-left-radius: 1.1rem;
     border-top-right-radius: 1.1rem;
     background: var(--glass-bg);
@@ -926,48 +930,58 @@ footer {
     backdrop-filter: none;
     border-bottom-color: transparent;
     pointer-events: none; 
-    height: 0;
-    margin: 0 -3rem; 
     
-    /* ✨ 同步補償 */
-    padding: calc(1.5rem + 2px) 3rem 0 3rem; 
+    /* ✨ 同步還原：與一般模式完全相同的 padding，確保幽靈按鈕絕對對齊 */
+    padding: 1.5rem 1.5rem 1.2rem 3rem; 
     
     position: sticky; 
-    top: -2px; /* ✨ 同步負數咬合 */
+    top: 0; /* ✨ 同步還原 */
+    
+    margin: 0 -3rem -2rem -3rem; 
+    height: auto;
+    
+    /* ✨ 索引模式因為是全透明的，不會漏光，所以取消遮罩 */
+    box-shadow: none; 
 }
 
-/* 2. 精確鎖定 X 按鈕對齊標題第一行 */
-.modal-top-bar.is-index-mode #modal-top-right {
-    /* ✨ 核心修復 2：拔除這個父層的絕對定位，統一交給 X 按鈕自己處理！ */
-    position: static !important;
+/* ✨ 讓左右容器保持純淨的 Flex 屬性，不帶多餘 margin */
+#modal-top-left, #modal-top-right {
+    display: flex;
+    align-items: center;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 #modal-top-right {
-    display: flex;
-    align-items: center;
     gap: 1rem; 
-    
-    /* ✨ 核心修復 3：給右側保留 3.5rem 的安全距離，確保漢堡目錄不會跟絕對定位的 X 疊在一起 */
-    padding-right: 3.5rem; 
 }
 
-/* 👇 0. 返回索引按鈕 (左側膠囊按鈕) */
+.modal-close-btn, .toc-toggle-btn {
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+}
+
+/* 👇 返回索引按鈕 (左側膠囊按鈕) */
 .modal-back-btn {
-    /* ✨ 還原 1：透明背景與主題色邊框、文字 */
     background: transparent;  
-    backdrop-filter: none;
     border: 1px solid var(--accent); 
     color: var(--accent); 
-    
     border-radius: 999px;
-    /* ✨ 還原 2：對齊舊版的精巧尺寸 */
-    padding: 0.4rem 0.9rem; 
-    font-size: 0.85rem;     
     
+    /* ✨ 核心修復 1：鎖死高度與右側按鈕完全一致 (36px)，拔除上下 padding 避免干擾！ */
+    box-sizing: border-box;
+    height: 36px;
+    padding: 0 1rem; 
+    margin: 0;
+    
+    font-size: 0.85rem;     
     font-weight: 500;
     cursor: pointer;
+    
+    /* ✨ 確保內部的「箭頭」與「文字」絕對垂直置中 */
     display: inline-flex;
     align-items: center;
+    justify-content: center; 
     gap: 0.4rem;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
@@ -994,13 +1008,6 @@ footer {
 /* 1. 關閉按鈕 (全天候絕對定位，消滅排版引擎干擾) */
 /* ========================= */
 .modal-close-btn {
-    /* ✨ 核心修復 4：將電腦版的 X 按鈕也徹底拔離 Flexbox 排版流！ */
-    position: absolute !important;
-    top: 1.5rem !important;
-    right: 1.5rem !important;
-    margin: 0 !important;
-
-    /* ✨ 核心修復 5：賦予全天候點擊霸體！無視父層的 pointer-events: none 封印 */
     pointer-events: auto !important;
 
     background: var(--glass-bg);
@@ -1673,22 +1680,28 @@ footer {
 /* ========================= */
 @media (max-width: 600px) {
     /* ========================================== */
-    /* ✨ 終極對稱修復：讓左邊按鈕與右邊按鈕高度一模一樣 */
+    /* ✨ 手機版按鈕純淨對齊 (雙邊強制 32px)      */
     /* ========================================== */
     
-    /* 強制鎖定左邊「返回索引」按鈕的高度 */
+    /* 強制鎖定左邊「返回索引」按鈕的高度與間距 */
     .modal-back-btn {
-    height: 32px !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    /* 內部本來就有 display: inline-flex; align-items: center; 所以字和圖標依然會完美置中 */
+        height: 32px !important;
+        padding: 0 0.8rem !important;
+        margin: 0 !important;
     }
 
-    /* 這樣一來 Flexbox 絕對不會產生任何誤差了！ */
-    .modal-top-bar.is-index-mode #modal-top-right {
-    /* 我們可以安心地把絕對座標設為最完美的 1.5rem */
-    top: 1.5rem; 
-    right: 1.5rem; 
+    /* 強制鎖定右邊「X / 漢堡」按鈕的高度與間距 */
+    .modal-close-btn, .toc-toggle-btn {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+        font-size: 1.5rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
     }
     
     .modal-content {
@@ -1701,43 +1714,29 @@ footer {
 
     /* 1. 修改手機版：一般文章模式的導覽列 */
     .modal-top-bar {
-        top: -2px; /* ✨ 手機版同步負數咬合 */
+        top: 0; /* ✨ 還原 */
         margin: 0 -1.5rem 1.5rem -1.5rem; 
         
-        /* ✨ 加上 calc(1.5rem + 2px) 補償 */
-        padding: calc(1.5rem + 2px) 1.5rem 1.2rem 1.5rem; 
+        /* ✨ 還原 */
+        padding: 1.5rem 1.5rem 1.2rem 1.5rem; 
         
         border-top-left-radius: 1.1rem;
         border-top-right-radius: 1.1rem;
+        
+        /* ✨ 手機版同步套用零佈局遮擋法 */
+        box-shadow: 0 -2px 0 0 var(--glass-bg);
     }
 
     /* 2. 手機版：索引頁模式 (底色隱藏狀態) */
     .modal-top-bar.is-index-mode {
-        margin: 0 -1.5rem;
-        /* ✨ 同步補償 */
-        padding: calc(1.5rem + 2px) 1.5rem 0 1.5rem;
-    }
-
-    /* 3. 手機版：索引頁模式下的右上角 X 按鈕絕對座標 */
-    .modal-top-bar.is-index-mode #modal-top-right {
-    /* ✨ 核心修改 2：強制將座標鎖定在距離頂部與右側完全相等的完美數值 */
-    /* 因為 Flexbox 垂直置中會產生約 0.05rem (約 1px) 的視覺偏移，
-        所以我們把 Top 和 Right 雙雙鎖定在 1.55rem，達到極致的視覺對稱與無縫切換！ */
-    top: 1.5rem; 
-    right: 1.5rem; 
-    }
-
-    /* ✨ 手機版：硬性鎖定 X 按鈕與漢堡按鈕的尺寸完全一致 */
-    .modal-close-btn, .toc-toggle-btn {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
-    font-size: 1.5rem !important; /* 1.5 是一個完美的平衡點，X 剛好夠大且不撐破框 */
-    padding: 0 !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
+        /* ✨ 還原 */
+        padding: 1.5rem 1.5rem 1.2rem 1.5rem;
+        
+        margin: 0 -1.5rem -2rem -1.5rem; 
+        height: auto;
+        
+        /* ✨ 取消遮罩 */
+        box-shadow: none; 
     }
 
     .toc-toggle-btn .bar { 
@@ -1752,29 +1751,6 @@ footer {
     width: 75%;             
     max-width: 260px;       
     margin: 1.5rem auto;    /* 左右 auto 完美置中 */
-    }
-
-    /* ========================================== */
-    /* ✨ 終極防抖動：將 X 按鈕徹底拔離排版流，成為全天候絕對定位 */
-    /* ========================================== */
-
-    /* 1. 讓 X 按鈕永遠釘死在導覽列右上角，不受任何按鈕出現/消失的干擾 */
-    .modal-close-btn {
-    position: absolute !important;
-    top: 1.5rem !important;
-    right: 1.5rem !important;
-    margin: 0 !important;
-    }
-
-    /* 2. 拔除原本在 is-index-mode 賦予父容器的定位，統一交給 X 按鈕自己控制 */
-    .modal-top-bar.is-index-mode #modal-top-right {
-    position: static !important;
-    }
-
-    /* 3. 確保漢堡按鈕不會跟絕對定位的 X 按鈕重疊！
-        (X 按鈕約佔 2rem 寬 + 原本的 1rem 間距，所以我們給右側留出 3rem 的完美安全距離) */
-    #modal-top-right {
-    padding-right: 3rem !important; 
     }
 
     /* ========================================== */
