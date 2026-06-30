@@ -94,11 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ✨ 核心修復：決定這一次要換上的目標圖片網址
     const targetFaviconUrl = theme === 'light' ? CONFIG.FAVICON_LIGHT : CONFIG.FAVICON_DARK;
     
-    // ✨ 核心修復：無差別抓取 HTML 內「所有」包含 icon 字眼的 link 標籤
-    // (這會同時抓到 apple-touch-icon, shortcut icon, icon 192x192 等所有設定)
-    const iconLinks = document.querySelectorAll("link[rel*='icon']");
+    // ✨ 修正：精準打擊，只替換標準的 favicon，放過 apple-touch-icon 與 mask-icon
+    const iconLinks = document.querySelectorAll("link[rel='icon']");
     
-    // ✨ 把所有的圖示網址一次性全部更新！
     iconLinks.forEach(link => {
         link.href = targetFaviconUrl;
     });
@@ -667,7 +665,7 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
 
         // ✨ 完美套用彈性排版，並加入「防撞車」安全距離！
         let indexHtml = `
-            <div class="article-header-wrapper" style="margin-top: 0; padding-right: 5.5rem;">
+            <div class="article-header-wrapper" style="margin-top: 0; padding-right: 3.5rem;">
                 <div class="header-left">
                     <h1 style="margin:0; padding:0; border:none;">${proj.title} - 內容索引</h1>
                 </div>
