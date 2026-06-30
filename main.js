@@ -501,6 +501,17 @@ async function loadProjects() {
         cardObserver.observe(card);
     });
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetProject = urlParams.get('p');
+    const targetArticle = urlParams.get('a');
+
+    if (targetProject && targetArticle !== null) {
+        // 給系統一點緩衝時間渲染 DOM，然後自動打開那篇文章
+        setTimeout(() => {
+            window.openArticle(targetProject, parseInt(targetArticle, 10));
+        }, 300);
+    }
+
     } catch (err) {
     console.error("載入失敗:", err);
     portfolioSections.innerHTML = `
@@ -708,47 +719,68 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
 // 打開具體的「文章內文」
 // ==========================================
 window.openArticle = function(projectId, articleIndex) {
-    // ✨ 在淡出前，先記住目前的捲軸位置
+    // 記住捲軸位置
     window.lastIndexScrollPos = document.querySelector('.modal-content').scrollTop;
 
-    // ✨ 將原本的邏輯包進 switchModalContent
     switchModalContent(() => {
         document.querySelector('.modal-top-bar').classList.remove('is-index-mode');
+        modalOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
 
         const proj = window.siteProjects.find(p => p.id === projectId);
         const article = proj.articles[articleIndex];
         
-        const articleHtml = marked.parse(article.content);
-        modalBody.innerHTML = articleHtml;
+        // 渲染文章內容
+        modalBody.innerHTML = marked.parse(article.content);
         document.querySelector('.modal-content').scrollTop = 0;
 
+        // --- 處理標題與 Meta ---
         const firstH1 = modalBody.querySelector('h1');
-        if (firstH1 && (article.date || article.is_new || article.is_updated || article.is_wip || article.is_archived)){
+        if (firstH1) {
+            // 建立 Meta 容器
             const wrapper = document.createElement('div');
-            wrapper.style.display = 'flex';
-            wrapper.style.alignItems = 'baseline';
-            wrapper.style.justifyContent = 'space-between';
-            wrapper.style.flexWrap = 'wrap';
-            wrapper.style.borderBottom = '2px solid var(--card-border)';
-            wrapper.style.paddingBottom = '0.3rem';
-            wrapper.style.marginBottom = '0.8rem';
-            wrapper.style.marginTop = (firstH1 === modalBody.firstElementChild) ? '0' : '0.8rem';
-
-            firstH1.style.borderBottom = 'none';
-            firstH1.style.paddingBottom = '0';
-            firstH1.style.margin = '0';
-
+            wrapper.className = 'meta-wrapper'; // 統一交給 CSS 管理排版
+            
             firstH1.parentNode.insertBefore(wrapper, firstH1);
             wrapper.appendChild(firstH1);
 
-            let statusBadge = window.getStatusBadgeHtml(article, false);
-            const metaHtml = `
-                <div style="display: flex; align-items: center; gap: 0.8rem; font-family: monospace; font-size: 0.95rem; color: var(--muted);">
-                    ${statusBadge}
-                    ${article.date ? `<span>${article.date}</span>` : ''}
-                </div>
-            `;
-            wrapper.insertAdjacentHTML('beforeend', metaHtml);
+            // 處理狀態標籤
+            const statusBadge = window.getStatusBadgeHtml(article, false);
+            if (statusBadge) {
+                const tagContainer = document.createElement('div');
+                tagContainer.className = 'status-badge-container';
+                tagContainer.innerHTML = statusBadge;
+                wrapper.appendChild(tagContainer);
+            }
+
+            // --- 處理「複製連結」按鈕 (獨立一行) ---
+            const shareUrl = `${window.location.origin}${window.location.pathname}?p=${projectId}&a=${articleIndex}`;
+            window.history.replaceState({ path: shareUrl }, '', shareUrl);
+
+            const linkSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+            const checkSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+            const actionContainer = document.createElement('div');
+            actionContainer.className = 'action-container';
+            
+            const shareBtn = document.createElement('button');
+            shareBtn.className = 'share-link-btn';
+            shareBtn.innerHTML = `${linkSvg} <span>複製連結</span>`;
+            
+            shareBtn.addEventListener('click', function() {
+                const originalContent = this.innerHTML;
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    this.classList.add('copied');
+                    this.innerHTML = `${checkSvg} <span>已複製</span>`;
+                    setTimeout(() => {
+                        this.classList.remove('copied');
+                        this.innerHTML = originalContent;
+                    }, 2000);
+                });
+            });
+            
+            actionContainer.appendChild(shareBtn);
+            wrapper.appendChild(actionContainer);
         }
 
         modalBody.querySelectorAll('img').forEach(img => {
@@ -1103,10 +1135,12 @@ window.openMarkdownModal = function(markdownText) {
     document.querySelector('.modal-content').scrollTop = 0;
 };
 
-// 關閉 Modal 的函數與事件綁定
 function closeModal() {
     modalOverlay.classList.remove('active');
     document.body.style.overflow = '';
+    
+    // ✨ 新增：當 Modal 關閉時，把網址列的參數清空，恢復成最乾淨的網址
+    window.history.replaceState(null, '', window.location.pathname);
 }
 
 closeModalBtn.addEventListener('click', closeModal);
