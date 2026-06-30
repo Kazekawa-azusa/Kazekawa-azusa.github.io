@@ -55,6 +55,15 @@ window.handleImageError = function(img) {
     // 這樣 Safari 就會以為「圖片載入成功了」，進而徹底註銷那個醜陋的原生 X 圓圈！
     img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
 };
+// ==========================================
+// ✨ 攔截 Markdown 渲染，讓圖片一出生就自帶載入中特效，0毫秒延遲！
+// ==========================================
+const renderer = new marked.Renderer();
+renderer.image = function(href, title, text) {
+    // 強制在 HTML 階段就注入 class 與 inline 事件
+    return `<img src="${href}" alt="${text || ''}" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)">`;
+};
+marked.use({ renderer });
 
 // === 1. 介面與導覽列邏輯 (Theme & Menu) ===
 document.addEventListener('DOMContentLoaded', () => {
@@ -648,8 +657,29 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
         const proj = window.siteProjects.find(p => p.id === projectId);
         if (!proj || !proj.articles) return;
 
-        let indexHtml = `<h1 style="padding-right: 4.5rem;">${proj.title} - 內容索引</h1><ul style="list-style:none; padding-left:0; margin-top:1.5rem;">`;
-        
+        // ==========================================
+        // ✨ 新增：專屬目錄的網址狀態連動 (只有 ?p=，沒有 &a=)
+        // ==========================================
+        const shareUrl = `${window.location.origin}${window.location.pathname}?p=${projectId}`;
+        window.history.replaceState({ path: shareUrl }, '', shareUrl);
+
+        const linkSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+
+        // ✨ 完美套用彈性排版，並加入「防撞車」安全距離！
+        let indexHtml = `
+            <div class="article-header-wrapper" style="margin-top: 0; padding-right: 5.5rem;">
+                <div class="header-left">
+                    <h1 style="margin:0; padding:0; border:none;">${proj.title} - 內容索引</h1>
+                </div>
+                <div style="display: flex; align-items: center; padding-top: 0.2rem;">
+                    <button class="share-link-btn" id="index-share-btn" style="margin-left: 0;">
+                        ${linkSvg} <span>複製連結</span>
+                    </button>
+                </div>
+            </div>
+            <ul style="list-style:none; padding-left:0; margin-top:1.5rem;">
+        `;
+
         proj.articles.sort((a, b) => {
             const aPinned = a.pinned ? 1 : 0;
             const bPinned = b.pinned ? 1 : 0;
@@ -696,6 +726,26 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
         indexHtml += `<style>#modal-body li a:hover { background: rgba(128, 128, 128, 0.05); }</style>`;
 
         modalBody.innerHTML = indexHtml;
+        // ==========================================
+        // ✨ 綁定「內容索引」專屬的複製連結事件
+        // ==========================================
+        const shareBtn = modalBody.querySelector('#index-share-btn');
+        if (shareBtn) {
+            shareBtn.removeAttribute('id');
+            const checkSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            
+            shareBtn.addEventListener('click', function() {
+                const originalContent = this.innerHTML;
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    this.classList.add('copied');
+                    this.innerHTML = `${checkSvg} <span>已複製</span>`;
+                    setTimeout(() => {
+                        this.classList.remove('copied');
+                        this.innerHTML = originalContent;
+                    }, 2000);
+                });
+            });
+        }
         modalOverlay.classList.add('active');
         document.body.style.overflow = 'hidden';
         
@@ -737,32 +787,57 @@ window.openArticle = function(projectId, articleIndex) {
         // --- 處理標題與 Meta ---
         const firstH1 = modalBody.querySelector('h1');
         if (firstH1) {
-            // 建立 Meta 容器
+            // ✨ 建立全新的標題容器
             const wrapper = document.createElement('div');
-            wrapper.className = 'meta-wrapper'; // 統一交給 CSS 管理排版
-            
-            firstH1.parentNode.insertBefore(wrapper, firstH1);
-            wrapper.appendChild(firstH1);
+            wrapper.className = 'article-header-wrapper';
+            wrapper.style.marginTop = (firstH1 === modalBody.firstElementChild) ? '0' : '0.8rem';
 
-            // 處理狀態標籤
+            // 拔除 H1 預設的底線與間距 (CSS也有寫，雙重保險)
+            firstH1.style.borderBottom = 'none';
+            firstH1.style.paddingBottom = '0';
+            firstH1.style.margin = '0';
+
+            // 將 wrapper 插入 DOM，並把 H1 移進去
+            firstH1.parentNode.insertBefore(wrapper, firstH1);
+
+            // ==========================================
+            // 左側區塊：標題 + 日期
+            // ==========================================
+            const leftGroup = document.createElement('div');
+            leftGroup.className = 'header-left';
+            leftGroup.appendChild(firstH1);
+            
+            // 如果有日期，放在標題正下方，非常具有技術部落格的質感
+            if (article.date) {
+                const dateSpan = document.createElement('div');
+                dateSpan.className = 'article-date';
+                dateSpan.innerText = article.date;
+                leftGroup.appendChild(dateSpan);
+            }
+            wrapper.appendChild(leftGroup);
+
+            // ==========================================
+            // 右側區塊：標籤 + 複製按鈕 (死守同行，並永遠靠右)
+            // ==========================================
+            const rightGroup = document.createElement('div');
+            rightGroup.className = 'header-right';
+
+            // 1. 放入標籤
             const statusBadge = window.getStatusBadgeHtml(article, false);
             if (statusBadge) {
                 const tagContainer = document.createElement('div');
                 tagContainer.className = 'status-badge-container';
                 tagContainer.innerHTML = statusBadge;
-                wrapper.appendChild(tagContainer);
+                rightGroup.appendChild(tagContainer);
             }
 
-            // --- 處理「複製連結」按鈕 (獨立一行) ---
+            // 2. 放入複製按鈕
             const shareUrl = `${window.location.origin}${window.location.pathname}?p=${projectId}&a=${articleIndex}`;
             window.history.replaceState({ path: shareUrl }, '', shareUrl);
 
             const linkSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
             const checkSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
-            const actionContainer = document.createElement('div');
-            actionContainer.className = 'action-container';
-            
             const shareBtn = document.createElement('button');
             shareBtn.className = 'share-link-btn';
             shareBtn.innerHTML = `${linkSvg} <span>複製連結</span>`;
@@ -778,20 +853,10 @@ window.openArticle = function(projectId, articleIndex) {
                     }, 2000);
                 });
             });
-            
-            actionContainer.appendChild(shareBtn);
-            wrapper.appendChild(actionContainer);
-        }
 
-        modalBody.querySelectorAll('img').forEach(img => {
-          if (img.complete && img.naturalWidth === 0) {
-            window.handleImageError(img);
-          } else if (!img.complete) {
-            img.classList.add('is-loading');
-            img.onload = () => img.classList.remove('is-loading');
-            img.onerror = () => window.handleImageError(img);
-          }
-        });
+            rightGroup.appendChild(shareBtn);
+            wrapper.appendChild(rightGroup);
+        }
 
         const topLeft = document.getElementById('modal-top-left');
         topLeft.innerHTML = ''; 

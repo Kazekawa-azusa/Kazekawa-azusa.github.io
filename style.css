@@ -798,6 +798,9 @@ footer {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
+
+    /* ✨ 告訴瀏覽器準備硬體加速，只渲染透明度，不要瘋狂重繪背景的模糊！ */
+    will-change: opacity;
 }
 
 .modal-overlay.active {
@@ -831,6 +834,12 @@ footer {
     transform 0.2s cubic-bezier(0.25,0.8,0.25,1),
     background-color 0.5s ease,
     border-color 0.5s ease;
+
+    /* ✨ 消滅卡頓的終極魔法：強制建立獨立的 3D 渲染圖層 */
+    will-change: transform, height;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateY(30px) scale(0.95) translateZ(0); /* 補上 translateZ(0) */
 }
 
 /* ========================================== */
@@ -891,7 +900,7 @@ footer {
 }
 
 .modal-overlay.active .modal-content {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1) translateZ(0);
 }
 
 /* ========================= */
@@ -915,7 +924,7 @@ footer {
     border-top-left-radius: 1.1rem;
     border-top-right-radius: 1.1rem;
     background: var(--glass-bg);
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--card-border);
     z-index: 1060;
     display: flex;
@@ -1244,7 +1253,6 @@ footer {
     text-shadow: 0 0 12px var(--accent-2); /* 加上一點霓虹光暈，超有質感！ */
 }
 
-.markdown-body h1:first-child { margin-top: 0; }
 .markdown-body p { margin-bottom: 1rem; }
 .markdown-body a { color: var(--accent-2); text-decoration: none; }
 .markdown-body a:hover { text-decoration: underline; color: var(--accent-hover); }
@@ -2137,10 +2145,19 @@ img.is-broken {
 }
 
 .share-link-btn:hover {
-    color: var(--accent-2);
+    color: var(--card);
     border-color: var(--accent-2);
-    background: var(--tag-bg);
+    background: var(--accent-2);
     box-shadow: 0 0 12px var(--glow-1);
+}
+
+.share-link-btn svg {
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Hover 時讓 SVG 圖示放大並輕微旋轉，增加互動俏皮感 */
+.share-link-btn:hover svg {
+    transform: scale(1.15) rotate(10deg);
 }
 
 /* 成功複製狀態：拔除所有變形與縮放 */
@@ -2151,29 +2168,61 @@ img.is-broken {
     transform: none !important; /* 確保不位移 */
 }
 
-/* 文章標題區 */
-.meta-wrapper {
-    display: flex; 
-    flex-wrap: wrap;       
-    align-items: flex-end; 
-    gap: 0.8rem;
+.share-link-btn.copied svg{
+    transform: none !important; /* 確保不位移 */
+
+}
+
+/* ========================================== */
+/* ✨ 文章標題區排版 (彈性換行置右版)          */
+/* ========================================== */
+.article-header-wrapper {
+    display: flex;
+    flex-wrap: wrap;       /* ✨ 允許左右區塊在空間不夠時換行 */
+    align-items: center;   /* 垂直置中對齊 */
+    justify-content: space-between; 
+    gap: 1rem;
+    
+    /* ✨ 整個區域的最下方共用一條橫線，避免雙重橫線 */
     border-bottom: 2px solid var(--card-border);
-    padding-bottom: 0.8rem;
+    padding-bottom: 1rem;
     margin-bottom: 1.5rem;
 }
 
-/* 右側 Tag 容器 */
-.status-badge-container {
+/* 左側：標題與日期 */
+.header-left {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-left: auto; /* 將 Tag 推到右側 */
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1 1 auto; 
+    min-width: 50%; /* 確保標題有一定的閱讀寬度 */
 }
 
-/* 按鈕容器 (強制換行) */
-.action-container {
+.header-left h1 {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important; /* ✨ 徹底拔除標題自己的橫線 */
+    line-height: 1.3;
+}
+
+.article-date {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+/* 右側：標籤與複製按鈕 */
+.header-right {
     display: flex;
-    justify-content: flex-end; /* 按鈕靠右 */
-    width: 100%;             /* 強制換行 */
-    margin-top: 0.5rem;      
+    align-items: center;
+    gap: 0.8rem;
+    margin-left: auto; /* ✨ 關鍵魔法：無論是否有換行，永遠推向最右側貼齊！ */
+    flex-wrap: nowrap; /* ✨ 確保標籤與按鈕永遠在「同一行」，死都不分離 */
+    flex-shrink: 0;    /* 防止被標題擠壓變形 */
+}
+
+.status-badge-container {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
 }
