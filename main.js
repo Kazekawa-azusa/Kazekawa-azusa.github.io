@@ -789,7 +789,15 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
             // ✨ 終極修復：利用 !important 與 aspect-ratio: 1/1，強制抵禦文章內文 250px 的污染！
             let baseIconHtml = art.cover_image
                 ? `<img src="${art.cover_image}" alt="cover" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)" style="position: relative; z-index: 2; width: 44px !important; height: 44px !important; min-width: 44px !important; min-height: 44px !important; max-width: 44px !important; max-height: 44px !important; aspect-ratio: 1/1 !important; object-fit: cover; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid var(--card-border); box-sizing: border-box; display: block !important;">`
-                : `<div style="position: relative; z-index: 2; width: 44px; height: 44px; min-width: 44px; min-height: 44px; flex-shrink: 0; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 1px solid var(--card-border); box-sizing: border-box;">📄</div>`;
+                : `<div style="position: relative; z-index: 2; width: 44px; height: 44px; min-width: 44px; min-height: 44px; flex-shrink: 0; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--card-border); box-sizing: border-box;">
+                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                       <polyline points="14 2 14 8 20 8"></polyline>
+                       <line x1="16" y1="13" x2="8" y2="13"></line>
+                       <line x1="16" y1="17" x2="8" y2="17"></line>
+                       <polyline points="10 9 9 9 8 9"></polyline>
+                     </svg>
+                   </div>`;
 
             let pinnedBadgeHtml = art.pinned ? `<div class="modal-pin">${techPinSvg}</div>` : '';
 
