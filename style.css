@@ -182,18 +182,58 @@ section h2 {
 .grid::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; transition: background-color 0.3s ease; }
 .grid::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
 
+/* ========================= */
+/* 首頁專案卡片 (防抖動終極版) */
+/* ========================= */
 .card {
     background: var(--card);
     border-radius: 1.1rem;
     padding: 1.4rem 1.6rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); 
     border: 1px solid rgba(64, 120, 153, 0.1); 
+    position: relative; 
     
-    position: relative; /* 作為右上角絕對定位圖釘的穩固錨點 */
+    /* ✨ 核心防護 1：隱藏 3D 背面，消滅邊緣鋸齒 */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
     
     opacity: 0;
-    transform: translateY(40px);
+    /* ✨ 核心防護 2：在所有 transform 後面加上 translateZ(0) */
+    transform: translateY(40px) translateZ(0);
     transition: opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+}
+
+/* ========================= */
+/* 卡片滾動浮現動畫 (Scroll Reveal) */
+/* ========================= */
+.card.show {
+    opacity: 1;
+    /* ✨ 同步補上 translateZ(0) */
+    transform: translateY(0) translateZ(0);
+}
+
+.card.show:hover {
+    /* ✨ 同步補上 translateZ(0) */
+    transform: translateY(-5px) translateZ(0);
+    box-shadow: 0 15px 35px rgba(68, 212, 190, 0.2); 
+}
+
+/* ========================= */
+/* 標籤過濾聚焦效果 (Focus Mode) */
+/* ========================= */
+.card.highlighted {
+    border-color: var(--accent-2) !important;
+    box-shadow: 0 0 15px var(--accent-2); 
+    z-index: 10;
+    position: relative; 
+    /* ✨ 同步補上 translateZ(0) */
+    transform: translateY(0) translateZ(0); 
+}
+
+.card.highlighted:hover {
+    /* ✨ 同步補上 translateZ(0) */
+    transform: translateY(-6px) translateZ(0);
+    box-shadow: 0 8px 25px var(--accent-2); 
 }
 
 .card h3 {
@@ -405,21 +445,6 @@ footer {
     box-shadow: 0 0 8px var(--accent-2);
 }
 
-/* ========================= */
-/* 卡片滾動浮現動畫 (Scroll Reveal) */
-/* ========================= */
-/* 2. 當 JavaScript 偵測到卡片進入畫面時，會幫它加上 .show 類別 */
-.card.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* (選用) 讓游標懸停在卡片上時有微微上浮的效果，增加互動感 */
-.card.show:hover {
-    transform: translateY(-5px);
-    /* 滑過時散發湖水綠的光暈 */
-    box-shadow: 0 15px 35px rgba(68, 212, 190, 0.2); 
-}
 
 /* ========================= */
 /* 標籤過濾聚焦效果 (Focus Mode) */
@@ -441,25 +466,6 @@ footer {
     animation-play-state: paused !important;
 }
 
-/* ✨ 已經完全移除 .card.dimmed，沒被選中的卡片將維持原樣，不會變暗！ */
-
-/* 當卡片被判定為「符合」時：邊框發出微光，但不強制上浮 */
-/* 當卡片被判定為「符合」時：邊框發出微光，但不強制上浮 */
-.card.highlighted {
-    border-color: var(--accent-2) !important;
-    /* ✨ 拔除 !important，利用類別本身的權重覆蓋即可，讓動畫有權限去改變它 */
-    box-shadow: 0 0 15px var(--accent-2); 
-    z-index: 10;
-    position: relative; 
-    transform: translateY(0); 
-}
-
-/* ✨ Highlight 狀態下的 Hover 互動：微微上升且光暈稍微放大 */
-.card.highlighted:hover {
-    /* ✨ 一樣拔除 !important */
-    transform: translateY(-6px);
-    box-shadow: 0 8px 25px var(--accent-2); 
-}
 
 /* ========================= */
 /* ✨ 修復：卡片跳轉時的「放大跳動」強調特效 (防抖動終極版) */
@@ -863,14 +869,11 @@ footer {
     align-items: center; 
     justify-content: center; 
     
-    /* ✨ 防抖動魔法 1：告訴瀏覽器「這東西隨時會變」，讓它常駐獨立渲染層 */
-    will-change: transform, box-shadow;
+    /* ✨ 效能修復 1：拔除 box-shadow，只對 transform 進行 GPU 預告，大幅減輕捲動負擔 */
+    will-change: transform;
     
-    /* ✨ 防抖動魔法 2：隱藏 3D 背面，防止邊緣在 GPU 運算時產生毛邊鋸齒 */
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    
-    /* ✨ 防抖動魔法 3：利用 translateZ(0) 強制開啟全時 GPU 硬體加速 */
     transform: translateZ(0); 
     
     transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s ease;
@@ -898,11 +901,13 @@ footer {
 
 /* 4. 共用聯動 Hover 動畫*/
 .card:hover .card-pin {
-    transform: scale(1.15) rotate(8deg) translate3d(10%, -10%, 0);
+    /* ✨ 效能修復 2：捨棄 translate3d，改用純粹的 2D translate，消滅複合圖層重疊問題 */
+    transform: scale(1.15) rotate(8deg) translate(10%, -10%);
     box-shadow: 0 8px 15px rgba(0,0,0,0.2), 0 0 15px var(--accent-2);
 }
 .modal-content a:hover .modal-pin {
-    transform: scale(1.15) rotate(-8deg) translate3d(-10%, -10%, 0);
+    /* ✨ 同上修復 */
+    transform: scale(1.15) rotate(-8deg) translate(-10%, -10%);
     box-shadow: 0 8px 15px rgba(0,0,0,0.2), 0 0 15px var(--accent-2);
 }
 
