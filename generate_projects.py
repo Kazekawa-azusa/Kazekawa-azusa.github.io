@@ -211,13 +211,29 @@ def generate_projects_json():
 
     # 3. 專案排序魔法：(分類排名, 專案排名)
     # 這樣 JSON 裡面的專案就會完美按照分類群聚，且內部也有序！
+    # 3. 專案排序魔法：(分類排名, 置頂優先, sort_order 編號, folder_name 字母)
     def proj_sort(x):
+        # 1. 分類順序 (這塊維持不變，確保大分類區塊順序)
         c_order = cat_order_map.get(x.get('category'), 999)
-        p_order = x.get('order', 999)
+        
+        # 2. 置頂優先 (Pinned 為 True 的排前面)
+        # 用負號讓 True (1) 變成 -1，False (0) 變成 0，這樣 -1 會排在 0 前面
+        pinned_val = -1 if x.get('pinned', False) else 0
+        
+        # 3. sort_order 編號 (數字越大越前面)
+        p_order = -int(x.get('order', 999))
+        
+        # 4. folder_name 字母 (A-Z)
+        name_val = x.get('id', '')
+
         return (
-            int(c_order) if str(c_order).isdigit() else 999, 
-            int(p_order) if str(p_order).isdigit() else 999
+            int(c_order) if str(c_order).isdigit() else 999,
+            pinned_val,
+            p_order,
+            name_val
         )
+
+    output_data["projects"].sort(key=proj_sort)
 
     output_data["projects"].sort(key=proj_sort)
 

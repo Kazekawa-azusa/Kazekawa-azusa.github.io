@@ -8,5 +8,6 @@
   "link": "https://github.com/Kazekawa-azusa/azubar",
   "cover": "./logo.webp",
   "date": "2026-06-08",
-  "version": "0.0.4.1"
+  "version": "0.0.4.1",
+  "pinned": true
 }

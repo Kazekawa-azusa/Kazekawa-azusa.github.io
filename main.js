@@ -600,15 +600,23 @@ async function loadProjects() {
     document.querySelectorAll('.card').forEach(card => {
         cardObserver.observe(card);
     });
-
+    // ==========================================
+    // ✨ 終極路由解析器：同時支援 ?p= (索引頁) 與 ?p=&a= (文章頁)
+    // ==========================================
     const urlParams = new URLSearchParams(window.location.search);
     const targetProject = urlParams.get('p');
     const targetArticle = urlParams.get('a');
 
-    if (targetProject && targetArticle !== null) {
-        // 給系統一點緩衝時間渲染 DOM，然後自動打開那篇文章
+    if (targetProject) {
+        // 給系統 300ms 緩衝，確保所有卡片 DOM 都已經注入完畢
         setTimeout(() => {
-            window.openArticle(targetProject, parseInt(targetArticle, 10));
+            if (targetArticle !== null) {
+                // 狀況 A：帶有文章索引 -> 直接跳轉文章
+                window.openArticle(targetProject, parseInt(targetArticle, 10));
+            } else {
+                // 狀況 B：只帶有專案 ID -> 打開該專案的內容索引
+                window.openProjectIndex(targetProject);
+            }
         }, 300);
     }
 
