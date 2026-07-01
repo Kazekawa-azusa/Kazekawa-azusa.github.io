@@ -798,6 +798,9 @@ footer {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
+
+    /* ✨ 告訴瀏覽器準備硬體加速，只渲染透明度，不要瘋狂重繪背景的模糊！ */
+    will-change: opacity;
 }
 
 .modal-overlay.active {
@@ -831,6 +834,12 @@ footer {
     transform 0.2s cubic-bezier(0.25,0.8,0.25,1),
     background-color 0.5s ease,
     border-color 0.5s ease;
+
+    /* ✨ 消滅卡頓的終極魔法：強制建立獨立的 3D 渲染圖層 */
+    will-change: transform, height;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateY(30px) scale(0.95) translateZ(0); /* 補上 translateZ(0) */
 }
 
 /* ========================================== */
@@ -891,7 +900,7 @@ footer {
 }
 
 .modal-overlay.active .modal-content {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1) translateZ(0);
 }
 
 /* ========================= */
@@ -915,7 +924,7 @@ footer {
     border-top-left-radius: 1.1rem;
     border-top-right-radius: 1.1rem;
     background: var(--glass-bg);
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--card-border);
     z-index: 1060;
     display: flex;
@@ -986,7 +995,9 @@ footer {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
+/* ✨ 完美對齊返回按鈕的 SVG 與文字 */
 .modal-back-btn svg {
+    display: block; /* ✨ 消除 inline 預設的文字底線干擾，讓箭頭絕對精準垂直置中！ */
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
@@ -1242,7 +1253,6 @@ footer {
     text-shadow: 0 0 12px var(--accent-2); /* 加上一點霓虹光暈，超有質感！ */
 }
 
-.markdown-body h1:first-child { margin-top: 0; }
 .markdown-body p { margin-bottom: 1rem; }
 .markdown-body a { color: var(--accent-2); text-decoration: none; }
 .markdown-body a:hover { text-decoration: underline; color: var(--accent-hover); }
@@ -1272,24 +1282,119 @@ footer {
     color: var(--muted);
     background: rgba(255,255,255,0.02);
 }
-/* ========================= */
-/* Markdown 圖片文繞圖排版     */
-/* ========================= */
 
-/* 預設的圖片樣式 */
+/* ================================================================== */
+/* 🖼️ Markdown 圖片全域排版系統 (Global Image System)                 */
+/* 寫法：![排版標籤](圖片網址)                                        */
+/* 支援標籤：center, float-right, float-left, full, icon              */
+/* ================================================================== */
+
+/* ------------------------------------------ */
+/* 0. 基礎大圖 (預設行為：若無標籤，佔滿寬度、16:9) */
+/* ------------------------------------------ */
 .markdown-body img {
     max-width: 100%;
-    border-radius: 0.6rem;
     height: auto;
+    border-radius: 0.6rem;
+    box-shadow: 0 4px 15px var(--shadow-base);
+    display: block; /* 預設為區塊，避免底部留白 */
+    margin: 1.5rem auto; /* 預設上下留白，左右置中 */
 }
 
-/* 1. 舊版支援：單純只有圖片的 Markdown 寫法 (![float-right]) */
-.markdown-body img[alt="float-right"] {
+/* 預設骨架屏防塌陷 (1 / 1) */
+.markdown-body img.is-loading,
+.markdown-body img.is-broken {
+    width: 100%;
+    min-height: 200px;
+    max-height: 450px;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+/* ------------------------------------------ */
+/* 1. 置中縮小圖 👉 ![center](url)           */
+/* ------------------------------------------ */
+.markdown-body img[alt="center"] {
+    width: 75%; 
+    max-width: 600px; /* 限制最大寬度，不會撐滿整個螢幕 */
+}
+.markdown-body img[alt="center"].is-loading,
+.markdown-body img[alt="center"].is-broken {
+    aspect-ratio: 4 / 3; /* 置中圖通常偏向 4:3 比例 */
+}
+
+/* ------------------------------------------ */
+/* 2. 靠右文繞圖 👉 ![float-right](url)      */
+/* ------------------------------------------ */
+.markdown-body img[alt="float-right"],
+.markdown-body figure.float-right {
     float: right;
     width: 40%; 
-    max-width: 300px; 
-    margin: 0.5rem 0 1.5rem 1.5rem; 
-    box-shadow: 0 4px 15px var(--shadow-base); 
+    max-width: 280px; 
+    margin: 0.5rem 0 1.5rem 1.5rem; /* 左側留白給文字 */
+}
+
+/* ------------------------------------------ */
+/* 3. 靠左文繞圖 👉 ![float-left](url)       */
+/* ------------------------------------------ */
+.markdown-body img[alt="float-left"],
+.markdown-body figure.float-left {
+    float: left;
+    width: 40%; 
+    max-width: 280px; 
+    margin: 0.5rem 1.5rem 1.5rem 0; /* 右側留白給文字 */
+}
+
+/* 左右文繞圖的骨架屏防塌陷 (3:4 直式比例) */
+.markdown-body img[alt="float-right"].is-loading,
+.markdown-body img[alt="float-right"].is-broken,
+.markdown-body img[alt="float-left"].is-loading,
+.markdown-body img[alt="float-left"].is-broken {
+    min-height: 150px;
+    max-height: 300px;
+    aspect-ratio: 1 / 1; 
+}
+
+/* ------------------------------------------ */
+/* 4. 滿版寬螢幕 👉 ![full](url)             */
+/* ------------------------------------------ */
+.markdown-body img[alt="full"] {
+    width: 100%;
+    max-width: none;
+    border-radius: 0; /* 滿版圖通常不加圓角，更有張力 */
+}
+
+/* ------------------------------------------ */
+/* 5. 輕量小圖示 👉 ![icon](url)             */
+/* ------------------------------------------ */
+.markdown-body img[alt="icon"] {
+    display: inline-block;
+    width: 48px;
+    height: 48px;
+    margin: 0 0.5rem;
+    vertical-align: middle; /* 與文字完美對齊 */
+    box-shadow: none; /* 圖示不需要大陰影 */
+    border-radius: 0; 
+}
+.markdown-body img[alt="icon"].is-loading,
+.markdown-body img[alt="icon"].is-broken {
+    min-height: 48px;
+    aspect-ratio: 1 / 1; /* 正方形 */
+}
+
+/* ------------------------------------------ */
+/* 🖼️ Figure 容器與圖片說明 (Figcaption) 支援 */
+/* ------------------------------------------ */
+.markdown-body figure img {
+    margin: 0 !important; /* 消除內部 img 的 margin，交由 figure 控制 */
+    width: 100% !important;
+}
+.markdown-body figure figcaption {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 0.6rem;
+    line-height: 1.4;
 }
 
 /* 2. ✨ 新版支援：帶有說明文字的 Figure 容器寫法 (<figure class="float-right">) */
@@ -1631,6 +1736,7 @@ footer {
     margin: 0 2px;
 }
 
+
 /* ========================= */
 /* ✨ 自訂 Hover 提示字 (Custom Tooltip) */
 /* ========================= */
@@ -1743,14 +1849,25 @@ footer {
     width: 14px; 
     }
 
-    /* Markdown 圖片：取消浮動，改成置中且縮小尺寸 */
+   /* ========================================== */
+    /* 📱 手機版：圖片排版最佳化                  */
+    /* ========================================== */
+    
+    /* 1. 手機螢幕太小，強制解除所有文繞圖 (float)，全部變成置中對齊 */
     .markdown-body img[alt="float-right"],
-    .markdown-body figure.float-right {
-    float: none;
-    display: block;         
-    width: 75%;             
-    max-width: 260px;       
-    margin: 1.5rem auto;    /* 左右 auto 完美置中 */
+    .markdown-body figure.float-right,
+    .markdown-body img[alt="float-left"],
+    .markdown-body figure.float-left {
+        float: none;
+        display: block;         
+        width: 75%;             
+        max-width: 260px;       
+        margin: 1.5rem auto;    /* 左右 auto 完美置中 */
+    }
+
+    /* 2. 置中圖在手機上可以稍微放大，利用空間 */
+    .markdown-body img[alt="center"] {
+        width: 90%;
     }
 
     /* ========================================== */
@@ -1877,53 +1994,6 @@ img.is-broken {
 }
 
 /* ========================================== */
-/* ✨ 文章與畫廊防塌陷 (冗餘清除版) */
-/* ========================================== */
-
-/* ========================================== */
-/* ✨ 文章與畫廊防塌陷 (完美比例骨架版) */
-/* ========================================== */
-
-/* A. Loading 時的保底高度與黃金比例 */
-
-/* 1. 一般文章內的大圖：給予 16:9 的橫向寬螢幕比例 */
-.markdown-body img.is-loading { 
-    min-height: 250px; 
-    display: block; 
-    width: 100%; 
-    
-    /* ✨ 升級防護：載入時預設呈現 1:1 的寬螢幕比例，不再是奇怪的細長條！ 
-       (如果 Markdown 有傳入 --img-ratio 變數則優先使用) */
-    aspect-ratio: var(--img-ratio, 1 / 1); 
-}
-
-/* 2. 右側文繞圖 (float-right)：通常偏向方形，給予 4:3 比例 */
-.markdown-body img[alt="float-right"].is-loading,
-.markdown-body figure.float-right img.is-loading { 
-    min-height: 150px; 
-    display: block; 
-    width: 100%;
-    background: var(--bg); 
-    
-    /* ✨ 升級防護：載入時預設呈現 1:1 的微長方比例，與右側欄寬度完美契合 */
-    aspect-ratio: var(--img-ratio, 1 / 1); 
-}
-
-/* B. Broken 破圖時的幾何防塌陷支撐 */
-.markdown-body img.is-broken,
-.markdown-body figure.float-right img.is-broken,
-.markdown-body img[alt="float-right"].is-broken {
-    width: 100%;
-    /* 統一支援 Markdown 傳入的 --img-ratio 變數，若無則預設為完美的 1:1 方形 */
-    aspect-ratio: var(--img-ratio, 1 / 1); 
-}
-
-/* C. 畫廊破圖：拔除放大補償，防止圓角溢出 */
-.markdown-body .gallery figure img.is-broken {
-    transform: none; 
-}
-
-/* ========================================== */
 /* 🎨 全域狀態色盤引擎 (Global Status Palette)  */
 /* ========================================== */
 
@@ -2047,99 +2117,63 @@ img.is-broken {
     text-shadow: 0 0 8px var(--glow-1);
 }
 
-/* ========================================== */
-/* ✨ 模態框內部切換平滑過渡 (Magnetic Rebound 磁吸回彈版) */
-/* ========================================== */
-@keyframes modal-slide-out {
-    from {
-        opacity:1;
-        transform:translateX(0);
-    }
-    to {
-        opacity:0;
-        transform:translateX(-15px);
-    }
-}
-
-@keyframes modal-slide-in {
-    from {
-        opacity:0;
-        transform:translateX(15px);
-    }
-    to {
-        opacity:1;
-        transform:translateX(0);
-    }
-}
-
-@keyframes modal-fade-out {
-    from { opacity:1; }
-    to { opacity:0; }
-}
-
-@keyframes modal-fade-in {
-    from { opacity:0; }
-    to { opacity:1; }
-}
 
 /* ========================================== */
-/* ✨ 模態框內部切換平滑過渡 (磁吸回彈版) */
+/* ✨ 動畫可擴充模組化引擎 (預設：VisionOS 景深) */
 /* ========================================== */
 
-/* 1. 配合磁吸的過渡動畫權限 */
-#modal-body, #modal-top-left, #toc-mount-point {
-    /* ✨ 磁吸彈簧張力：透明度極速淡入出 (0.12s)，但位移具有 Q 彈的回彈感 (0.3s) */
-    transition: opacity 0.12s ease-out, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    will-change: opacity, transform;
+/* 1. 預設變數：如果不指定特效，預設使用 VisionOS 景深 */
+:root {
+    /* 共用基礎屬性 */
+    --modal-origin: center top;
+    --modal-out-opacity: 0;
+
+    /* VisionOS 預設參數 */
+    --modal-transition: opacity 0.12s ease-out, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.12s ease-out;
+    --modal-will-change: opacity, transform, filter;
+    --modal-out-transform: scale(0.92) translateY(10px);
+    --modal-out-filter: blur(8px);
 }
 
-/* 2. 隱藏狀態 (順著 TOC 的推力往右滑出 15px) */
-.content-fade-out {
-    opacity: 0 !important;
-    transform: translateX(15px) !important; /* ✨ 往右推擠 */
-    pointer-events: none;
+/* 2. 可擴充特效區 */
+
+/* VisionOS 景深 (提供給明確指定屬性時使用) */
+[data-modal-fx="vision-os"] {
+    --modal-transition: opacity 0.12s ease-out, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.12s ease-out;
+    --modal-will-change: opacity, transform, filter;
+    --modal-out-transform: scale(0.92) translateY(10px);
+    --modal-out-filter: blur(8px);
 }
 
-/* ========================================== */
-/* 🎨 狀態驅動動畫系統 (Animation System) */
-/* ========================================== */
-
-/* 1. 預設模式 & 磁吸回彈版 (Magnetic) */
+/* 磁吸回彈 */
 [data-modal-fx="magnetic"] {
     --modal-transition: opacity 0.12s ease-out, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     --modal-will-change: opacity, transform;
-    --modal-origin: center top;
-
-    /* 退場 (Fade-out) 參數 */
-    --modal-out-opacity: 0;
-    --modal-out-transform: translateX(15px); /* 往右推擠 */
+    --modal-out-transform: translateX(15px);
+    
+    /* ✨ 核心防禦：必須強制清除預設的模糊效果，避免污染磁吸的純粹位移動畫 */
     --modal-out-filter: none;
 }
 
-/* 2. VisionOS 景深沉浸版 (Vision-OS) */
-:root,[data-modal-fx="vision-os"] {
-    --modal-transition: opacity 0.12s ease-out, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.12s ease-out;
-    --modal-will-change: opacity, transform, filter;
-    --modal-origin: center top;
-
-    /* 退場 (Fade-out) 參數 */
-    --modal-out-opacity: 0;
-    --modal-out-transform: scale(0.92) translateY(10px); /* 往後退並微沉 */
-    --modal-out-filter: blur(8px); /* 毛玻璃迷霧 */
+/* 經典淡出 (純粹淡出) */
+[data-modal-fx="fade"] {
+    --modal-transition: opacity 0.3s ease;
+    --modal-will-change: opacity;
+    --modal-out-transform: none;
+    
+    /* 同理，清除預設模糊 */
+    --modal-out-filter: none;
 }
 
 /* ========================================== */
-/* 🧩 綁定元素樣式 (套用變數，原有邏輯不變) */
+/* 3. 綁定核心邏輯 (這段之後永遠不用再動) */
 /* ========================================== */
-
-/* 基礎過渡狀態 */
 #modal-body, #modal-top-left, #toc-mount-point {
     transition: var(--modal-transition) !important;
     will-change: var(--modal-will-change);
     transform-origin: var(--modal-origin);
 }
 
-/* 觸發隱藏狀態 (JS 加上 .content-fade-out) */
 #modal-body.content-fade-out, 
 #modal-top-left.content-fade-out, 
 #toc-mount-point.content-fade-out {
@@ -2147,4 +2181,238 @@ img.is-broken {
     transform: var(--modal-out-transform) !important;
     filter: var(--modal-out-filter) !important;
     pointer-events: none;
+}
+/* ========================================== */
+/* ✨ 複製連結按鈕 (最終鎖定版)                */
+/* ========================================== */
+.share-link-btn {
+    margin-left: auto; 
+    background: transparent; 
+    border: 1px solid var(--card-border); 
+    color: var(--muted); 
+    border-radius: 999px; 
+    
+    /* 鎖定寬度為 96px，確保切換文字時不跳動 */
+    width: 96px; 
+    height: 30px; /* 強制高度，防止內部文字變化導致高度改變 */
+    padding: 0; 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; /* 讓文字與圖示永遠置中 */
+    gap: 6px;
+    font-size: 0.8rem; 
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer; 
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+    box-sizing: border-box;
+}
+
+.share-link-btn:hover {
+    color: var(--card);
+    border-color: var(--accent-2);
+    background: var(--accent-2);
+    box-shadow: 0 0 12px var(--glow-1);
+}
+
+.share-link-btn svg {
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Hover 時讓 SVG 圖示放大並輕微旋轉，增加互動俏皮感 */
+.share-link-btn:hover svg {
+    transform: scale(1.15) rotate(10deg);
+}
+
+/* 成功複製狀態：拔除所有變形與縮放 */
+.share-link-btn.copied {
+    background: var(--accent-2) !important;
+    color: var(--card) !important;
+    border-color: var(--accent-2) !important;
+    transform: none !important; /* 確保不位移 */
+}
+
+.share-link-btn.copied svg{
+    transform: none !important; /* 確保不位移 */
+
+}
+
+/* ========================================== */
+/* ✨ 文章標題區排版 (彈性換行置右版)          */
+/* ========================================== */
+.article-header-wrapper {
+    display: flex;
+    flex-wrap: wrap;       /* ✨ 允許左右區塊在空間不夠時換行 */
+    align-items: center;   /* 垂直置中對齊 */
+    justify-content: space-between; 
+    gap: 1rem;
+    
+    /* ✨ 整個區域的最下方共用一條橫線，避免雙重橫線 */
+    border-bottom: 2px solid var(--card-border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
+}
+
+/* 左側：標題與日期 */
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1 1 auto; 
+    min-width: 50%; /* 確保標題有一定的閱讀寬度 */
+}
+
+.header-left h1 {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important; /* ✨ 徹底拔除標題自己的橫線 */
+    line-height: 1.3;
+}
+
+.article-date {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+/* 右側：標籤與複製按鈕 */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-left: auto; /* ✨ 關鍵魔法：無論是否有換行，永遠推向最右側貼齊！ */
+    flex-wrap: nowrap; /* ✨ 確保標籤與按鈕永遠在「同一行」，死都不分離 */
+    flex-shrink: 0;    /* 防止被標題擠壓變形 */
+}
+
+.status-badge-container {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* ========================================== */
+/* ✨ Mermaid 專業級互動畫布 (Interactive Canvas) */
+/* ========================================== */
+
+.mermaid-container {
+    position: relative;
+    margin: 2rem 0;
+    border: 1px solid var(--card-border);
+    border-radius: 0.8rem;
+    background: var(--bg);
+    overflow: hidden; 
+    box-shadow: 0 4px 15px var(--shadow-base);
+    transition: all 0.3s ease;
+}
+
+/* 📺 全螢幕模式下的動態調整 */
+.mermaid-container:fullscreen, 
+.mermaid-container:-webkit-full-screen {
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.mermaid-container:fullscreen .mermaid-wrapper,
+.mermaid-container:-webkit-full-screen .mermaid-wrapper {
+    max-height: none;
+    
+    /* ✨ 核心防禦：進入全螢幕時，強制解開 JS 的高度鎖定，讓畫布盡情延伸 */
+    height: auto !important; 
+    
+    flex: 1; /* 填滿剩下的畫面 */
+}
+
+/* 🎛️ 控制台樣式 */
+.mermaid-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--glass-bg); 
+    border-bottom: 1px solid var(--card-border);
+    justify-content: flex-end; 
+}
+
+.mermaid-btn {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--muted);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.mermaid-btn:hover {
+    background: var(--accent-2);
+    color: var(--card);
+    border-color: var(--accent-2);
+}
+
+/* Hover 提示字 (Tooltip) */
+.mermaid-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: -34px;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background: var(--text);
+    color: var(--card);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 10;
+}
+.mermaid-btn:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 🖼️ 畫布本體與卷軸設定 */
+.mermaid-wrapper {
+    width: 100%;
+    max-height: 65vh; 
+    overflow: auto; /* 允許雙向捲動 */
+    padding: 1.5rem;
+    box-sizing: border-box;
+    text-align: center; /* 讓未放大的圖表乖乖置中 */
+    cursor: grab; /* 暗示可以拖拽 */
+    
+    /* 雙向卷軸樣式 */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--bg);
+}
+.mermaid-wrapper:active { cursor: grabbing; }
+
+.mermaid-wrapper::-webkit-scrollbar { height: 8px; width: 8px; }
+.mermaid-wrapper::-webkit-scrollbar-track { background: var(--scrollbar-bg); }
+.mermaid-wrapper::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+.mermaid-wrapper::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+
+/* 🔍 縮放核心魔法：直接改變寬度，強迫外層產生卷軸 */
+.mermaid {
+    display: inline-block;
+    vertical-align: middle;
+    width: var(--zoom, 100%); /* 綁定變數，由 JS 控制 */
+    transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 破解 Mermaid 原本鎖死的屬性，讓它隨著我們的變數一起長大 */
+.mermaid svg {
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
 }
