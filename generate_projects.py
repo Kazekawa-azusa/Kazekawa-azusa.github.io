@@ -124,9 +124,36 @@ def generate_projects_json():
                         with open(md_file_path, 'r', encoding='utf-8') as md_file:
                             content = md_file.read() 
                             
-                            # 組合出這個角色專屬的真實路徑並替換
+                            # 組合出這個角色專屬的真實路徑
                             real_path = f"./projects/{cat_folder}/{proj_folder}/{item}/"
-                            content = content.replace('./', real_path)
+                            
+
+                            # ==========================================
+                            # ✨ 智慧路徑替換引擎 (Regex)
+                            # ==========================================
+                            # 1. 處理 Markdown 圖片: ![alt](url)
+                            def replace_md_img(match):
+                                alt_text, url = match.group(1), match.group(2)
+                                if not url.startswith(('http://', 'https://', 'data:')):
+                                    # ✨ 終極修復：如果你已經自己寫了 'projects/'，就絕對不要再疊加了！
+                                    if 'projects/' not in url:
+                                        clean_url = url[2:] if url.startswith('./') else url
+                                        url = f"{real_path}{clean_url}"
+                                return f"![{alt_text}]({url})"
+                                
+                            content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', replace_md_img, content)
+
+                            # 2. 處理 HTML 圖片: <img src="url">
+                            def replace_html_img(match):
+                                prefix, url, suffix = match.group(1), match.group(2), match.group(3)
+                                if not url.startswith(('http://', 'https://', 'data:')):
+                                    # ✨ 同樣加上防呆機制
+                                    if 'projects/' not in url:
+                                        clean_url = url[2:] if url.startswith('./') else url
+                                        url = f"{real_path}{clean_url}"
+                                return f"{prefix}{url}{suffix}"
+                                
+                            content = re.sub(r'(<img[^>]+src=["\'])([^"\']+)(["\'][^>]*>)', replace_html_img, content)
 
                             # 標題 fallback 邏輯
                             if sub_data.get('title') is None and content.startswith('# '):
@@ -154,8 +181,14 @@ def generate_projects_json():
                         print(f"⚠️ Error reading Markdown {md_file_path}: {e}")
 
             if articles:
-                # 確保 sort_order 是整數後進行排序 (原本的 reverse=True 代表數字大的在前面)
-                sorted_articles = sorted(articles, key=lambda x: (int(x['sort_order']), x['folder_name']), reverse=True) 
+                # 定義排序邏輯：1. pinned(置頂) 優先，2. sort_order 編號，3. folder_name 字母
+                def article_sort(x):
+                    pinned_val = 1 if x.get('pinned', False) else 0
+                    order_val = int(x.get('sort_order', 999))
+                    return (-pinned_val, -order_val, x.get('folder_name', ''))
+
+                sorted_articles = sorted(articles, key=article_sort)
+                
                 for art in sorted_articles:
                     del art['sort_order']
                     del art['folder_name']

@@ -1282,24 +1282,119 @@ footer {
     color: var(--muted);
     background: rgba(255,255,255,0.02);
 }
-/* ========================= */
-/* Markdown 圖片文繞圖排版     */
-/* ========================= */
 
-/* 預設的圖片樣式 */
+/* ================================================================== */
+/* 🖼️ Markdown 圖片全域排版系統 (Global Image System)                 */
+/* 寫法：![排版標籤](圖片網址)                                        */
+/* 支援標籤：center, float-right, float-left, full, icon              */
+/* ================================================================== */
+
+/* ------------------------------------------ */
+/* 0. 基礎大圖 (預設行為：若無標籤，佔滿寬度、16:9) */
+/* ------------------------------------------ */
 .markdown-body img {
     max-width: 100%;
-    border-radius: 0.6rem;
     height: auto;
+    border-radius: 0.6rem;
+    box-shadow: 0 4px 15px var(--shadow-base);
+    display: block; /* 預設為區塊，避免底部留白 */
+    margin: 1.5rem auto; /* 預設上下留白，左右置中 */
 }
 
-/* 1. 舊版支援：單純只有圖片的 Markdown 寫法 (![float-right]) */
-.markdown-body img[alt="float-right"] {
+/* 預設骨架屏防塌陷 (1 / 1) */
+.markdown-body img.is-loading,
+.markdown-body img.is-broken {
+    width: 100%;
+    min-height: 200px;
+    max-height: 450px;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+/* ------------------------------------------ */
+/* 1. 置中縮小圖 👉 ![center](url)           */
+/* ------------------------------------------ */
+.markdown-body img[alt="center"] {
+    width: 75%; 
+    max-width: 600px; /* 限制最大寬度，不會撐滿整個螢幕 */
+}
+.markdown-body img[alt="center"].is-loading,
+.markdown-body img[alt="center"].is-broken {
+    aspect-ratio: 4 / 3; /* 置中圖通常偏向 4:3 比例 */
+}
+
+/* ------------------------------------------ */
+/* 2. 靠右文繞圖 👉 ![float-right](url)      */
+/* ------------------------------------------ */
+.markdown-body img[alt="float-right"],
+.markdown-body figure.float-right {
     float: right;
     width: 40%; 
-    max-width: 300px; 
-    margin: 0.5rem 0 1.5rem 1.5rem; 
-    box-shadow: 0 4px 15px var(--shadow-base); 
+    max-width: 280px; 
+    margin: 0.5rem 0 1.5rem 1.5rem; /* 左側留白給文字 */
+}
+
+/* ------------------------------------------ */
+/* 3. 靠左文繞圖 👉 ![float-left](url)       */
+/* ------------------------------------------ */
+.markdown-body img[alt="float-left"],
+.markdown-body figure.float-left {
+    float: left;
+    width: 40%; 
+    max-width: 280px; 
+    margin: 0.5rem 1.5rem 1.5rem 0; /* 右側留白給文字 */
+}
+
+/* 左右文繞圖的骨架屏防塌陷 (3:4 直式比例) */
+.markdown-body img[alt="float-right"].is-loading,
+.markdown-body img[alt="float-right"].is-broken,
+.markdown-body img[alt="float-left"].is-loading,
+.markdown-body img[alt="float-left"].is-broken {
+    min-height: 150px;
+    max-height: 300px;
+    aspect-ratio: 1 / 1; 
+}
+
+/* ------------------------------------------ */
+/* 4. 滿版寬螢幕 👉 ![full](url)             */
+/* ------------------------------------------ */
+.markdown-body img[alt="full"] {
+    width: 100%;
+    max-width: none;
+    border-radius: 0; /* 滿版圖通常不加圓角，更有張力 */
+}
+
+/* ------------------------------------------ */
+/* 5. 輕量小圖示 👉 ![icon](url)             */
+/* ------------------------------------------ */
+.markdown-body img[alt="icon"] {
+    display: inline-block;
+    width: 48px;
+    height: 48px;
+    margin: 0 0.5rem;
+    vertical-align: middle; /* 與文字完美對齊 */
+    box-shadow: none; /* 圖示不需要大陰影 */
+    border-radius: 0; 
+}
+.markdown-body img[alt="icon"].is-loading,
+.markdown-body img[alt="icon"].is-broken {
+    min-height: 48px;
+    aspect-ratio: 1 / 1; /* 正方形 */
+}
+
+/* ------------------------------------------ */
+/* 🖼️ Figure 容器與圖片說明 (Figcaption) 支援 */
+/* ------------------------------------------ */
+.markdown-body figure img {
+    margin: 0 !important; /* 消除內部 img 的 margin，交由 figure 控制 */
+    width: 100% !important;
+}
+.markdown-body figure figcaption {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 0.6rem;
+    line-height: 1.4;
 }
 
 /* 2. ✨ 新版支援：帶有說明文字的 Figure 容器寫法 (<figure class="float-right">) */
@@ -1754,14 +1849,25 @@ footer {
     width: 14px; 
     }
 
-    /* Markdown 圖片：取消浮動，改成置中且縮小尺寸 */
+   /* ========================================== */
+    /* 📱 手機版：圖片排版最佳化                  */
+    /* ========================================== */
+    
+    /* 1. 手機螢幕太小，強制解除所有文繞圖 (float)，全部變成置中對齊 */
     .markdown-body img[alt="float-right"],
-    .markdown-body figure.float-right {
-    float: none;
-    display: block;         
-    width: 75%;             
-    max-width: 260px;       
-    margin: 1.5rem auto;    /* 左右 auto 完美置中 */
+    .markdown-body figure.float-right,
+    .markdown-body img[alt="float-left"],
+    .markdown-body figure.float-left {
+        float: none;
+        display: block;         
+        width: 75%;             
+        max-width: 260px;       
+        margin: 1.5rem auto;    /* 左右 auto 完美置中 */
+    }
+
+    /* 2. 置中圖在手機上可以稍微放大，利用空間 */
+    .markdown-body img[alt="center"] {
+        width: 90%;
     }
 
     /* ========================================== */
@@ -1885,48 +1991,6 @@ img.is-broken {
     
     /* 綁定專屬的三層聯動掃光與呼吸雙重動畫 */
     animation: broken-sweep 2s infinite linear, skeleton-breathe 2.5s infinite ease-in-out;
-}
-
-
-/* ========================================== */
-/* ✨ 文章與畫廊防塌陷 */
-/* ========================================== */
-
-/* 1. 一般文章內的大圖：給予 16:9 的橫向寬螢幕比例 */
-.markdown-body img.is-loading { 
-    min-height: 250px; 
-    display: block; 
-    width: 100%; 
-    
-    /* ✨ 升級防護：載入時預設呈現 1:1 的寬螢幕比例，不再是奇怪的細長條！ 
-       (如果 Markdown 有傳入 --img-ratio 變數則優先使用) */
-    aspect-ratio: var(--img-ratio, 1 / 1); 
-}
-
-/* 2. 右側文繞圖 (float-right)：通常偏向方形，給予 4:3 比例 */
-.markdown-body img[alt="float-right"].is-loading,
-.markdown-body figure.float-right img.is-loading { 
-    min-height: 150px; 
-    display: block; 
-    width: 100%;
-    background: var(--bg); 
-    
-    /* ✨ 升級防護：載入時預設呈現 1:1 的微長方比例，與右側欄寬度完美契合 */
-    aspect-ratio: var(--img-ratio, 1 / 1); 
-}
-
-/* B. Broken 破圖時的幾何防塌陷支撐 */
-.markdown-body img.is-broken,
-.markdown-body figure.float-right img.is-broken,
-.markdown-body img[alt="float-right"].is-broken {
-    width: 100%;
-    /* 統一支援 Markdown 傳入的 --img-ratio 變數，若無則預設為完美的 1:1 方形 */
-    aspect-ratio: var(--img-ratio, 1 / 1); 
-}
-
-/* C. 畫廊破圖：拔除放大補償，防止圓角溢出 */
-.markdown-body .gallery figure img.is-broken {
-    transform: none; 
 }
 
 /* ========================================== */
@@ -2185,8 +2249,8 @@ img.is-broken {
     
     /* ✨ 整個區域的最下方共用一條橫線，避免雙重橫線 */
     border-bottom: 2px solid var(--card-border);
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
 }
 
 /* 左側：標題與日期 */
@@ -2225,4 +2289,130 @@ img.is-broken {
     display: flex;
     align-items: center;
     gap: 0.4rem;
+}
+
+/* ========================================== */
+/* ✨ Mermaid 專業級互動畫布 (Interactive Canvas) */
+/* ========================================== */
+
+.mermaid-container {
+    position: relative;
+    margin: 2rem 0;
+    border: 1px solid var(--card-border);
+    border-radius: 0.8rem;
+    background: var(--bg);
+    overflow: hidden; 
+    box-shadow: 0 4px 15px var(--shadow-base);
+    transition: all 0.3s ease;
+}
+
+/* 📺 全螢幕模式下的動態調整 */
+.mermaid-container:fullscreen, 
+.mermaid-container:-webkit-full-screen {
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.mermaid-container:fullscreen .mermaid-wrapper,
+.mermaid-container:-webkit-full-screen .mermaid-wrapper {
+    max-height: none;
+    
+    /* ✨ 核心防禦：進入全螢幕時，強制解開 JS 的高度鎖定，讓畫布盡情延伸 */
+    height: auto !important; 
+    
+    flex: 1; /* 填滿剩下的畫面 */
+}
+
+/* 🎛️ 控制台樣式 */
+.mermaid-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--glass-bg); 
+    border-bottom: 1px solid var(--card-border);
+    justify-content: flex-end; 
+}
+
+.mermaid-btn {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--muted);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.mermaid-btn:hover {
+    background: var(--accent-2);
+    color: var(--card);
+    border-color: var(--accent-2);
+}
+
+/* Hover 提示字 (Tooltip) */
+.mermaid-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: -34px;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background: var(--text);
+    color: var(--card);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 10;
+}
+.mermaid-btn:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 🖼️ 畫布本體與卷軸設定 */
+.mermaid-wrapper {
+    width: 100%;
+    max-height: 65vh; 
+    overflow: auto; /* 允許雙向捲動 */
+    padding: 1.5rem;
+    box-sizing: border-box;
+    text-align: center; /* 讓未放大的圖表乖乖置中 */
+    cursor: grab; /* 暗示可以拖拽 */
+    
+    /* 雙向卷軸樣式 */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--bg);
+}
+.mermaid-wrapper:active { cursor: grabbing; }
+
+.mermaid-wrapper::-webkit-scrollbar { height: 8px; width: 8px; }
+.mermaid-wrapper::-webkit-scrollbar-track { background: var(--scrollbar-bg); }
+.mermaid-wrapper::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+.mermaid-wrapper::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+
+/* 🔍 縮放核心魔法：直接改變寬度，強迫外層產生卷軸 */
+.mermaid {
+    display: inline-block;
+    vertical-align: middle;
+    width: var(--zoom, 100%); /* 綁定變數，由 JS 控制 */
+    transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 破解 Mermaid 原本鎖死的屬性，讓它隨著我們的變數一起長大 */
+.mermaid svg {
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
 }

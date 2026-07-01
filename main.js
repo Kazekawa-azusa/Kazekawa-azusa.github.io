@@ -5,7 +5,7 @@
 /* ================================================================== */
 const CONFIG = {
     // 🚩 發布前必改
-    VERSION: "U0.5.3",          // 目前系統版本號
+    VERSION: "U0.5.5",          // 目前系統版本號
 
     // 🎨 介面與主題設定
     DEFAULT_THEME: "light",     // 預設主題 (light / dark)
@@ -23,6 +23,21 @@ const CONFIG = {
 // ✨ 全域狀態標籤系統 (支援快速擴充)
 // ==========================================
 window.STATUS_LIST = ['NEW', 'UPDATED', 'WIP', 'ARCHIVED'];
+
+// ==========================================
+// ✨ 新增：動態非同步引入 Mermaid 引擎 (ESM 模組)
+// ==========================================
+window.mermaid = null;
+import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(m => {
+    window.mermaid = m.default;
+    const currentTheme = document.documentElement.getAttribute('data-theme') || CONFIG.DEFAULT_THEME;
+    window.mermaid.initialize({
+        startOnLoad: false,
+        theme: currentTheme === 'dark' ? 'dark' : 'default',
+        fontFamily: 'inherit',
+        securityLevel: 'loose'
+    });
+}).catch(err => console.error("Mermaid 引擎載入失敗:", err));
 
 // 共用函數：自動判斷物件屬性並回傳對應的 HTML 徽章
 window.getStatusBadgeHtml = function(item, isTitle = false) {
@@ -46,23 +61,71 @@ document.documentElement.style.setProperty('--marquee-speed', `${CONFIG.MARQUEE_
 window.siteProjects = [];
 
 // ==========================================
-// ✨ 新增：全域圖片破圖處理器 (終極解決 Safari/iOS 限制)
+// ✨ 全域圖片破圖處理器 (終極解決 Safari/iOS 限制)
 // ==========================================
 window.handleImageError = function(img) {
+    img.onerror = null; // ✨ 核心防禦：拔除 onerror 防止無限迴圈
     img.classList.remove('is-loading');
     img.classList.add('is-broken');
-    // ✨ 核心魔法：將破圖瞬間替換為 1x1 透明 SVG！
-    // 這樣 Safari 就會以為「圖片載入成功了」，進而徹底註銷那個醜陋的原生 X 圓圈！
-    img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+    
+    // ✨ 終極魔法：換成絕對有效的 1x1 透明 GIF base64
+    // 這會徹底騙過瀏覽器讓它以為「載入成功」，藉此解鎖並顯示我們自訂的 CSS 漂亮背景！
+    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 };
+
 // ==========================================
 // ✨ 攔截 Markdown 渲染，讓圖片一出生就自帶載入中特效，0毫秒延遲！
 // ==========================================
 const renderer = new marked.Renderer();
-renderer.image = function(href, title, text) {
-    // 強制在 HTML 階段就注入 class 與 inline 事件
-    return `<img src="${href}" alt="${text || ''}" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)">`;
+
+// 1. ✨ 修復：攔截圖片 (相容最新版 Marked.js 傳入單一 Token 物件的改動)
+renderer.image = function(token_or_href, title, text) {
+    // 解析參數：如果是物件(新版)，就從物件裡面拿；如果是字串(舊版)，就直接用
+    const href = typeof token_or_href === 'object' ? token_or_href.href : token_or_href;
+    const altText = typeof token_or_href === 'object' ? token_or_href.text : text;
+    
+    // 如果路徑是空的，安全防護跳出
+    if (!href) return '';
+
+    return `<img src="${href}" alt="${altText || ''}" class="is-loading" onload="this.classList.remove('is-loading')" onerror="window.handleImageError(this)">`;
 };
+
+// 2. ✨ 攔截 Mermaid 程式碼區塊 (相容最新版 Marked.js)
+const originalCodeRenderer = renderer.code.bind(renderer);
+renderer.code = function(token_or_code, language, isEscaped) {
+    // 完美兼容 marked.js 最新版 (傳入單一物件) 與舊版 (傳入三個參數)
+    const lang = typeof token_or_code === 'object' ? token_or_code.lang : language;
+    const text = typeof token_or_code === 'object' ? token_or_code.text : token_or_code;
+
+    if (lang === 'mermaid') {
+        const encodedText = encodeURIComponent(text);
+        
+        // ✨ 動態注入包含「放大、縮小、重設、全螢幕」的專業級控制台
+        return `
+        <div class="mermaid-container">
+            <div class="mermaid-toolbar">
+                <button class="mermaid-btn" onclick="window.zoomMermaid(this, 1)" data-tooltip="放大">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                </button>
+                <button class="mermaid-btn" onclick="window.zoomMermaid(this, -1)" data-tooltip="縮小">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                </button>
+                <button class="mermaid-btn" onclick="window.zoomMermaid(this, 0)" data-tooltip="重設比例">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                </button>
+                <div style="width: 1px; height: 16px; background: var(--card-border); margin: 0 4px; align-self: center;"></div>
+                <button class="mermaid-btn" onclick="window.fullscreenMermaid(this)" data-tooltip="全螢幕">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                </button>
+            </div>
+            <div class="mermaid-wrapper">
+                <div class="mermaid" data-zoom="100" style="--zoom: 100%;" data-original-text="${encodedText}">${text}</div>
+            </div>
+        </div>`;
+    }
+    return originalCodeRenderer.apply(this, arguments);
+};
+
 marked.use({ renderer });
 
 // === 1. 介面與導覽列邏輯 (Theme & Menu) ===
@@ -89,7 +152,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. 建立一個專門執行切換的函數 (保持程式碼 DRY 原則)
     function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-theme', theme);
+
+        // ✨ Mermaid 主題同步與「即時重繪引擎」
+        if (window.mermaid) {
+            window.mermaid.initialize({
+                startOnLoad: false,
+                theme: theme === 'dark' ? 'dark' : 'default',
+                fontFamily: 'inherit',
+                securityLevel: 'loose' 
+            });
+            
+            // 如果使用者在看文章時點擊了深淺色切換，瞬間重新繪製畫面上的架構圖！
+            document.querySelectorAll('.mermaid').forEach(el => {
+                const originalText = decodeURIComponent(el.getAttribute('data-original-text') || '');
+                if (originalText) {
+                    el.textContent = originalText; // 還原被 SVG 覆蓋的原始文字
+                    el.removeAttribute('data-processed'); // 拔除已處理標籤
+                }
+            });
+            window.mermaid.run({ querySelector: '.mermaid' }).catch(() => {});
+        }
+
+    // ✨ 新增：同步 Mermaid 主題，讓架構圖跟著網站一起變色！
+    if (window.mermaid) {
+        mermaid.initialize({
+            startOnLoad: false, // 取消自動渲染，由我們的 SPA 手動控制
+            theme: theme === 'dark' ? 'dark' : 'default',
+            fontFamily: 'inherit', // 讓圖表字體完美融入您的網站字體
+            securityLevel: 'loose' 
+        });
+    }
     
     // ✨ 核心修復：決定這一次要換上的目標圖片網址
     const targetFaviconUrl = theme === 'light' ? CONFIG.FAVICON_LIGHT : CONFIG.FAVICON_DARK;
@@ -677,12 +770,6 @@ window.openProjectIndex = function(projectId, restoreScroll = false) {
             </div>
             <ul style="list-style:none; padding-left:0; margin-top:1.5rem;">
         `;
-
-        proj.articles.sort((a, b) => {
-            const aPinned = a.pinned ? 1 : 0;
-            const bPinned = b.pinned ? 1 : 0;
-            return bPinned - aPinned;
-        });
         
         proj.articles.forEach((art, idx) => {
             let descHtml = art.description ? `<span style="font-size: 0.95rem; color: var(--muted); line-height: 1.4;">- ${art.description}</span>` : '';
@@ -779,8 +866,44 @@ window.openArticle = function(projectId, articleIndex) {
         const article = proj.articles[articleIndex];
         
         // 渲染文章內容
+        // 渲染文章內容
         modalBody.innerHTML = marked.parse(article.content);
         document.querySelector('.modal-content').scrollTop = 0;
+
+        // ==========================================
+        // ✨ 終極防護：手動捕捉 Markdown 以外的「原生 HTML 圖片」(如畫廊)
+        // ==========================================
+        modalBody.querySelectorAll('img').forEach(img => {
+            // 如果這張圖片沒有被 marked.js 攔截器綁定過 onerror，我們就手動幫它加上！
+            if (!img.getAttribute('onerror')) {
+                img.classList.add('is-loading');
+                img.setAttribute('onerror', 'window.handleImageError(this)');
+                
+                img.addEventListener('load', function() { 
+                    this.classList.remove('is-loading'); 
+                });
+                
+                // 防呆：如果圖片在我們綁定事件前就已經載入失敗 (或者根本沒有 src)
+                if (img.complete && img.naturalHeight === 0) {
+                    window.handleImageError(img);
+                }
+            }
+        });
+
+        // ==========================================
+        // ✨ 喚醒 Mermaid 引擎 (附帶防延遲的安全機制)
+        // ==========================================
+        const renderMermaid = () => {
+            if (window.mermaid) {
+                document.querySelectorAll('.mermaid').forEach(el => el.removeAttribute('data-processed'));
+                window.mermaid.run({ querySelector: '.mermaid' }).then(() => {
+                    window.initMermaidDrag(); 
+                }).catch(e => console.warn('Mermaid 語法錯誤:', e));
+            } else {
+                setTimeout(renderMermaid, 300);
+            }
+        };
+        renderMermaid();
 
         // --- 處理標題與 Meta ---
         const firstH1 = modalBody.querySelector('h1');
@@ -952,12 +1075,6 @@ window.openArticle = function(projectId, articleIndex) {
             };
             
             gallery.addEventListener('scroll', checkScroll);
-            
-            const imgs = gallery.querySelectorAll('img');
-            imgs.forEach(img => {
-                if (img.complete) checkScroll();
-                else img.addEventListener('load', checkScroll);
-            });
 
             new ResizeObserver(checkScroll).observe(gallery);
             setTimeout(checkScroll, 100); 
@@ -1213,3 +1330,118 @@ modalOverlay.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal();
 });
+
+// ==========================================
+// ✨ Mermaid 專業控制台引擎 (Zoom & Fullscreen)
+// ==========================================
+window.zoomMermaid = function(btn, direction) {
+    const container = btn.closest('.mermaid-container');
+    const mermaidDiv = container.querySelector('.mermaid');
+    const wrapper = container.querySelector('.mermaid-wrapper'); // ✨ 抓取外層捲動容器
+    if (!mermaidDiv || !wrapper) return;
+
+    // 讀取目前的縮放比例 (預設 100)
+    let currentZoom = parseInt(mermaidDiv.getAttribute('data-zoom')) || 100;
+
+    // ==========================================
+    // ✨ 高度鎖定魔法：在變形前，死死鎖住目前的實體高度，防止容器被往下撐開！
+    // ==========================================
+    if (!wrapper.dataset.lockedHeight) {
+        // 記錄初始高度 (包含 padding)，並存起來
+        wrapper.dataset.lockedHeight = wrapper.offsetHeight + 'px';
+    }
+
+    if (direction === 0) {
+        currentZoom = 100; // 重設
+        
+        // ✨ 恢復 100% 時，解除高度鎖定，讓它回歸自然大小
+        wrapper.style.height = '';
+        delete wrapper.dataset.lockedHeight;
+    } else {
+        // ✨ 放大或縮小時，強制套用鎖定的高度，絕對不准往下擠！
+        wrapper.style.height = wrapper.dataset.lockedHeight;
+        currentZoom += direction * 25; 
+    }
+
+    // 限制縮放範圍 (最低 50%，最高 400%)
+    currentZoom = Math.max(50, Math.min(currentZoom, 400));
+
+    // 更新屬性與 CSS 變數，觸發絲滑的 CSS 寬度動畫
+    mermaidDiv.setAttribute('data-zoom', currentZoom);
+    mermaidDiv.style.setProperty('--zoom', `${currentZoom}%`);
+};
+
+// ==========================================
+// ✨ 全螢幕捲軸位置保護機制 (監聽 ESC 與退出事件)
+// ==========================================
+document.addEventListener('fullscreenchange', restoreScrollAfterFullscreen);
+document.addEventListener('webkitfullscreenchange', restoreScrollAfterFullscreen); // 支援 Safari
+
+function restoreScrollAfterFullscreen() {
+    // 如果目前沒有任何元素在全螢幕狀態，代表我們「剛退出全螢幕」
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const modalContainer = document.querySelector('.modal-content');
+        if (modalContainer && window.preFullscreenScrollTop !== undefined) {
+            // 等待一下，讓瀏覽器把 DOM 塞回 Modal 且完成高度計算
+            setTimeout(() => {
+                modalContainer.scrollTop = window.preFullscreenScrollTop;
+            }, 50); // 50ms 的緩衝時間
+        }
+    }
+}
+
+window.fullscreenMermaid = function(btn) {
+    const container = btn.closest('.mermaid-container');
+    const modalContainer = document.querySelector('.modal-content');
+
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        // ✨ 進入全螢幕前：死死記住目前的捲軸高度！
+        if (modalContainer) {
+            window.preFullscreenScrollTop = modalContainer.scrollTop;
+        }
+
+        // 進入全螢幕
+        if (container.requestFullscreen) container.requestFullscreen();
+        else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen(); // Safari
+    } else {
+        // 退出全螢幕 (這會自動觸發上面的 restoreScrollAfterFullscreen 監聽器)
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); // Safari
+    }
+};
+
+// ==========================================
+// ✨ Mermaid 滑鼠拖拽平移引擎 (Drag to Pan)
+// ==========================================
+window.initMermaidDrag = function() {
+    document.querySelectorAll('.mermaid-wrapper').forEach(wrapper => {
+        // 防止重複綁定
+        if (wrapper.dataset.dragInit) return;
+        wrapper.dataset.dragInit = 'true';
+
+        let isDown = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        wrapper.addEventListener('mousedown', (e) => {
+            isDown = true;
+            startX = e.pageX - wrapper.offsetLeft;
+            startY = e.pageY - wrapper.offsetTop;
+            scrollLeft = wrapper.scrollLeft;
+            scrollTop = wrapper.scrollTop;
+        });
+        
+        wrapper.addEventListener('mouseleave', () => { isDown = false; });
+        wrapper.addEventListener('mouseup', () => { isDown = false; });
+        
+        wrapper.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - wrapper.offsetLeft;
+            const y = e.pageY - wrapper.offsetTop;
+            const walkX = (x - startX); // 1:1 移動距離
+            const walkY = (y - startY);
+            wrapper.scrollLeft = scrollLeft - walkX;
+            wrapper.scrollTop = scrollTop - walkY;
+        });
+    });
+};
