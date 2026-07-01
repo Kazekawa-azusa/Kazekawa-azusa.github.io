@@ -479,17 +479,24 @@ footer {
 }
 
 /* ========================= */
-/* ✨ 新增：卡片動作按鈕的純 CSS 互動 (取代 JS) */
+/* ✨ 卡片動作按鈕的純 CSS 互動 */
 /* ========================= */
 /* 1. 一般滑過卡片時，動作按鈕會亮起並飛出箭頭 */
 .card:hover .action-btn { color: var(--accent-2) !important; }
 .card:hover .action-arrow[data-dir="up-right"] { transform: translate(4px, -4px) !important; }
 .card:hover .action-arrow[data-dir="right"] { transform: translateX(5px) !important; }
 
+/* ✨ 書本開合動畫：闔上的書淡出縮小，打開的書放大浮現 */
+.card:hover .icon-book-closed { opacity: 0 !important; transform: scale(0.8) !important; }
+.card:hover .icon-book-open { opacity: 1 !important; transform: scale(1) !important; }
+
 /* 2. 核心防呆：當滑鼠停留在「標籤 (.tag)」上面時，取消卡片的跳轉提示！ */
-/* 利用最新強大的 :has() 選擇器，完美分離使用者的點擊意圖 */
 .card:has(.tag:hover) .action-btn { color: var(--accent) !important; }
 .card:has(.tag:hover) .action-arrow { transform: translate(0, 0) !important; }
+
+/* ✨ 防呆：這時候書本也不准打開，要乖乖闔上 */
+.card:has(.tag:hover) .icon-book-closed { opacity: 1 !important; transform: scale(1) !important; }
+.card:has(.tag:hover) .icon-book-open { opacity: 0 !important; transform: scale(0.8) !important; }
 
 /* ✨ 確保跑馬燈能準確計算內部標籤的位置 */
 .marquee-content { position: relative; }
@@ -1283,6 +1290,60 @@ footer {
     background: rgba(255,255,255,0.02);
 }
 
+/* ========================================== */
+/* ✨ Markdown 表格排版系統 (Tables)          */
+/* ========================================== */
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+    
+    /* ✨ 手機版防撐破魔法：讓表格在空間不夠時可以橫向滑動 */
+    display: block;
+    overflow-x: auto;
+    
+    /* 捲軸美化 */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+/* 在桌機版螢幕夠大時，恢復成預設的漂亮表格排版 */
+@media (min-width: 600px) {
+    .markdown-body table {
+        display: table;
+    }
+}
+
+.markdown-body table th,
+.markdown-body table td {
+    border: 1px solid var(--card-border);
+    padding: 0.75rem 1rem;
+    line-height: 1.5;
+}
+
+/* 標題列：使用主題色與微底色突顯 */
+.markdown-body table th {
+    background-color: var(--box-bg);
+    color: var(--accent);
+    font-weight: 600;
+    text-align: left;
+}
+
+/* 內容列斑馬紋 (隔行換色，增加閱讀性) */
+.markdown-body table tbody tr:nth-child(even) {
+    background-color: rgba(128, 128, 128, 0.03);
+}
+
+/* 滑鼠懸停特效：整列亮起主題標籤色 */
+.markdown-body table tbody tr:hover {
+    background-color: var(--tag-bg);
+    transition: background-color 0.2s ease;
+}
+
+.markdown-body table::-webkit-scrollbar { height: 6px; }
+.markdown-body table::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+
 /* ================================================================== */
 /* 🖼️ Markdown 圖片全域排版系統 (Global Image System)                 */
 /* 寫法：![排版標籤](圖片網址)                                        */
@@ -1567,7 +1628,6 @@ footer {
 .scroll-hint {
     position: absolute;
     top: 0;
-    /* ✨ 加寬：從 60px 增加到 80px，讓漸層依然柔和 */
     width: 80px; 
     height: 100%;
     display: flex;
@@ -1583,37 +1643,49 @@ footer {
     visibility: visible;
 }
 
+/* ✨ 新增：共用的 SVG 箭頭物理屬性 */
+.hint-right::after, 
+.hint-left::after {
+    content: ""; /* 清空原本的文字內容 */
+    display: block;
+    width: 24px;
+    height: 24px;
+    background-color: var(--accent); /* 讓 SVG 完美吃到主題色 */
+    
+    /* 設定遮罩屬性 */
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+}
+
 /* 2. 右側專屬設定 */
 .hint-right {
-    /* ✨ 往外擴：加上 -2px 防止基礎層級的像素誤差 */
     right: -2px; 
     justify-content: flex-end;
     padding-right: 8px;
-    /* ✨ 強制封印縫隙：80% 後變成絕對純色，消滅所有漏光邊緣 */
     background: linear-gradient(to right, rgba(0,0,0,0) 0%, var(--bg) 90%, var(--bg) 100%);
 }
 .hint-right::after {
-    content: "→";
-    color: var(--accent);
-    font-size: 1.5rem;
-    font-weight: bold;
+    /* ✨ 替換為 Data URI 格式的右箭頭 SVG */
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3Cpolyline points='12 5 19 12 12 19'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3Cpolyline points='12 5 19 12 12 19'/%3E%3C/svg%3E");
     animation: hint-pulse-right 1.5s infinite ease-in-out;
 }
 
-/* 3. 左側專屬設定 (漸層方向與箭頭相反) */
+/* 3. 左側專屬設定 */
 .hint-left {
-    /* ✨ 往外擴：加上 -2px 防止基礎層級的像素誤差 */
     left: -2px; 
     justify-content: flex-start;
     padding-left: 8px;
-    /* ✨ 強制封印縫隙 */
     background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--bg) 80%, var(--bg) 100%);
 }
 .hint-left::after {
-    content: "←";
-    color: var(--accent);
-    font-size: 1.5rem;
-    font-weight: bold;
+    /* ✨ 替換為 Data URI 格式的左箭頭 SVG */
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'/%3E%3Cpolyline points='12 19 5 12 12 5'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'/%3E%3Cpolyline points='12 19 5 12 12 5'/%3E%3C/svg%3E");
     animation: hint-pulse-left 1.5s infinite ease-in-out;
 }
 
@@ -1888,12 +1960,6 @@ footer {
     }
     .modal-content .hint-right { background: linear-gradient(to right, rgba(0,0,0,0) 0%, var(--card) 70%, var(--card) 100%) !important; }
     .modal-content .hint-left { background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--card) 70%, var(--card) 100%) !important; }
-
-    /* 3. 稍微縮小箭頭圖示，適應較窄的遮罩空間 */
-    .hint-right::after, 
-    .hint-left::after {
-        font-size: 1.2rem !important;
-    }
 
     /* ========================================== */
     /* ✨ 終極修復：文章目錄的絕對安全邊界自適應 */

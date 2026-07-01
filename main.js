@@ -5,7 +5,7 @@
 /* ================================================================== */
 const CONFIG = {
     // 🚩 發布前必改
-    VERSION: "U0.5.5",          // 目前系統版本號
+    VERSION: "U0.5.6",          // 目前系統版本號
 
     // 🎨 介面與主題設定
     DEFAULT_THEME: "light",     // 預設主題 (light / dark)
@@ -454,14 +454,32 @@ async function loadProjects() {
             if (window.currentActiveTag) window.clearFilter();
             openProjectIndex(data.id);
             };
-            actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">📖 展開系列 (${data.articles.length}) <span class="action-arrow" data-dir="right" style="font-size: 1.2rem; transition: transform 0.2s ease;">➔</span></div>`;
+
+            // ✨ 替換 1：「展開系列」改為動態雙 SVG 渲染 (闔上 + 打開)
+            actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">
+                <div style="position: relative; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;">
+                    <svg class="icon-book-closed" style="position: absolute; transition: opacity 0.2s ease, transform 0.2s ease;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+                    <svg class="icon-book-open" style="position: absolute; opacity: 0; transform: scale(0.8); transition: opacity 0.2s ease, transform 0.2s ease;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                </div>
+                展開系列 (${data.articles.length}) 
+                <span class="action-arrow" data-dir="right" style="display: flex; align-items: center; transition: transform 0.2s ease;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </span>
+            </div>`;
         } else if (data.link) {
             card.style.cursor = 'pointer';
             card.onclick = (e) => {
             if (window.currentActiveTag) window.clearFilter();
             window.open(data.link, '_blank');
             };
-            actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">🔗 前往外部專案 <span class="action-arrow" data-dir="up-right" style="font-size: 1.2rem; transition: transform 0.2s ease;">↗</span></div>`;
+            // ✨ 替換 2：「外部專案」改為純 SVG 渲染 (鎖鏈 + 右上箭頭)
+            actionText = `<div class="action-btn" style="margin-top: 1.2rem; color: var(--accent); font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s ease;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> 
+                前往外部專案 
+                <span class="action-arrow" data-dir="up-right" style="display: flex; align-items: center; transition: transform 0.2s ease;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                </span>
+            </div>`;
         } else {
             // ✨ 終極修復：針對沒有任何連結與文章的靜態卡片
             card.onclick = (e) => {
