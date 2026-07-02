@@ -1621,7 +1621,7 @@ footer {
 .markdown-body .gallery::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
 
 /* ========================================== */
-/* ✨ 橫向捲動「雙向」視覺提示系統 (毛玻璃進化版) */
+/* ✨ 橫向捲動「雙向」視覺提示系統               */
 /* ========================================== */
 
 .scroll-wrapper {
@@ -1629,39 +1629,35 @@ footer {
     display: flow-root; 
 }
 
-/* 1. 共用毛玻璃遮罩基底 */
+/* 1. 共用遮罩基底 */
 .scroll-hint {
     position: absolute;
     top: 0;
-    width: 54px; /* ✨ 縮小為固定的精緻寬度，變成面板 */
+    width: 80px; 
     height: 100%;
     display: flex;
     align-items: center;
-    justify-content: center; /* ✨ 讓箭頭絕對置中，不再需要靠左靠右 */
     pointer-events: none; 
     z-index: 5;
     opacity: 0; 
     visibility: hidden; 
     transition: opacity 0.4s ease, visibility 0.4s ease; 
-
-    /* ✨ 純淨毛玻璃底層 */
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
 }
 .scroll-hint.visible {
     opacity: 1;
     visibility: visible;
 }
 
-/* 共用的 SVG 箭頭物理屬性 (這段維持不變) */
+/* ✨ 新增：共用的 SVG 箭頭物理屬性 */
 .hint-right::after, 
 .hint-left::after {
-    content: ""; 
+    content: ""; /* 清空原本的文字內容 */
     display: block;
     width: 24px;
     height: 24px;
-    background-color: var(--accent); 
+    background-color: var(--accent); /* 讓 SVG 完美吃到主題色 */
     
+    /* 設定遮罩屬性 */
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
@@ -1673,14 +1669,12 @@ footer {
 /* 2. 右側專屬設定 */
 .hint-right {
     right: -2px; 
-    
-    /* ✨ 拔除容易造成疊影的漸層遮罩，改用「實體邊框」與「陰影」產生真正的玻璃切面 */
-    border-left: 1px solid var(--card-border);
-    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.05);
-    
-    /* ❌ 徹底刪除 -webkit-mask-image 與 mask-image */
+    justify-content: flex-end;
+    padding-right: 8px;
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, var(--bg) 90%, var(--bg) 100%);
 }
 .hint-right::after {
+    /* ✨ 替換為 Data URI 格式的右箭頭 SVG */
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3Cpolyline points='12 5 19 12 12 19'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3Cpolyline points='12 5 19 12 12 19'/%3E%3C/svg%3E");
     animation: hint-pulse-right 1.5s infinite ease-in-out;
@@ -1689,32 +1683,40 @@ footer {
 /* 3. 左側專屬設定 */
 .hint-left {
     left: -2px; 
-    
-    /* ✨ 同樣改用實體切割 */
-    border-right: 1px solid var(--card-border);
-    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
-    
-    /* ❌ 徹底刪除 -webkit-mask-image 與 mask-image */
+    justify-content: flex-start;
+    padding-left: 8px;
+    background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--bg) 80%, var(--bg) 100%);
 }
 .hint-left::after {
+    /* ✨ 替換為 Data URI 格式的左箭頭 SVG */
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'/%3E%3Cpolyline points='12 19 5 12 12 5'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'/%3E%3Cpolyline points='12 19 5 12 12 5'/%3E%3C/svg%3E");
     animation: hint-pulse-left 1.5s infinite ease-in-out;
 }
 
-/* 4. 位置微調 (拔除所有冗餘的 background 覆寫，因為毛玻璃會自動適應底色！) */
-.modal-content .hint-right { right: -1.2rem; }
-.modal-content .hint-left { left: -1.2rem; }
-#portfolio-sections .hint-left { left: -0.8rem; }
+/* 4. Modal 內的邊距與底色覆寫 */
+.modal-content .hint-right {
+    /* ✨ 往外推：從 -0.8rem 加大覆蓋範圍到 -1.2rem */
+    right: -1.2rem; 
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, var(--card) 80%, var(--card) 100%);
+}
+.modal-content .hint-left {
+    /* ✨ 往外推：從 -0.8rem 加大覆蓋範圍到 -1.2rem */
+    left: -1.2rem; 
+    background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--card) 80%, var(--card) 100%);
+}
+#portfolio-sections .hint-left {
+    left: -0.8rem; /* 同步微調首頁左側的外推 */
+}
 
-/* 5. 動畫 */
+/* 5. 左右各自的動畫 */
 @keyframes hint-pulse-right {
-    0%, 100% { transform: translateX(-8px); opacity: 0.4; }
+    0%, 100% { transform: translateX(-8); opacity: 0.4; }
     50% { transform: translateX(5px); opacity: 1; }
 }
 @keyframes hint-pulse-left {
-    0%, 100% { transform: translateX(8px); opacity: 0.4; }
-    50% { transform: translateX(-5px); opacity: 1; }
+    0%, 100% { transform: translateX(8); opacity: 0.4; }
+    50% { transform: translateX(-5px); opacity: 1; } /* 往左彈 */
 }
 
 /* ========================= */
@@ -1944,6 +1946,25 @@ footer {
     .markdown-body img[alt="center"] {
         width: 90%;
     }
+
+        /* ========================================== */
+    /* ✨ 畫廊與卡片網格：手機版雙向捲動提示優化 */
+    /* ========================================== */
+    
+    /* 1. 縮減漸層遮罩寬度：從電腦版的 80px 縮小至 40px，把寶貴的螢幕空間還給卡片 */
+    .scroll-hint {
+        width: 40px !important;
+    }
+
+    /* 2. 微調漸層的過渡比例，讓窄版漸層看起來不會太生硬 */
+    .hint-right, .modal-content .hint-right {
+        background: linear-gradient(to right, rgba(0,0,0,0) 0%, var(--bg) 70%, var(--bg) 100%) !important;
+    }
+    .hint-left, .modal-content .hint-left {
+        background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--bg) 70%, var(--bg) 100%) !important;
+    }
+    .modal-content .hint-right { background: linear-gradient(to right, rgba(0,0,0,0) 0%, var(--card) 70%, var(--card) 100%) !important; }
+    .modal-content .hint-left { background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--card) 70%, var(--card) 100%) !important; }
 
 
     /* ========================================== */
