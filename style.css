@@ -838,7 +838,7 @@ footer {
     /* ✨ 核心防禦 2：強制保留捲軸軌道，切換長短頁面時，X 按鈕與標題絕對不跳動！ */
     scrollbar-gutter: stable;
 
-    padding: 0 3rem 2.5rem 3rem; 
+    padding: 0 3rem 2rem 3rem; 
     position: relative;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     transform: translateY(30px) scale(0.95);
@@ -1888,11 +1888,11 @@ footer {
     }
     
     .modal-content {
-    width: 95%;                  
-    max-height: 90vh;           
-    max-height: 90dvh;           
-    /* ✨ 手機版同步拔除上方留白，改為 0 */
-    padding: 0 1.5rem 5rem 1.5rem; 
+        width: 95%;                  
+        max-height: 90vh;           
+        max-height: 90dvh;           
+        /* ✨ 手機版同步拔除上方留白，改為 0 */
+        padding: 0 1.5rem 2rem 1.5rem; 
     }
 
     /* 1. 修改手機版：一般文章模式的導覽列 */
@@ -2487,4 +2487,52 @@ img.is-broken {
     width: 100% !important;
     max-width: none !important;
     height: auto !important;
+}
+
+/* ========================================== */
+/* ✨ 局部直書模式區塊 (透過 Markdown 內的 div 觸發) */
+/* ========================================== */
+.vertical-wrapper {
+    writing-mode: vertical-rl; /* 直書，由右至左 */
+    
+    /* ✨ 限制高度：這會迫使內容往左方延伸，進而產生「內部橫向捲軸」 */
+    height: 65vh; 
+    min-height: 400px;
+    width: 100%;
+    box-sizing: border-box;
+    
+    overflow-x: auto;
+    overflow-y: hidden;
+    
+    /* 美化排版：讓它看起來像一張有質感的古典稿紙 */
+    padding: 2rem 1.5rem 0.5rem 1.5rem;
+    margin: 1rem 0;
+    border-radius: 12px;
+    background: var(--box-bg); 
+    border: 1px solid var(--card-border);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+    
+    /* 捲軸樣式 */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.vertical-wrapper::-webkit-scrollbar { height: 8px; width: 8px; }
+.vertical-wrapper::-webkit-scrollbar-track { background: transparent; }
+.vertical-wrapper::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+.vertical-wrapper::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+
+/* 直書內部的標題微調 */
+.vertical-wrapper h1, 
+.vertical-wrapper h2, 
+.vertical-wrapper h3 {
+    /* 直書的上下間距會變成「左右間距」 */
+    margin: 0 1.2rem 0 0; 
+}
+
+/* 直書內部的圖片防破版 */
+.vertical-wrapper img {
+    max-height: 70%; /* 限制圖片最高只能佔區塊的 70% 高度，避免撐破直書容器 */
+    width: auto !important;
+    margin: 0 1.5rem !important;
 }

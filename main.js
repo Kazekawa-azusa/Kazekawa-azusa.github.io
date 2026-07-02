@@ -126,7 +126,12 @@ renderer.code = function(token_or_code, language, isEscaped) {
     return originalCodeRenderer.apply(this, arguments);
 };
 
-marked.use({ renderer });
+// ✨ 啟動 GFM 單行換行魔法 (breaks: true)
+marked.use({ 
+    renderer: renderer,
+    breaks: true,  // 👈 只要加了這個，以後在 md 裡面按一次 Enter 就會產生真正的換行！
+    gfm: true      // 確保 GitHub 風格開啟 (通常預設是 true)
+});
 
 // === 1. 介面與導覽列邏輯 (Theme & Menu) ===
 document.addEventListener('DOMContentLoaded', () => {
